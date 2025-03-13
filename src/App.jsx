@@ -3,6 +3,7 @@ import reactLogo from './assets/img/react.svg'
 import viteLogo from '/vite.svg'
 import './assets/style/App.css'
 import Navbar from './components/Navbar'
+import Footer from './components/Footer'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -16,7 +17,9 @@ function App() {
           This is a React app built with Vite and Tailwind CSS.
         </p>
       </main>
+      <Footer/>
     </>
+    
   )
 }
 

@@ -24,11 +24,11 @@
 
 a {
   font-weight: 500;
-  color: #36bbca;
+  color: #545657;
   text-decoration: inherit;
 }
 a:hover {
-  color: #3ea6b1;
+  color: #4FB7BD;
 }
 
 body {
@@ -42,18 +42,21 @@ h1 {
 }
 
 button {
-  border-radius: 8px;
+  border-radius: 30px;
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: #FFFF;
+  color: #545657;
+  border-color: #82AAAA ;
   cursor: pointer;
   transition: border-color 0.25s;
 }
 button:hover {
-  border-color: #646cff;
+  background-color: #2A8F9E;
+  color: #FFFF;
 }
 button:focus,
 button:focus-visible {

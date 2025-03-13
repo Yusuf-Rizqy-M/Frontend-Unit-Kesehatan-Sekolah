@@ -21,7 +21,7 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { ChevronDownIcon, PhoneIcon, PlayCircleIcon } from '@heroicons/react/20/solid'
-import UksImg from "../assets/img/uks.png";
+import Uks1Img from "../assets/img/Uks1.png";
 
 // const products = [
 //   { name: 'Analytics', description: 'Get a better understanding of your traffic', href: '#', icon: ChartPieIcon },
@@ -40,39 +40,40 @@ export default function Example() {
 
   return (
     <header className="bg-white">
-      <nav aria-label="Global" className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8">
-        <div className="flex lg:flex-1">
-          <a href="#" className="-m-1.5 p-1.5">
-            <span className="sr-only">Uks</span>
-            <img
-              alt="Logo"
-              src={UksImg}
-              className="h-15 w-auto"
-            />
-          </a>
-        </div>  
-        <div className="flex lg:hidden">
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen(true)}
-            className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700"
-          >
-            <span className="sr-only">Open main menu</span>
-            <Bars3Icon aria-hidden="true" className="size-6" />
-          </button>
-        </div>
-        <PopoverGroup className="flex lg:gap-x-30 text-white">
-          <a href="#" className="text-sm/6 font-semibold text-white">Home</a>
-          <a href="#" className="text-sm/6 font-semibold text-white">Kalkulator BMI</a>
-          <a href="#" className="text-sm/6 font-semibold text-white">Kondisi</a>
-          <a href="#" className="text-sm/6 font-semibold text-white">About Us</a>
-        </PopoverGroup>
-        <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-          <a href="#" className="text-sm/6 font-semibold text-white">
-            Log in <span aria-hidden="true">&rarr;</span>
-          </a>
-        </div>
-      </nav>
+    <nav aria-label="Global" className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8">
+      {/* Logo */}
+      <div className="flex lg:flex-1">
+        <a href="#" className="-m-1.5 p-1.5">
+          <span className="sr-only">Uks</span>
+          <img alt="Logo" src={Uks1Img} className="h-20 w-auto" />
+        </a>
+      </div>
+  
+      {/* Mobile Menu Button */}
+      <div className="flex lg:hidden">
+        <button
+          type="button"
+          onClick={() => setMobileMenuOpen(true)}
+          className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700"
+        >
+          <span className="sr-only">Open main menu</span>
+          <Bars3Icon aria-hidden="true" className="size-6" />
+        </button>
+      </div>
+      <div className="hidden lg:flex lg:items-center lg:gap-x-20">
+        <a href="#" className="text-sm font-semibold text-gray-900">Home</a>
+        <a href="#" className="text-sm font-semibold text-gray-900">Kalkulator BMI</a>
+        <a href="#" className="text-sm font-semibold text-gray-900">Kondisi</a>
+        <a href="#" className="text-sm font-semibold text-gray-900">Edukasi Kesehatan</a>
+        <a href="#" className="text-sm font-semibold text-gray-900">About Us</a>
+      </div>
+      <div className="hidden lg:flex lg:flex-1 lg:justify-end">
+        <button type="button" className="px-4 py-2 rounded-md bg-blue-500 text-white font-semibold hover:bg-blue-600">
+          Log In
+        </button>
+      </div>
+    </nav>
+  
 
       {/* Mobile Menu */}
       <Dialog open={mobileMenuOpen} onClose={setMobileMenuOpen} className="lg:hidden">
@@ -106,6 +107,9 @@ export default function Example() {
                 </a>
                 <a href="#" className="block rounded-lg px-3 py-2 text-base/7 font-semibold text-gray-900 hover:bg-gray-50">
                   Kondisi
+                </a>
+                <a href="#" className="block rounded-lg px-3 py-2 text-base/7 font-semibold text-gray-900 hover:bg-gray-50">
+                Edukasi Kesehatan
                 </a>
                 <a href="#" className="block rounded-lg px-3 py-2 text-base/7 font-semibold text-gray-900 hover:bg-gray-50">
                   About Us

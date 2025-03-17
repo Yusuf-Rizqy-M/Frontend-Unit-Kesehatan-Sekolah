@@ -41,33 +41,27 @@ export default function Navigation() {
         {/* Desktop Menu */}
         <div className="hidden lg:flex lg:items-center lg:gap-x-20">
           {menuItems.map((item) => (
-          <Link
-            key={item.name}
-            to={item.href}
-            className={`relative text-sm font-semibold transition-all duration-300 
-              ${location.pathname === item.href ? 
-                "text-gray-900" : 
-                "text-gray-500"} 
-                 hover:text-teal-500`}
-          >
-            {item.name}
-            <span 
-              className={`absolute left-0 bottom-[-2px] h-[2px] w-0 bg-teal-500 transition-all duration-300 
-                ${location.pathname === item.href ? "w-full" : "hover:w-full"}`}
-            ></span>
-        </Link>
-        
-         
+            <Link
+              key={item.name}
+              to={item.href}
+              className={`relative text-sm font-semibold transition-all duration-300 
+              ${location.pathname === item.href ? "text-gray-900" : "text-gray-500"}`}
+            >
+              {item.name}
+              <span
+                className={`absolute left-0 bottom-[-2px] h-[2px] w-0 bg-[#82AAAA] transition-all duration-300 
+                ${location.pathname === item.href ? "w-full" : ""}`}
+              ></span>
+            </Link>
           ))}
         </div>
 
         <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-        <button className="px-4 py-2 rounded-full border border-[#82AAAA] text-[#545657] 
+          <button className="px-4 py-2 rounded-full border border-[#82AAAA] text-[#545657] 
               font-semibold bg-white transition-colors duration-300 
               hover:bg-[#2A8F9E] hover:text-white focus:outline focus:outline-4 focus:outline-auto">
-              Log In
-        </button>
-
+            Log In
+          </button>
         </div>
       </nav>
 
@@ -96,21 +90,19 @@ export default function Navigation() {
                     key={item.name}
                     to={item.href}
                     className={`block rounded-lg px-3 py-2 text-base font-semibold 
-                      ${location.pathname === item.href ? "text-teal-500" : "text-gray-900"} 
-                      hover:bg-gray-50`}
-                    onClick={() => setMobileMenuOpen(false)} 
+                      ${location.pathname === item.href ? "text-teal-500" : "text-gray-900"}`}
+                    onClick={() => setMobileMenuOpen(false)}
                   >
                     {item.name}
                   </Link>
                 ))}
               </div>
               <div className="py-6">
-              <button className="block w-full rounded-full px-3 py-2.5 text-base font-semibold 
-                text-[#545657] bg-white border border-[#82AAAA] transition-colors duration-300 
+                <button className="block w-full rounded-full px-2 py-2 text-base font-semibold 
+                text-[#545657] bg-white border border-[#82AAAA] transition-colors duration-800 
                 hover:bg-[#2A8F9E] hover:text-white focus:outline focus:ring-2 focus:ring-[#82AAAA]">
-                Log In
-              </button>
-
+                  Log In
+                </button>
               </div>
             </div>
           </div>

@@ -18,7 +18,7 @@ export default function Navigation() {
   ];
 
   return (
-    <header className="bg-white border-b border-gray-300">
+    <header className="sticky top-0 z-50 bg-white border-b border-gray-300 shadow-md">
       <nav aria-label="Global" className="mx-auto flex max-w-7xl items-center justify-between p-1 lg:px-8">
         <div className="flex items-center lg:flex-1 min-w-0">
           <Link to="/" className="-m-1.5 p-1.5">

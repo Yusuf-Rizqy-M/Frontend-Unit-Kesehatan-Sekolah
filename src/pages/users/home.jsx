@@ -1,16 +1,18 @@
 import Layout from '../../components/layout';
+import HeroSection from '../../components/hero_section';
+import FeatureSection from '../../components/feature_section';
 
 function Home() {
   return (
     <Layout>
-      <main>
-        <h1 className="text-4xl text-teal-300">Welcome to My APP</h1>
-        <p className="mt-2 text-gray-600">
-          This is a React app built with Vite and Tailwind CSS.
-        </p>
+      <main className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+        <HeroSection />
+        <FeatureSection />
       </main>
     </Layout>
   );
 }
 
 export default Home;
+
+

@@ -1,9 +1,9 @@
 import Layout from '../../components/layout';
-import HeroSection from '../../components/hero_section';
-import FeatureSection from '../../components/feature_section';
-import HealthcareTeam from "../../components/HealthcareTeam";
-import Facilities from "../../components/Facilities";
-import FAQ from "../../components/FAQ";
+import HeroSection from '../../section/hero-home';
+import FeatureSection from '../../section/feature-home';
+import HealthcareTeam from "../../section/healthcare-home";
+import Facilities from "../../section/facilities-home";
+import FAQ from "../../section/faq-home";
 
 function Home() {
   return (

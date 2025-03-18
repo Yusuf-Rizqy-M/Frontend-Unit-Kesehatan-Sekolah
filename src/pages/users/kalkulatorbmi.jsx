@@ -14,3 +14,4 @@ function KalkulatorBmi() {
 }
 
 export default KalkulatorBmi;
+  

@@ -1,6 +1,39 @@
 @import "tailwindcss";
 
 
+@import url(' https://fonts.cdnfonts.com/css/general-sans');
+
+
+@font-face {
+  font-family: GeneralSans-Bold;
+  src: url(../fonts/GeneralSans-Bold.otf);
+}
+
+@font-face {
+  font-family: GeneralSans-Semi-Bold;
+  src: url(../fonts/GeneralSans-SemiBold.otf);
+}
+
+@font-face {
+  font-family: GeneralSans-Medium;
+  src: url(../fonts/GeneralSans-Medium.otf);
+}
+
+@font-face {
+  font-family: GeneralSans-Regular;
+  src: url(../fonts/GeneralSans-Regular.otf);
+}
+
+@font-face {
+  font-family: GeneralSans-Light;
+  src: url(../fonts/GeneralSans-Light.otf);
+}
+
+@theme{
+  --font-GeneralSans-Semi-Bold:GeneralSans-Semi-Bold, sans-serif;
+}
+
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;

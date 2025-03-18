@@ -7,10 +7,10 @@ const DoctorCard = ({ name, specialty, whatsapp }) => {
       <img src={DoctorImage} alt={name} className="w-full h-[250px] object-cover bg-blue-100" />
       <div className="p-4 flex justify-between bg-white">
         <div className="text-left flex-grow">
-          <h3 className="text-md font-semibold text-white">{name}</h3>
-          <p className="text-sm text-gray-300">{specialty}</p>
+          <h3 className="text-md font-semibold text-[#2D3E50]">{name}</h3>
+          <p className="text-sm text-gray-500">{specialty}</p>
         </div>
-        <a href={`https://wa.me/${whatsapp}`} target="_blank" className="text-white">
+        <a href={`https://wa.me/${whatsapp}`} target="_blank" className="text-green-600">
           <FaWhatsapp size={18} />
         </a>
       </div>

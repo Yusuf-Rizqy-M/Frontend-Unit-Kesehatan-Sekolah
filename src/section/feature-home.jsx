@@ -30,7 +30,7 @@ const FeaturePage = () => {
                         admin UKS secara daring. Fitur ini dirancang untuk memudahkan siswa atau pengguna dalam menyampaikan keluhan kesehatan dan 
                         mendapatkan tanggapan dari pihak UKS secara efisien.
                     </p>
-                    <a href="#" className="mt-3 inline-block bg-[#2A8F9E] text-white px-4 py-2 rounded-lg transition duration-300 hover:bg-[#237987] hover:scale-105">
+                    <a href="#" className="mt-3 inline-block bg-[#2A8F9E] text-white px-4 py-2 rounded-lg transition duration-300 hover:bg-[#237987] ">
                         Explore Konsultasi →
                     </a>
             </div>
@@ -49,7 +49,7 @@ const FeaturePage = () => {
                     <p className="mt-2 text-gray-600 max-w-2xl ml-auto">
                         Fitur Rekap Medis UKS adalah sistem pencatatan riwayat kesehatan siswa yang memungkinkan pihak UKS untuk menyimpan dan mengelola data medis setiap pengguna. Fitur ini berfungsi sebagai arsip digital yang membantu dalam pemantauan kondisi kesehatan siswa secara lebih efektif.
                     </p>
-                    <a href="#" className="mt-4 inline-block bg-[#2A8F9E] text-white px-4 py-2 rounded-lg transition duration-300 hover:bg-[#237987] hover:scale-105">
+                    <a href="#" className="mt-4 inline-block bg-[#2A8F9E] text-white px-4 py-2 rounded-lg transition duration-300 hover:bg-[#237987] ">
                         Explore Rekap Medis →
                     </a>
             </div>
@@ -69,7 +69,7 @@ const FeaturePage = () => {
                         Cek kesehatanmu dengan Kalkulator BMI! Masukkan berat dan tinggi badan untuk mengetahui kategori berat badanmu—kurang, 
                         ideal, atau berlebih. Dapatkan juga rekomendasi untuk menjaga keseimbangan tubuh yang sehat.
                     </p>
-                    <a href="/KalkulatorBmi" className="mt-3 inline-block bg-[#2A8F9E] text-white px-4 py-2 rounded-lg transition duration-300 hover:bg-[#237987] hover:scale-105">
+                    <a href="/KalkulatorBmi" className="mt-3 inline-block bg-[#2A8F9E] text-white px-4 py-2 rounded-lg transition duration-300 hover:bg-[#237987] ">
                         Explore Kalkulator BMI →
                     </a>
             </div>

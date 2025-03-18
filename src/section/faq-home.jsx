@@ -9,7 +9,7 @@ const faqs = [
 
 function FAQ() {
   return (
-    <section className="mt-20 w-full flex justify-center">
+    <section className="mt-20 w-full flex justify-center mb-28">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center max-w-4xl w-full">
         <img src={DoctorIllustration} alt="Doctor Illustration" className="w-full max-w-[450px] mx-auto" />
         <div className="w-full max-w-lg text-center">

@@ -1,4 +1,4 @@
-'use client'
+'use client';
 import React, { useState } from "react";
 import { Dialog, DialogPanel } from '@headlessui/react';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
@@ -45,24 +45,29 @@ export default function Navigation() {
             <Link
               key={item.name}
               to={item.href}
-              className={`relative text-sm font-semibold transition-all duration-300 
-              ${location.pathname === item.href ? "text-gray-900" : "text-gray-500"}`}
+              className={`relative group text-sm font-semibold transition-all duration-300 
+       ${location.pathname === item.href ? "text-gray-900" : "text-gray-500"}`}
             >
               {item.name}
               <span
-                className={`absolute left-0 bottom-[-2px] h-[2px] w-0 bg-[#82AAAA] transition-all duration-300 
-                ${location.pathname === item.href ? "w-full" : ""}`}
+                className={`absolute left-0 bottom-0 h-[2px] w-full bg-[#00ACC1] origin-center scale-x-0 transition-transform duration-300 
+         ${location.pathname === item.href ? "scale-x-100" : "group-hover:scale-x-100"}
+       `}
               ></span>
             </Link>
+
           ))}
         </div>
 
         <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-          <button className="px-4 py-2 rounded-full border border-[#82AAAA] text-[#545657] 
+          <Link
+            to="/login"
+            className="px-4 py-2 rounded-full border border-[#82AAAA] text-[#545657] 
               font-semibold bg-white transition-colors duration-300 
-              hover:bg-[#2A8F9E] hover:text-white focus:outline focus:outline-4 focus:outline-auto">
+              hover:bg-[#2A8F9E] hover:text-white focus:outline focus:outline-4 focus:outline-auto"
+          >
             Log In
-          </button>
+          </Link>
         </div>
       </nav>
 
@@ -99,11 +104,15 @@ export default function Navigation() {
                 ))}
               </div>
               <div className="py-6">
-                <button className="block w-full rounded-full px-2 py-2 text-base font-semibold 
-                text-[#545657] bg-white border border-[#82AAAA] transition-colors duration-800 
-                hover:bg-[#2A8F9E] hover:text-white focus:outline focus:ring-2 focus:ring-[#82AAAA]">
+                <Link
+                  to="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block w-full rounded-full px-2 py-2 text-base font-semibold 
+                    text-[#545657] bg-white border border-[#82AAAA] transition-colors duration-800 
+                    hover:bg-[#2A8F9E] hover:text-white focus:outline focus:ring-2 focus:ring-[#82AAAA]"
+                >
                   Log In
-                </button>
+                </Link>
               </div>
             </div>
           </div>

@@ -4,6 +4,8 @@ import KalkulatorBmi from "./pages/users/kalkulatorbmi";
 import Kondisi from "./pages/users/kondisi";
 import EdukasiKesehatan from "./pages/users/edukasiKesehatan";
 import AboutUs from "./pages/users/about_us";
+import RegisterPage from "../src/auth/register_page";
+
 
 
 function App() {
@@ -15,6 +17,7 @@ function App() {
         <Route path="/Kondisi" element={<Kondisi />} />
         <Route path="/EdukasiKesehatan" element={<EdukasiKesehatan />} />
         <Route path="/AboutUs" element={<AboutUs />} />
+        <Route path="/RegisterPage" element={<RegisterPage />} />
       </Routes>
     </>
   );

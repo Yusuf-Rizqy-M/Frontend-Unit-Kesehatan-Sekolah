@@ -5,6 +5,8 @@ import Kondisi from "./pages/users/kondisi";
 import EdukasiKesehatan from "./pages/users/edukasiKesehatan";
 import AboutUs from "./pages/users/about_us";
 import RegisterPage from "../src/auth/register_page";
+import LoginPage from "../src/auth/login_page";
+
 
 
 
@@ -18,6 +20,7 @@ function App() {
         <Route path="/EdukasiKesehatan" element={<EdukasiKesehatan />} />
         <Route path="/AboutUs" element={<AboutUs />} />
         <Route path="/RegisterPage" element={<RegisterPage />} />
+        <Route path="/login" element={<LoginPage />} />
       </Routes>
     </>
   );

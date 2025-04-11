@@ -17,12 +17,6 @@ function Facilities() {
         <div className="absolute top-[300px] right-[100px] w-[70px] h-[70px] bg-[#E6E6FA] rotate-12 rounded-md opacity-50" />
         <div className="absolute bottom-[150px] left-[100px] w-[90px] h-[90px] bg-[#B0E0E6] rounded-full opacity-40" />
       </div>
-<<<<<<< HEAD
-
-      {/* Konten */}
-=======
-      
->>>>>>> main
       <div className="relative z-10 w-fit md:pl-20">
         <h2 className="text-lg md:text-2xl font-bold text-[#1C4245] text-left mb-10 pb-2 relative group">
           Facilities

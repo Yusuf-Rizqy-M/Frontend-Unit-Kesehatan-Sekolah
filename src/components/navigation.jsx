@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Dialog, DialogPanel } from '@headlessui/react';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import { Link, useLocation } from "react-router-dom";
+import { href, Link, useLocation } from "react-router-dom";
 import UKS2Img from "../assets/img/UKS2.png";
 
 export default function Navigation() {
@@ -12,9 +12,10 @@ export default function Navigation() {
   const menuItems = [
     { name: "Home", href: "/" },
     { name: "Kalkulator BMI", href: "/KalkulatorBmi" },
-    { name: "Kondisi", href: "/Kondisi" },
+    // { name: "Kondisi", href: "/Kondisi" },
     { name: "Edukasi Kesehatan", href: "/EdukasiKesehatan" },
-    { name: "About Us", href: "/AboutUs" }
+    { name: "About Us", href: "/AboutUs" },
+    { name: "Register Page", href: "/RegisterPage"}
   ];
 
   return (

@@ -11,11 +11,11 @@ export default function Navigation() {
 
   const menuItems = [
     { name: "Home", href: "/" },
-    { name: "Kalkulator BMI", href: "/KalkulatorBmi" },
+    { name: "Kalkulator BMI", href: "/kalkulatorbmi" },
     // { name: "Kondisi", href: "/Kondisi" },
-    { name: "Edukasi Kesehatan", href: "/EdukasiKesehatan" },
-    { name: "About Us", href: "/AboutUs" },
-    { name: "Register Page", href: "/RegisterPage"}
+    { name: "Edukasi Kesehatan", href: "/edukasikesehatan" },
+    { name: "About Us", href: "/aboutus" },
+    { name: "Register Page", href: "/registerpage"}
   ];
 
   return (

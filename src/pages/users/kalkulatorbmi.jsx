@@ -45,7 +45,7 @@ function KalkulatorBmi() {
 
   return (
     <Layout>
-      <main className="max-w-7xl mx-auto px-4 py-10 grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
+    <main className="max-w-7xl mx-auto px-4 pb-16 grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
         {/* Kiri - Ilustrasi & Hasil */}
         <div className="bg-white p-8 rounded-2xl shadow-md text-center w-full h-full">
           <img

@@ -1,6 +1,6 @@
 import React from "react";
-import DoctorImg from "../assets/img/doctor_img.png";
-import UKS2Img from "../assets/img/UKS2.png";
+import DoctorImg from "../../assets/img/doctor_img.png";
+import UKS2Img from "../../assets/img/UKS2.png";
 
 const RegisterPage = () => {
   return (

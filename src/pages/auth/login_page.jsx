@@ -1,6 +1,7 @@
 import React from 'react';
-import UksImg2 from "../assets/img/doctor_img_rounded.png";
-import LogoImg from "../assets/img/UKS2.png";
+
+import UksImg2 from "../../assets/img/doctor_img.png";
+import LogoImg from "../../assets/img/UKS2.png";
 
 const LoginPage = () => {
   return (

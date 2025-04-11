@@ -5,7 +5,7 @@ import AboutUs from "../pages/users/about_us";
 import EdukasiKesehatan from "../pages/users/edukasiKesehatan";
 import KalkulatorBmi from "../pages/users/kalkulatorbmi";
 import Kondisi from "../pages/users/kondisi";
-import RegisterPage from "../auth/register_page";
+import RegisterPage from "../pages/auth/register_page";
 
 function AppRoutes() {
   return (

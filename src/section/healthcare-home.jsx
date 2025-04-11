@@ -11,11 +11,11 @@ function HealthcareTeam() {
     <section className="relative mt-12 w-full flex justify-center bg-white mb-16 overflow-visible">
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute top-20 left-[-30px] w-[120px] h-[120px] bg-[#F1FFE2] rounded-full opacity-50" />
-<<<<<<< HEAD
+
         <div className="absolute bottom-50 right-10 w-0 h-0 border-l-[50px] border-r-[50px] border-b-[80px] border-l-transparent border-r-transparent border-b-[#FFFACD] opacity-60" />
-=======
+
         <div className="absolute bottom-50 right-10 w-0 h-0 border-l-[50px] border-r-[50px] border-b-[80px] border-l-transparent border-r-transparent border-b-[#FFFACD] rotate-20 opacity-60" />
->>>>>>> main
+
         <div className="absolute top-[300px] right-[300px] w-[70px] h-[70px] bg-[#FFD1DC] rotate-12 rounded-md opacity-50" />
         <div className="absolute bottom-[150px] left-[-100px] w-[90px] h-[90px] bg-[#B0E0E6] rounded-full opacity-40" />
       </div>

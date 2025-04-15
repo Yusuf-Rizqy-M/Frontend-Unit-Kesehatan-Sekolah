@@ -1,78 +1,100 @@
-import React from "react";
-import DoctorImg from "../../assets/img/doctor_img.png";
-import UKS2Img from "../../assets/img/UKS2.png";
+import React from 'react';
+import UksImg2 from "../assets/img/doctor_img_rounded.png";
+import LogoImg from "../assets/img/UKS2.png";
 
 const RegisterPage = () => {
   return (
-    <div className="flex w-screen h-screen">
+    <div className="flex min-h-screen font-poppins bg-white">
       {/* Left */}
-      <div className="w-1/2 bg-[#cbe8f6] relative flex flex-col items-center justify-center text-center p-5">
+      <div className="w-1/2 bg-[#DDF6FF] flex flex-col justify-center items-center p-12 relative">
 
-        <div className="absolute top-[-150px] left-[550px] w-[200px] h-[200px] bg-[#3bb7c6] rounded-full"></div>
-        <div className="absolute bottom-1/2 left-[50px] w-0 h-0 border-l-[30px] border-r-[30px] border-b-[50px] border-l-transparent border-r-transparent border-b-[#3bb7c6]"></div>
-        <div className="absolute bottom-[15%] left-[400px] w-[40px] h-[20px] bg-[#3bb7c6] rotate-[30deg]"></div>
+        <div className="absolute top-0 left-0 w-32 h-32 bg-cyan-500 rounded-full opacity-40 -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-10 left-10 w-8 h-8 bg-cyan-500 rotate-45" />
+        <div className="absolute top-20 right-10 w-6 h-6 bg-cyan-500 rotate-45" />
 
-        <div className="relative z-10 max-w-[80%] text-center">
-          <h1 className="text-3xl font-bold text-[#2F3C40] text-center mb-4">
-            Hallo, Teman <br />  Selamat Datang!
+          <h1 className="text-4xl font-bold text-gray-800 text-center mb-8 leading-tight">
+            Hallo, Teman<br />Selamat Datang!
           </h1>
 
-          <div className="flex justify-center items-center mb-4">
-            <div className="w-[200px] h-[200px] bg-white rounded-full flex items-center justify-center overflow-hidden">
-              <img
-                src={DoctorImg}
-                alt="Doctor"
-                className="w-full h-auto object-cover"
-              />
+          <img src={UksImg2} alt="Doctor" className="w-60 h-60 mb-8" />
+          <hr className="w-24 border-[1.5px] border-gray-400 mb-6" />
+
+            <div className="text-center">
+              <h2 className="text-lg font-bold text-gray-800 mb-2">UKS SMK RUS</h2>
+              <p className="text-sm text-gray-600 max-w-xs">
+                Jaga kesehatanmu dengan UKS SMK RUS, platform terbaik untuk memantau dan meningkatkan kesehatan di sekolah.
+              </p>
             </div>
-          </div>
-
-          <h2 className="text-3xl font-semi-bold text-[#2F3C40] text-center mb-4">
-            UKS SMK RUS
-          </h2>
-
-
-          <p className="text-base leading-relaxed text-[#444]">
-            Jaga kesehatanmu dengan UKS SMK RUS, platform terbaik untuk memantau
-            dan meningkatkan kesehatan di sekolah.
-          </p>
-        </div>
       </div>
 
       {/* Right */}
-      <div className="w-1/2 flex items-center justify-center bg-white text-black">
-        {/* Form placeholder */}
-        <div className="w-[70%] max-w-[400px] text-center">
-          <img alt="Logo" src={UKS2Img} className="h-20 w-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-4">Sign in to your account</h2>
-
-          <label className="block text-left mb-1">Email address</label>
-          <input
-            type="email"
-            placeholder="Enter your email"
-            className="w-full p-2 mb-3 border border-gray-300 rounded"
-          />
-
-          <label className="block text-left mb-1">Password</label>
-          <input
-            type="password"
-            placeholder="Enter your password"
-            className="w-full p-2 mb-3 border border-gray-300 rounded"
-          />
-
-          <div className="flex justify-between items-center text-sm mb-4">
-            <label className="flex items-center">
-              <input type="checkbox" className="mr-1" /> Remember me
-            </label>
-            <a href="#" className="text-[#3bb7c6]">Forgot your password?</a>
+       <div className="w-1/2 flex flex-col justify-center items-center p-12">
+          <div className="w-full max-w-sm flex flex-col items-start mb-8">
+            <img
+              src={LogoImg}
+              alt="Logo"
+              className="w-16 h-16 mb-4 object-contain"
+            />
+            <h2 className="text-2xl font-bold text-gray-800">
+              Sign up to your account
+            </h2>
           </div>
 
-          <button className="w-full p-2 bg-[#2A8F9E] text-white rounded font-semibold">Sign In</button>
+          {/* form */}
+          <form className="w-full max-w-sm text-left">
+            
+            <div className="mb-5">
+              <label className="block text-xs font-semibold text-gray-600 mb-1">
+                Create Username
+              </label>
+              <input
+              type="email"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 text-sm text-black"
+            />
+            </div>
 
-          <p className="mt-4 text-sm">
-            Not a user? <a href="#" className="text-[#3bb7c6]">Sign up here</a>
+            {/* input email */}
+            <div className="mb-5">
+              <label className="block text-xs font-semibold text-gray-600 mb-1">
+                Email Address
+              </label>
+              <input
+              type="email"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 text-sm text-black"
+            />
+            </div>
+
+            {/* input pw */}
+            <div className="mb-5">
+              <label className="block text-xs font-semibold text-gray-600 mb-1">
+                Create Password
+              </label>
+            <input
+              type="password"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 text-sm text-black"
+            />
+            </div>
+            
+            <div className="flex items-center justify-between mb-6">
+              <label className="flex items-center text-sm text-gray-600">
+                <input type="checkbox" defaultChecked className="mr-2" /> Remember me
+              </label>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 rounded-md text-sm transition-colors duration-200"
+            >
+              Sign Up
+            </button>
+          </form>
+           {/* login link */}
+          <p className="mt-8 text-sm text-gray-700">
+            Already have an account?{" "}
+            <a href="/login" className="text-blue-600 hover:underline">
+              Log In here
+            </a>
           </p>
-        </div>
       </div>
     </div>
   );

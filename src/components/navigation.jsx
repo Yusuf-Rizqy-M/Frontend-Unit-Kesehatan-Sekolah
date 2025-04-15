@@ -12,8 +12,10 @@ export default function Navigation() {
   const menuItems = [
     { name: "Home", href: "/" },
     { name: "Kalkulator BMI", href: "/kalkulatorbmi" },
-    { name: "Edukasi Kesehatan", href: "/EdukasiKesehatan" },
-    { name: "About Us", href: "/AboutUs" },
+    // { name: "Kondisi", href: "/Kondisi" },
+    { name: "Edukasi Kesehatan", href: "/edukasikesehatan" },
+    { name: "About Us", href: "/aboutus" },
+    { name: "Antre", href: "/registerpage"}
   ];
 
   return (
@@ -44,20 +46,20 @@ export default function Navigation() {
               key={item.name}
               to={item.href}
               className={`relative group text-sm font-semibold transition-all duration-300 
-              ${location.pathname === item.href ? "text-gray-900" : "text-gray-500"}`}
+       ${location.pathname === item.href ? "text-gray-900" : "text-gray-500"}`}
             >
               {item.name}
               <span
                 className={`absolute left-0 bottom-0 h-[2px] w-full bg-[#00ACC1] origin-center scale-x-0 transition-transform duration-300 
-                ${location.pathname === item.href ? "scale-x-100" : "group-hover:scale-x-100"}
-                `}
+         ${location.pathname === item.href ? "scale-x-100" : "group-hover:scale-x-100"}
+       `}
               ></span>
             </Link>
 
           ))}
         </div>
 
-        <div className="hidden lg:flex lg:flex-2 lg:justify-end">
+        <div className="hidden lg:flex lg:flex-1 lg:justify-end">
           <Link
             to="/login"
             className="px-4 py-2 rounded-full border border-[#82AAAA] text-[#545657] 
@@ -67,20 +69,8 @@ export default function Navigation() {
             Log In
           </Link>
         </div>
-         
-      <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-          <Link
-            to="/RegisterPage"
-            className="px-4 py-2 rounded-full border border-[#82AAAA] text-[#545657] 
-              font-semibold bg-white transition-colors duration-300 
-              hover:bg-[#2A8F9E] hover:text-white focus:outline focus:outline-4 focus:outline-auto"
-          >
-          Register
-          </Link>
-        </div>
       </nav>
-     
-  
+
       {/* Mobile Menu */}
       <Dialog open={mobileMenuOpen} onClose={setMobileMenuOpen} className="lg:hidden">
         <DialogPanel className="fixed inset-y-0 right-0 z-10 w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">

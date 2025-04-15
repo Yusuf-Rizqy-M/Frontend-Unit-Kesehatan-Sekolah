@@ -1,7 +1,6 @@
 import React from 'react';
-import UksImg2 from "../assets/img/doctor_img_rounded.png";
-import LogoImg from "../assets/img/UKS2.png";
-
+import UksImg2 from "../../assets/img/doctor_img_rounded.png";
+import LogoImg from "../../assets/img/UKS2.png";
 const RegisterPage = () => {
   return (
     <div className="flex min-h-screen font-poppins bg-white">

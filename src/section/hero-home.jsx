@@ -1,10 +1,22 @@
 import React from "react";
+import { motion } from "framer-motion";
+import { useInView } from "react-intersection-observer";
 import DoctorImg from "../assets/img/doctor_img.png";
 
 const HeroSection = () => {
+  const [refLeft, inViewLeft] = useInView({ triggerOnce: false });
+  const [refRight, inViewRight] = useInView({ triggerOnce: false });
+
   return (
     <section className="bg-white py-26 px-2 md:px-16 pl-15 flex flex-col md:flex-row items-center">
-      <div className="md:w-1/2 text-center md:text-left  pl-17 relative -mt-6">
+      {/* Left Text Area */}
+      <motion.div
+        ref={refLeft}
+        className="md:w-1/2 text-center md:text-left pl-17 relative -mt-6"
+        initial={{ opacity: 0, y: 50 }}
+        animate={inViewLeft ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
+        transition={{ duration: 0.8 }}
+      >
         <h1 className="text-4xl md:text-6xl font-semibold text-black leading-tight">
           Sehat <br /> Bersama UKS, <br /> Peduli Sejak Dini
         </h1>
@@ -15,19 +27,24 @@ const HeroSection = () => {
           serta edukasi untuk membangun kebiasaan hidup sehat sejak dini.
           Bersama UKS, wujudkan lingkungan sekolah yang lebih sehat dan nyaman!
         </p>
-      </div>
-      <div className="md:w-1/2 flex justify-center mt-6 md:mt-0 relative -mt-12">
+      </motion.div>
+
+      {/* Right Image */}
+      <motion.div
+        ref={refRight}
+        className="md:w-1/2 flex justify-center mt-6 md:mt-0 relative -mt-12"
+        initial={{ opacity: 0, x: 100 }}
+        animate={inViewRight ? { opacity: 1, x: 0 } : { opacity: 0, x: 100 }}
+        transition={{ duration: 0.8, delay: 0.3 }}
+      >
         <img
           src={DoctorImg}
           alt="Doctor Illustration"
           className="max-w-xs md:max-w-md"
         />
-      </div>
+      </motion.div>
     </section>
   );
 };
 
 export default HeroSection;
-
-
-

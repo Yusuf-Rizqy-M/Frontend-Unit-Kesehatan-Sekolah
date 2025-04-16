@@ -1,6 +1,13 @@
 import React from 'react';
+<<<<<<< Updated upstream
 import UksImg2 from "../../assets/img/doctor_img_rounded.png";
 import LogoImg from "../../assets/img/UKS2.png";
+=======
+import UksImg from "../../assets/img/doctor_img_rounded.png";
+import LogoImg from "../../assets/img/UKS2.png";
+
+
+>>>>>>> Stashed changes
 const RegisterPage = () => {
   return (
     <div className="flex min-h-screen font-poppins bg-white">
@@ -15,7 +22,7 @@ const RegisterPage = () => {
             Hallo, Teman<br />Selamat Datang!
           </h1>
 
-          <img src={UksImg2} alt="Doctor" className="w-60 h-60 mb-8" />
+          <img src={UksImg} alt="Doctor" className="w-60 h-60 mb-8" />
           <hr className="w-24 border-[1.5px] border-gray-400 mb-6" />
 
             <div className="text-center">

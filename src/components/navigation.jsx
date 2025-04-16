@@ -72,52 +72,61 @@ export default function Navigation() {
       </nav>
 
       {/* Mobile Menu */}
-      <Dialog open={mobileMenuOpen} onClose={setMobileMenuOpen} className="lg:hidden">
-        <DialogPanel className="fixed inset-y-0 right-0 z-10 w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
-          <div className="flex items-center justify-between">
-            <Link to="/" className="-m-1.5 p-1.5">
-              <span className="sr-only">Uks</span>
-              <img alt="Logo" src={UKS2Img} className="h-8 w-auto" />
-            </Link>
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen(false)}
-              className="-m-2.5 rounded-md p-2.5 text-gray-700"
-            >
-              <span className="sr-only">Close menu</span>
-              <XMarkIcon aria-hidden="true" className="size-6" />
-            </button>
-          </div>
-          <div className="mt-6 flow-root">
-            <div className="-my-6 divide-y divide-gray-500/10">
-              <div className="space-y-2 py-6">
-                {menuItems.map((item) => (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    className={`block rounded-lg px-3 py-2 text-base font-semibold 
-                      ${location.pathname === item.href ? "text-teal-500" : "text-gray-900"}`}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {item.name}
-                  </Link>
-                ))}
-              </div>
-              <div className="py-6">
+      <Dialog open={mobileMenuOpen} onClose={setMobileMenuOpen} className="relative z-50 lg:hidden">
+          <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+          
+          <div className="fixed top-4 right-4 z-50 w-[280px] rounded-xl bg-white shadow-lg ring-1 ring-gray-900/10 p-4">
+            <div className="flex items-center justify-between mb-4">
+              <Link to="/" className="-m-1.5 p-1.5">
+                <span className="sr-only">Uks</span>
+                <img alt="Logo" src={UKS2Img} className="h-8 w-auto" />
+              </Link>
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-md p-2 text-gray-700 hover:bg-gray-100"
+              >
+                <span className="sr-only">Close menu</span>
+                <XMarkIcon aria-hidden="true" className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              {menuItems.map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={`block rounded-md px-3 py-2 text-sm font-semibold 
+                    ${location.pathname === item.href ? "text-teal-500" : "text-gray-900"} hover:bg-gray-100`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {item.name}
+                </Link>
+              ))}
+
+              <div className="pt-3">
                 <Link
                   to="/login"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block w-full rounded-full px-2 py-2 text-base font-semibold 
-                    text-[#545657] bg-white border border-[#82AAAA] transition-colors duration-800 
-                    hover:bg-[#2A8F9E] hover:text-white focus:outline focus:ring-2 focus:ring-[#82AAAA]"
+                  className="block w-full text-center rounded-full px-3 py-2 text-sm font-semibold 
+                    text-[#545657] border border-[#82AAAA] hover:bg-[#2A8F9E] hover:text-white"
                 >
-                  Log In
+                  Sign in
+                </Link>
+              </div>
+              <div>
+                <Link
+                  to="/RegisterPage"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block w-full text-center rounded-full px-3 py-2 text-sm font-semibold 
+                    text-[#545657] border border-[#82AAAA] hover:bg-[#2A8F9E] hover:text-white"
+                >
+                  Sign Up
                 </Link>
               </div>
             </div>
           </div>
-        </DialogPanel>
-      </Dialog>
+        </Dialog>
     </header>
   );
 }

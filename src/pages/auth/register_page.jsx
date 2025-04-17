@@ -1,13 +1,7 @@
 import React from 'react';
-<<<<<<< Updated upstream
-import UksImg2 from "../../assets/img/doctor_img_rounded.png";
-import LogoImg from "../../assets/img/UKS2.png";
-=======
 import UksImg from "../../assets/img/doctor_img_rounded.png";
 import LogoImg from "../../assets/img/UKS2.png";
 
-
->>>>>>> Stashed changes
 const RegisterPage = () => {
   return (
     <div className="flex min-h-screen font-poppins bg-white">

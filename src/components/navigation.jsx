@@ -15,7 +15,7 @@ export default function Navigation() {
     // { name: "Kondisi", href: "/Kondisi" },
     { name: "Edukasi Kesehatan", href: "/edukasikesehatan" },
     { name: "About Us", href: "/aboutus" },
-    { name: "Antre", href: "/registerpage"}
+    { name: "Antre", href: "/newpass"}
   ];
 
   return (

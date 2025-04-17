@@ -6,6 +6,10 @@ import EdukasiKesehatan from "./pages/users/edukasiKesehatan";
 import AboutUs from "./pages/users/about_us";
 import RegisterPage from "./pages/auth/register_page";
 import LoginPage from "./pages/auth/login_page";
+import OtpPage from "./pages/auth/ootp_page";
+import GantiPasswordPage from "./pages/auth/new_password_page";
+
+
 
 
 
@@ -20,6 +24,8 @@ function App() {
         <Route path="/aboutus" element={<AboutUs />} />
         <Route path="/registerpage" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/ootp" element={<OtpPage />} />
+        <Route path="/newpass" element={<GantiPasswordPage />} />
       </Routes>
     </>
   );

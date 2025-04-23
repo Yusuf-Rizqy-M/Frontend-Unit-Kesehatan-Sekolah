@@ -8,11 +8,11 @@ import RegisterPage from "./pages/auth/register_page";
 import LoginPage from "./pages/auth/login_page";
 import OtpPage from "./pages/auth/ootp_page";
 import GantiPasswordPage from "./pages/auth/new_password_page";
-
-
-
-
-
+import MentalEdu from "./section/mental-edu";
+import FisikEdu from "./section/fisik-edu";
+import CegahSakit from "./section/cegahsakit-edu";
+import KebersihanDiri from "./section/kebersihandiri-edu";
+import PolaHidupSehat from "./section/hidupsehat-edu";
 function App() {
   return (
     <>
@@ -26,6 +26,12 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/ootp" element={<OtpPage />} />
         <Route path="/newpass" element={<GantiPasswordPage />} />
+        <Route path="/KesehatanMental" element={<MentalEdu/>} />
+        <Route path="/FisikEdu" element={<FisikEdu/>} />
+        <Route path="/CegahSakit" element={<CegahSakit/>} />
+        <Route path="/KebersihanDiri" element={<KebersihanDiri/>} />
+        <Route path="/PolaHidupSehat" element={<PolaHidupSehat/>} />
+
       </Routes>
     </>
   );

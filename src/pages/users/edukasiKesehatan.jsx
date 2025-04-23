@@ -1,4 +1,5 @@
 import Layout from '../../components/layout';
+import { Link } from 'react-router-dom';
 import MentalHealth from '../../assets/img/loveydovey.png';
 import KesehatanFisik from '../../assets/img/strong.png';
 import PencegahanPenyakit from '../../assets/img/shieldy2.png';
@@ -24,15 +25,26 @@ function EdukasiKesehatan() {
           Apa yang ingin <span className="text-[#005A79]">dibaca?</span>
         </h2>
         
+        {/* changed */}
         <div className="flex flex-wrap justify-center gap-6 mt-10">
-          <EducationCard title="Kesehatan Mental" icon={MentalHealth} onClick={() => console.log("Mental")} />
-          <EducationCard title="Pencegahan Penyakit" icon={PencegahanPenyakit} onClick={() => console.log("Pencegahan")} />
-          <EducationCard title="Kebersihan Diri" icon={KebersihanDiri} onClick={() => console.log("Kebersihan")} />
-          <EducationCard title="Kesehatan Fisik" icon={KesehatanFisik} onClick={() => console.log("Fisik")} />
-          <EducationCard title="Pola Hidup Sehat" icon={PolaHidupSehat} onClick={() => console.log("Hidup Sehat")} />
+          <Link to="/KesehatanMental">
+            <EducationCard title="Kesehatan Mental" icon={MentalHealth} />
+          </Link>
+          <Link to="/FisikEdu" >
+            <EducationCard title="Kesehatan Fisik" icon={KesehatanFisik} />
+          </Link>
+          <Link to="/CegahSakit" >
+            <EducationCard title="Pencegahan Penyakit " icon={PencegahanPenyakit} />
+          </Link>
+          <Link to="/KebersihanDiri" >
+            <EducationCard title="Kebersihan Diri " icon={KebersihanDiri} />
+          </Link>
+          <Link to="/PolaHidupSehat" >
+            <EducationCard title="Pola Hidup Sehat " icon={PolaHidupSehat} />
+          </Link>
         </div>
       </main>
-    </Layout>
+    </Layout>  
   );
 }
 

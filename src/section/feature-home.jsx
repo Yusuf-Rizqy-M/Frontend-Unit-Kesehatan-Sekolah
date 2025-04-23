@@ -37,26 +37,18 @@ const FeaturePage = () => {
           Feature UKS SMK Raden Umar Said
           <span className="absolute left-1/2 -translate-x-1/2 bottom-[-4px] w-0 group-hover:w-full transition-all duration-300 h-[3px] bg-[#4FB7BD]" />
         </h2>
-      </motion.div>
+      </motion.div>.
 
-      {/* Feature: Kalkulator BMI */}
-      <motion.div
-        className="relative z-10 flex flex-col md:flex-row items-center gap-6 md:gap-12"
-        variants={fadeInLeft}
-        initial="hidden"
-        whileInView="visible"
-        transition={{ duration: 0.7, delay: 0.2 }}
-        viewport={{ once: false, amount: 0.3 }}
-      >
-        <div className="w-24 md:w-40 flex-shrink-0">
-          <img src={Calculator} alt="calculatorimg" className="w-full h-auto object-contain" />
-        </div>
-        <div className="w-full md:w-3/4 text-left">
-          <h3 className="text-lg font-semibold text-gray-900 relative pb-2 w-fit">
+      
+      {/* changed */}
+      <motion.div> 
+      <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 md:gap-12 mt-10">
+        <div className="w-full md:w-1/2 text-center md:text-left">
+          <h3 className="text-lg font-semibold text-gray-900 relative pb-2 w-fit mx-auto md:mx-0">
             Kalkulator BMI
             <span className="absolute left-0 bottom-0 w-full h-[2px] bg-[#42B1EC]" />
           </h3>
-          <p className="mt-2 text-gray-600 max-w-2xl text-sm">
+          <p className="mt-2 text-gray-600 text-sm md:text-base max-w-2xl mx-auto md:mx-0">
             Cek kesehatanmu dengan Kalkulator BMI! Masukkan berat dan tinggi badan untuk mengetahui kategori berat badanmu—kurang, ideal, atau berlebih. Dapatkan juga rekomendasi untuk menjaga keseimbangan tubuh yang sehat.
           </p>
           <a
@@ -65,6 +57,7 @@ const FeaturePage = () => {
           >
             Explore Kalkulator BMI →
           </a>
+        </div>
         </div>
       </motion.div>
 
@@ -77,9 +70,9 @@ const FeaturePage = () => {
         transition={{ duration: 0.7, delay: 0.3 }}
         viewport={{ once: false, amount: 0.3 }}
       >
-        <div className="w-20 md:w-40 flex-shrink-0 pr-6">
+        {/* <div className="w-20 md:w-40 flex-shrink-0 pr-6">
           <img src={Recap} alt="recapimg" className="w-full h-auto" />
-        </div>
+        </div> */}
         <div className="w-full md:w-3/4 text-right">
           <h3 className="text-lg font-semibold text-gray-900 relative pb-2 w-fit ml-auto">
             Rekap Medis

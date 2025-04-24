@@ -13,6 +13,8 @@ import FisikEdu from "./section/fisik-edu";
 import CegahSakit from "./section/cegahsakit-edu";
 import KebersihanDiri from "./section/kebersihandiri-edu";
 import PolaHidupSehat from "./section/hidupsehat-edu";
+import InfoProfile from "./pages/users/info_profile";
+
 function App() {
   return (
     <>
@@ -31,7 +33,7 @@ function App() {
         <Route path="/CegahSakit" element={<CegahSakit/>} />
         <Route path="/KebersihanDiri" element={<KebersihanDiri/>} />
         <Route path="/PolaHidupSehat" element={<PolaHidupSehat/>} />
-
+        <Route path="/infoprofile" element={<InfoProfile/>} />
       </Routes>
     </>
   );

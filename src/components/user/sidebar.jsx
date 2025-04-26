@@ -1,7 +1,7 @@
 import React from "react";
 import { FaUserCog, FaInfoCircle, FaSignOutAlt } from "react-icons/fa";
 import { Link } from "react-router-dom";
-import UksLogo from "../assets/img/UKS2.png"; // Pastikan path gambar/logo UKS sesuai
+import UksLogo from "../../assets/img/UKS2.png";
 
 const SidebarProfile = () => {
   return (

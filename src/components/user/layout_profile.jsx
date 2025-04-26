@@ -1,5 +1,5 @@
 import React from "react";
-import SidebarProfile from "./sidebar"; // Sidebar kiri
+import SidebarProfile from "../sidebar"; // Sidebar kiri
 
 const LayoutProfile = ({ children }) => {
   return (

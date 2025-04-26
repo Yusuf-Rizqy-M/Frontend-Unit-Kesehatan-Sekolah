@@ -1,3 +1,4 @@
+// src/services/authService.js
 import api from '../api/auth';
 
 const AuthService = {
@@ -11,11 +12,11 @@ const AuthService = {
     const resData = response.data;
 
     if (resData.status) {
-      const { token, name, email } = resData.data;
+      const { token, name, email, role } = resData.data;
 
       return {
         token,
-        user: { name, email },
+        user: { name, email, role }, // Role ditambahkan di sini
       };
     } else {
       throw new Error(resData.message || "Login gagal");

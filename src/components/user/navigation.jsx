@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import UKS2Img from "../assets/img/UKS2.png";
+import UKS2Img from "../../assets/img/UKS2.png";
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 export default function Navigation() {

@@ -13,27 +13,43 @@ import FisikEdu from "./section/fisik-edu";
 import CegahSakit from "./section/cegahsakit-edu";
 import KebersihanDiri from "./section/kebersihandiri-edu";
 import PolaHidupSehat from "./section/hidupsehat-edu";
-import InfoProfile from "./pages/users/info_profile";
+import ProtectedRoute from "./routes/protectedRoute";
+import Dashboard from "./components/admin/dashboard";
+import UserRoute from "./routes/userRoute";
+import NotFound from "./pages/notfound";
 
 function App() {
   return (
     <>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/kalkulatorbmi" element={<KalkulatorBmi />} />
-        <Route path="/kondisi" element={<Kondisi />} />
-        <Route path="/edukasikesehatan" element={<EdukasiKesehatan />} />
-        <Route path="/aboutus" element={<AboutUs />} />
-        <Route path="/registerpage" element={<RegisterPage />} />
+        {/* Routes public */}
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/ootp" element={<OtpPage />} />
-        <Route path="/newpass" element={<GantiPasswordPage />} />
-        <Route path="/KesehatanMental" element={<MentalEdu/>} />
-        <Route path="/FisikEdu" element={<FisikEdu/>} />
-        <Route path="/CegahSakit" element={<CegahSakit/>} />
-        <Route path="/KebersihanDiri" element={<KebersihanDiri/>} />
-        <Route path="/PolaHidupSehat" element={<PolaHidupSehat/>} />
-        <Route path="/infoprofile" element={<InfoProfile/>} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/otp" element={<OtpPage />} />
+        <Route path="/gantipassword" element={<GantiPasswordPage />} />
+
+        {/* Routes user */}
+        <Route path="/" element={<UserRoute><Home /></UserRoute>} />
+        <Route path="/kalkulatorbmi" element={<UserRoute><KalkulatorBmi /></UserRoute>} />
+        <Route path="/kondisi" element={<UserRoute><Kondisi /></UserRoute>} />
+        <Route path="/edukasikesehatan" element={<UserRoute><EdukasiKesehatan /></UserRoute>} />
+        <Route path="/aboutus" element={<UserRoute><AboutUs /></UserRoute>} />
+        <Route path="/kesehatanmental" element={<UserRoute><MentalEdu /></UserRoute>} />
+        <Route path="/fisikedu" element={<UserRoute><FisikEdu /></UserRoute>} />
+        <Route path="/cegahsakit" element={<UserRoute><CegahSakit /></UserRoute>} />
+        <Route path="/kebersihandiri" element={<UserRoute><KebersihanDiri /></UserRoute>} />
+        <Route path="/polahidupsehat" element={<UserRoute><PolaHidupSehat /></UserRoute>} />
+
+        {/* Route admin */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
+
+        {/* Not Found */}
+        <Route path="/notfound" element={<NotFound />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   );

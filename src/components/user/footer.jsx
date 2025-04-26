@@ -1,5 +1,5 @@
 import { FaMapMarkerAlt, FaEnvelope, FaWhatsapp } from "react-icons/fa";
-import UksImg2 from "../assets/img/UKS2.png";
+import UksImg2 from "../../assets/img/UKS2.png";
 
 export default function Footer() {
   return (

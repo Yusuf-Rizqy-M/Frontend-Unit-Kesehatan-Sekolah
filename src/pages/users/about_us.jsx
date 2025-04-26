@@ -1,4 +1,4 @@
-import Layout from "../../components/layout";
+import Layout from '../../components/user/layout';
 import UksImg1 from "../../assets/img/hospital-room-interior.jpg";
 import UksImg2 from "../../assets/img/person_bg.png";
 

@@ -1,4 +1,4 @@
-import Layout from '../../components/layout';
+import Layout from '../../components/user/layout';
 import { useState } from 'react';
 import laki from "../../assets/img/laki.png"; // <--- Tambahin ini
 import Perempuan from "../../assets/img/Perempuan.png"; // <--- Tambahin ini

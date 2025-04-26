@@ -14,13 +14,18 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     const data = await login(email, password, remember);
     if (data) {
-      navigate("/");
+      const role = data.user.role;
+      if (role === "admin") {
+        navigate("/dashboard");
+      } else {
+        navigate("/");
+      }
     }
   };
-
+  
   return (
     <div className="flex flex-col lg:flex-row min-h-screen font-poppins bg-white">
       {/* Left Side */}

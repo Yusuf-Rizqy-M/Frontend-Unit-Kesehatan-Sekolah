@@ -1,4 +1,5 @@
-import Layout from '../../components/layout';
+import Layout from '../../components/user/layout';
+
 import { Link } from 'react-router-dom';
 import MentalHealth from '../../assets/img/loveydovey.png';
 import KesehatanFisik from '../../assets/img/strong.png';
@@ -27,7 +28,7 @@ function EdukasiKesehatan() {
         
         {/* changed */}
         <div className="flex flex-wrap justify-center gap-6 mt-10">
-          <Link to="/KesehatanMental">
+          <Link to="/kesehatanmental">
             <EducationCard title="Kesehatan Mental" icon={MentalHealth} />
           </Link>
           <Link to="/FisikEdu" >

@@ -1,4 +1,4 @@
-import Layout from '../../components/layout';
+import Layout from '../../components/user/layout';
 import HeroSection from '../../section/hero-home';
 import FeatureSection from '../../section/feature-home';
 import HealthcareTeam from "../../section/healthcare-home";

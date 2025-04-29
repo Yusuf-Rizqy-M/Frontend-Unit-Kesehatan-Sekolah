@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 
 import SearchModal from '../components/ModalSearch';
-import Notifications from '../components/DropdownNotifications';
-import Help from '../components/DropdownHelp';
-import UserMenu from '../components/DropdownProfile';
+import Notifications from '../components/dropdown/DropdownNotifications';
+import UserMenu from '../components/dropdown/DropdownProfile';
 import ThemeToggle from '../components/ThemeToggle';
 
 function Header({
@@ -62,7 +61,6 @@ function Header({
               <SearchModal id="search-modal" searchId="search" modalOpen={searchModalOpen} setModalOpen={setSearchModalOpen} />
             </div>
             <Notifications align="right" />
-            <Help align="right" />
             <ThemeToggle />
             {/*  Divider */}
             <hr className="w-px h-6 bg-gray-200 dark:bg-gray-700/60 border-none" />

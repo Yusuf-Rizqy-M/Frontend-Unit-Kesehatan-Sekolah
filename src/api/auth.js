@@ -1,4 +1,3 @@
-// src/api/auth.js
 import axios from 'axios';
 
 export const API_URL = 'https://api-uks.rplrus.com/api';

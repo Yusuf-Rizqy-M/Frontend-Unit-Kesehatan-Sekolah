@@ -20,7 +20,10 @@ import FisikEdu from './section/fisik-edu';
 import CegahSakit from './section/cegahsakit-edu';
 import KebersihanDiri from './section/kebersihandiri-edu';
 import PolaHidupSehat from './section/hidupsehat-edu';
+import AntreUser from './pages/user/antre-user';
+import AntreAfter from './pages/user/antre-after';
 import NotFound from './pages/notfound';
+
 
 // Import Protected Routes
 import ProtectedRoute from './routes/protectedRoute';
@@ -28,6 +31,7 @@ import UserRoute from './routes/userRoute';
 
 // Import Admin Page
 import Dashboard from './pages/admin/Dashboard'; // Admin dashboard
+// import Antre from './pages/user/antre-user';
 
 function App() {
   const location = useLocation();
@@ -42,7 +46,6 @@ function App() {
     <Routes>
       {/* Public Routes */}
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
       <Route path="/otp" element={<OtpPage />} />
       <Route path="/gantipassword" element={<GantiPasswordPage />} />
 
@@ -57,6 +60,9 @@ function App() {
       <Route path="/cegahsakit" element={<UserRoute><CegahSakit /></UserRoute>} />
       <Route path="/kebersihandiri" element={<UserRoute><KebersihanDiri /></UserRoute>} />
       <Route path="/polahidupsehat" element={<UserRoute><PolaHidupSehat /></UserRoute>} />
+      <Route path="/antreuser" element={<UserRoute><AntreUser /></UserRoute>} />
+      <Route path="/antreafter" element={<UserRoute><AntreAfter /></UserRoute>} />
+      {/* <Route path="/registerpage" element={<RegisterPage />} /> */}
 
       {/* Admin Route */}
       <Route path="/dashboard" element={
@@ -64,6 +70,12 @@ function App() {
           <Dashboard />
         </ProtectedRoute>
       } />
+      <Route path="/registerpage" element={
+        <ProtectedRoute allowedRoles={["admin"]}>
+          <RegisterPage />
+        </ProtectedRoute>
+      } />
+      
 
       {/* Not Found */}
       <Route path="/notfound" element={<NotFound />} />

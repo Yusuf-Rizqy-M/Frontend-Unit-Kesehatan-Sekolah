@@ -64,7 +64,7 @@ export default function Navigation() {
   const menuItems = [
     { name: "Home", href: "/" },
     { name: "Kalkulator BMI", href: "/kalkulatorbmi" },
-    { name: "Antrian", href: "/antrian" },
+    { name: "Antrian", href: "/antreuser" },
     { name: "Edukasi Kesehatan", href: "/edukasikesehatan" },
     { name: "About Us", href: "/aboutus" },
   ];

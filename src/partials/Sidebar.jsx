@@ -81,7 +81,7 @@ function Sidebar({
           </button>
           {/* Logo */}
           <NavLink end to="/" className="block">
-          <img src={UKS2} alt="UKS Logo" className="w-10 h-auto" />
+            <img src={UKS2} alt="UKS Logo" className="w-10 h-auto" />
           </NavLink>
         </div>
 
@@ -130,7 +130,7 @@ function Sidebar({
                         </div>
                       </a>
                       <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
-                        <ul className={`pl-8 mt-1 ${!open && "hidden"}`}>
+                        <ul className={`pl-8 mt-1 flex flex-col items-start ${!open && "hidden"}`}>
                           <li className="mb-1 last:mb-0">
                             <NavLink
                               end
@@ -150,8 +150,8 @@ function Sidebar({
                   );
                 }}
               </SidebarLinkGroup>
-               {/* Rekam Medis */}
-               <SidebarLinkGroup activecondition={pathname.includes("utility")}>
+              {/* Rekam Medis */}
+              <SidebarLinkGroup activecondition={pathname.includes("utility")}>
                 {(handleClick, open) => {
                   return (
                     <React.Fragment>
@@ -184,7 +184,7 @@ function Sidebar({
                         </div>
                       </a>
                       <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
-                        <ul className={`pl-8 mt-1 ${!open && "hidden"}`}>
+                        <ul className={`pl-8 mt-1 flex flex-col items-start ${!open && "hidden"}`}>
                           <li className="mb-1 last:mb-0">
                             <NavLink
                               end
@@ -250,7 +250,7 @@ function Sidebar({
                         </div>
                       </a>
                       <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
-                        <ul className={`pl-8 mt-1 ${!open && "hidden"}`}>
+                        <ul className={`pl-8 mt-1 flex flex-col items-start ${!open && "hidden"}`}>
                           <li className="mb-1 last:mb-0">
                             <NavLink
                               end
@@ -317,7 +317,7 @@ function Sidebar({
                         </div>
                       </a>
                       <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
-                        <ul className={`pl-8 mt-1 ${!open && "hidden"}`}>
+                        <ul className={`pl-8 mt-1 flex flex-col items-start ${!open && "hidden"}`}>
                           <li className="mb-1 last:mb-0">
                             <NavLink
                               end
@@ -437,7 +437,7 @@ function Sidebar({
                         </div>
                       </a>
                       <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
-                        <ul className={`pl-8 mt-1 ${!open && "hidden"}`}>
+                        <ul className={`pl-8 mt-1 flex flex-col items-start ${!open && "hidden"}`}>
                           <li className="mb-1 last:mb-0">
                             <NavLink
                               end
@@ -484,7 +484,7 @@ function Sidebar({
                   );
                 }}
               </SidebarLinkGroup>
-             
+
             </ul>
           </div>
           {/* More group */}
@@ -528,11 +528,11 @@ function Sidebar({
                         </div>
                       </a>
                       <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
-                        <ul className={`pl-8 mt-1 ${!open && "hidden"}`}>
+                        <ul className={`pl-8 mt-1 flex flex-col items-start ${!open && "hidden"}`}>
                           <li className="mb-1 last:mb-0">
                           </li>
                           <li className="mb-1 last:mb-0">
-                            <NavLink end to="/registerpage">
+                            <NavLink end to="https://cruip.com/mosaic/ dark:hover:text-gray-200 transition duration-150 truncate">
                               <span className="text-sm font-medium lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
                                 Sign up
                               </span>
@@ -551,8 +551,8 @@ function Sidebar({
                   );
                 }}
               </SidebarLinkGroup>
-             
-             
+
+
             </ul>
           </div>
         </div>

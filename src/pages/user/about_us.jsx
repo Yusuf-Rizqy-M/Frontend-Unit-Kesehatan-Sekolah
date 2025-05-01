@@ -6,7 +6,7 @@ const pengurusData = [
   {
     nama: "Budi Santoso",
     jabatan: "Ketua UKS",
-    deskripsi: "Memimpin dan mengkoordinasi seluruh kegiatan UKS di sekolah.",
+    deskripsi: "Memzimpin dan mengkoordinasi seluruh kegiatan UKS di sekolah.",
     foto: UksImg2,
   },
   {

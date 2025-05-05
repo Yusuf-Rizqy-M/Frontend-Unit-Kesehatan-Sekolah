@@ -19,6 +19,8 @@ import EdukasiKesehatan from "./pages/user/edukasiKesehatan";
 import AboutUs from "./pages/user/about_us";
 import InfoProfile from "./pages/user/info_profile";
 import EditProfile from "./pages/user/edit_profile";
+import AntreUser from "./pages/user/antre-user";
+import AntreAfter from "./pages/user/antre-after";
 
 // Edukasi sections
 import MentalEdu from "./section/mental-edu";
@@ -64,7 +66,8 @@ function App() {
         <Route path="/aboutus" element={<UserRoute><AboutUs /></UserRoute>} />
         <Route path="/infoprofile" element={<UserRoute><InfoProfile /></UserRoute>} />
         <Route path="/editprofile" element={<UserRoute><EditProfile /></UserRoute>} />
-
+        <Route path="/antreuser" element={<UserRoute><AntreUser /></UserRoute>} />
+        <Route path="/antreafter" element={<UserRoute><AntreAfter /></UserRoute>} />
 
         {/* Edukasi detail routes */}
         <Route path="/kesehatanmental" element={<UserRoute><MentalEdu /></UserRoute>} />

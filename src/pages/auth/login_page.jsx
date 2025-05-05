@@ -104,7 +104,7 @@ const LoginPage = () => {
           </button>
 
           <div className="text-center mt-4">
-            <a href="/ootp" className="text-sm text-gray-800 font-semibold underline">Lupa password?</a>
+            <a href="/forgot-password" className="text-sm text-gray-800 font-semibold underline">Lupa password?</a>
           </div>
         </form>
 

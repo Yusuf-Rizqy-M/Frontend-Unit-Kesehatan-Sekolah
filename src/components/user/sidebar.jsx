@@ -25,7 +25,7 @@ const SidebarProfile = () => {
             className="flex items-center justify-start gap-2 w-full text-teal-700 bg-white px-4 py-2 rounded-md"
           >
             <FaInfoCircle />
-            <span className="text-left">Profile Setting</span>
+            <span className="text-left">Edit Profile</span>
           </Link>
         </nav>
       </div>

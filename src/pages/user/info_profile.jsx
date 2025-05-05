@@ -1,5 +1,5 @@
 import React from "react";
-import LayoutProfile from "../../components/layout_profile";
+import LayoutProfile from "../../components/user/layout_profile";
 import ProfileImg from "../../assets/img/doctor_img_rounded.png";
 import MaleIcon from "../../assets/img/gendermale.png";
 

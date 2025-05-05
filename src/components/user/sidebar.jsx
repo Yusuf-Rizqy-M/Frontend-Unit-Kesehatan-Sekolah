@@ -14,18 +14,18 @@ const SidebarProfile = () => {
         {/* Navigasi utama */}
         <nav className="space-y-4">
           <Link
-            to="/profilesettings"
+            to="/infoprofile"
             className="flex items-center justify-start gap-2 w-full text-white bg-teal-600 px-4 py-2 rounded-md"
           >
             <FaUserCog />
-            <span className="text-left">Profile settings</span>
+            <span className="text-left">Info profile</span>
           </Link>
           <Link
-            to="/infoprofile"
+            to="/editprofile"
             className="flex items-center justify-start gap-2 w-full text-teal-700 bg-white px-4 py-2 rounded-md"
           >
             <FaInfoCircle />
-            <span className="text-left">Info profile</span>
+            <span className="text-left">Profile Setting</span>
           </Link>
         </nav>
       </div>

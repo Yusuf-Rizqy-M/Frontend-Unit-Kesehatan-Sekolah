@@ -21,7 +21,7 @@ function AntreUser() {
                 </div>
 
                 {/* Sub Header */}
-                <h2 className="mt-10 text-2xl font-semibold text-[#1C4245] text-center z-10 relative">
+                <h2 className="mt-6 text-2xl font-semibold text-[#1C4245] text-center z-10 relative">
                     Antrean sekarang
                 </h2>
 
@@ -31,7 +31,7 @@ function AntreUser() {
                 </div>
 
                 {/* Kotak Putih Bawah */}
-                <div className="w-[800px] max-w-full bg-white mx-auto mt-16 mb-20 rounded-xl shadow-lg z-10 flex flex-col md:flex-row border border-[#A2A2A2]">
+                <div className="w-[800px] max-w-full bg-white mx-auto mt-10 mb-20 rounded-xl shadow-lg z-10 flex flex-col md:flex-row border border-[#A2A2A2]">
                     {/* Kiri - Form */}
                     <div className="w-full md:w-1/2 p-6 flex flex-col justify-between">
                         <div>

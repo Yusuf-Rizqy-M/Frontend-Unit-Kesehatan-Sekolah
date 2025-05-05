@@ -14,13 +14,18 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     const data = await login(email, password, remember);
     if (data) {
-      navigate("/");
+      const role = data.user.role;
+      if (role === "admin") {
+        navigate("/dashboard");
+      } else {
+        navigate("/");
+      }
     }
   };
-
+  
   return (
     <div className="flex flex-col lg:flex-row min-h-screen font-poppins bg-white">
       {/* Left Side */}
@@ -99,7 +104,7 @@ const LoginPage = () => {
           </button>
 
           <div className="text-center mt-4">
-            <a href="/ootp" className="text-sm text-gray-800 font-semibold underline">Lupa password?</a>
+            <a href="/forgot-password" className="text-sm text-gray-800 font-semibold underline">Lupa password?</a>
           </div>
         </form>
 

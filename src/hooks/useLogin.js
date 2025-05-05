@@ -1,6 +1,5 @@
-// src/hooks/useLogin.js
 import { useState } from "react";
-import AuthService from "../services/authService"; // pastikan path benar
+import AuthService from "../services/authService"; 
 
 const useLogin = () => {
   const [loading, setLoading] = useState(false);
@@ -14,6 +13,7 @@ const useLogin = () => {
       const data = await AuthService.login(email, password, remember);
 
       const storage = remember ? localStorage : sessionStorage;
+      
       storage.setItem("token", data.token);
       storage.setItem("user", JSON.stringify(data.user));
 

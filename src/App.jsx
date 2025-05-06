@@ -32,6 +32,7 @@ import PolaHidupSehat from "./section/hidupsehat-edu";
 // Admin
 import Dashboard from "./pages/admin/dashboard";
 import ManajemenUser from "./pages/admin/ManajemenUser";
+import UploadBlog from "./pages/admin/upload_blog";
 
 // Routes
 import ProtectedRoute from "./routes/protectedRoute";
@@ -59,40 +60,155 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
         {/* User protected routes */}
-        <Route path="/" element={<UserRoute><Home /></UserRoute>} />
-        <Route path="/kalkulatorbmi" element={<UserRoute><KalkulatorBmi /></UserRoute>} />
-        <Route path="/kondisi" element={<UserRoute><Kondisi /></UserRoute>} />
-        <Route path="/edukasikesehatan" element={<UserRoute><EdukasiKesehatan /></UserRoute>} />
-        <Route path="/aboutus" element={<UserRoute><AboutUs /></UserRoute>} />
-        <Route path="/infoprofile" element={<UserRoute><InfoProfile /></UserRoute>} />
-        <Route path="/editprofile" element={<UserRoute><EditProfile /></UserRoute>} />
-        <Route path="/antreuser" element={<UserRoute><AntreUser /></UserRoute>} />
-        <Route path="/antreafter" element={<UserRoute><AntreAfter /></UserRoute>} />
+        <Route
+          path="/"
+          element={
+            <UserRoute>
+              <Home />
+            </UserRoute>
+          }
+        />
+        <Route
+          path="/kalkulatorbmi"
+          element={
+            <UserRoute>
+              <KalkulatorBmi />
+            </UserRoute>
+          }
+        />
+        <Route
+          path="/kondisi"
+          element={
+            <UserRoute>
+              <Kondisi />
+            </UserRoute>
+          }
+        />
+        <Route
+          path="/edukasikesehatan"
+          element={
+            <UserRoute>
+              <EdukasiKesehatan />
+            </UserRoute>
+          }
+        />
+        <Route
+          path="/aboutus"
+          element={
+            <UserRoute>
+              <AboutUs />
+            </UserRoute>
+          }
+        />
+        <Route
+          path="/infoprofile"
+          element={
+            <UserRoute>
+              <InfoProfile />
+            </UserRoute>
+          }
+        />
+        <Route
+          path="/editprofile"
+          element={
+            <UserRoute>
+              <EditProfile />
+            </UserRoute>
+          }
+        />
+        <Route
+          path="/antreuser"
+          element={
+            <UserRoute>
+              <AntreUser />
+            </UserRoute>
+          }
+        />
+        <Route
+          path="/antreafter"
+          element={
+            <UserRoute>
+              <AntreAfter />
+            </UserRoute>
+          }
+        />
 
         {/* Edukasi detail routes */}
-        <Route path="/kesehatanmental" element={<UserRoute><MentalEdu /></UserRoute>} />
-        <Route path="/fisikedu" element={<UserRoute><FisikEdu /></UserRoute>} />
-        <Route path="/cegahsakit" element={<UserRoute><CegahSakit /></UserRoute>} />
-        <Route path="/kebersihandiri" element={<UserRoute><KebersihanDiri /></UserRoute>} />
-        <Route path="/polahidupsehat" element={<UserRoute><PolaHidupSehat /></UserRoute>} />
+        <Route
+          path="/kesehatanmental"
+          element={
+            <UserRoute>
+              <MentalEdu />
+            </UserRoute>
+          }
+        />
+        <Route
+          path="/fisikedu"
+          element={
+            <UserRoute>
+              <FisikEdu />
+            </UserRoute>
+          }
+        />
+        <Route
+          path="/cegahsakit"
+          element={
+            <UserRoute>
+              <CegahSakit />
+            </UserRoute>
+          }
+        />
+        <Route
+          path="/kebersihandiri"
+          element={
+            <UserRoute>
+              <KebersihanDiri />
+            </UserRoute>
+          }
+        />
+        <Route
+          path="/polahidupsehat"
+          element={
+            <UserRoute>
+              <PolaHidupSehat />
+            </UserRoute>
+          }
+        />
 
         {/* Admin dashboard route */}
-        <Route path="/dashboard" element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <Dashboard />
-          </ProtectedRoute>
-        } />
-        <Route path="/manajemenuser" element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <ManajemenUser />
-          </ProtectedRoute>
-        } />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manajemenuser"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <ManajemenUser />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/uploadblog"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <UploadBlog />
+            </ProtectedRoute>
+          }
+        />
 
-        <Route path="/register" element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <RegisterPage />
-          </ProtectedRoute>
-        } />
+        <Route
+          path="/register"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <RegisterPage />
+            </ProtectedRoute>
+          }
+        />
 
         {/* 404 fallback */}
         <Route path="/notfound" element={<NotFound />} />

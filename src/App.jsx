@@ -31,6 +31,7 @@ import PolaHidupSehat from "./section/hidupsehat-edu";
 
 // Admin
 import Dashboard from "./pages/admin/dashboard";
+import ManajemenUser from "./pages/admin/ManajemenUser";
 
 // Routes
 import ProtectedRoute from "./routes/protectedRoute";
@@ -53,7 +54,6 @@ function App() {
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
         <Route path="/otp" element={<OtpPage />} />
         <Route path="/gantipassword" element={<GantiPasswordPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -80,6 +80,17 @@ function App() {
         <Route path="/dashboard" element={
           <ProtectedRoute allowedRoles={["admin"]}>
             <Dashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/manajemenuser" element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <ManajemenUser />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/register" element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <RegisterPage />
           </ProtectedRoute>
         } />
 

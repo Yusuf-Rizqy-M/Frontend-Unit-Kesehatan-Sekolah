@@ -1,6 +1,6 @@
 import React from "react";
 import { FaUserCog, FaInfoCircle, FaSignOutAlt } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
 import UksLogo from "../../assets/img/UKS2.png";
 
 const SidebarProfile = () => {
@@ -13,20 +13,32 @@ const SidebarProfile = () => {
         </div>
         {/* Navigasi utama */}
         <nav className="space-y-4">
-          <Link
+          <NavLink
             to="/infoprofile"
-            className="flex items-center justify-start gap-2 w-full text-white bg-teal-600 px-4 py-2 rounded-md"
+            className={({ isActive }) =>
+              `flex items-center justify-start gap-2 w-full px-4 py-2 rounded-md transition-colors duration-200 ${
+                isActive
+                  ? "text-white bg-teal-600 hover:bg-teal-700"
+                  : "text-teal-700 bg-white hover:bg-teal-50 hover:text-teal-800 hover:shadow-md"
+              }`
+            }
           >
             <FaUserCog />
             <span className="text-left">Info profile</span>
-          </Link>
-          <Link
+          </NavLink>
+          <NavLink
             to="/editprofile"
-            className="flex items-center justify-start gap-2 w-full text-teal-700 bg-white px-4 py-2 rounded-md"
+            className={({ isActive }) =>
+              `flex items-center justify-start gap-2 w-full px-4 py-2 rounded-md transition-colors duration-200 ${
+                isActive
+                  ? "text-white bg-teal-600 hover:bg-teal-700"
+                  : "text-teal-700 bg-white hover:bg-teal-50 hover:text-teal-800 hover:shadow-md"
+              }`
+            }
           >
             <FaInfoCircle />
             <span className="text-left">Edit Profile</span>
-          </Link>
+          </NavLink>
         </nav>
       </div>
 
@@ -34,7 +46,7 @@ const SidebarProfile = () => {
       <div className="mt-auto">
         <Link
           to="/"
-          className="flex items-center justify-start gap-2 w-full text-white bg-red-500 px-4 py-2 rounded-md"
+          className="flex items-center justify-start gap-2 w-full text-white bg-red-500 px-4 py-2 rounded-md hover:bg-red-600 hover:shadow-md transition-colors duration-200"
         >
           <FaSignOutAlt />
           <span className="text-left">Keluar</span>

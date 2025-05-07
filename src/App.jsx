@@ -55,9 +55,10 @@ function App() {
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/otp" element={<OtpPage />} />
         <Route path="/gantipassword" element={<GantiPasswordPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+       
 
         {/* User protected routes */}
         <Route

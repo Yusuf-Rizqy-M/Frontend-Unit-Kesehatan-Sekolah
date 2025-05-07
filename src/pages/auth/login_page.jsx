@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import useLogin from "../../hooks/useLogin";
 import UksImg2 from "../../assets/img/doctor_img_rounded.png";
 import LogoImg from "../../assets/img/UKS2.png";
+import { Link } from "react-router-dom";
 
 const LoginPage = () => {
   const { login, loading, error } = useLogin();
@@ -154,7 +155,9 @@ const LoginPage = () => {
           </button>
 
           <div className="text-center mt-4">
-            <a href="/forgot-password" className="text-sm text-gray-800 font-semibold underline">Lupa password?</a>
+            <Link to="/forgot-password" className="text-sm text-gray-800 font-semibold underline">
+              Lupa password?
+            </Link>
           </div>
         </form>
 

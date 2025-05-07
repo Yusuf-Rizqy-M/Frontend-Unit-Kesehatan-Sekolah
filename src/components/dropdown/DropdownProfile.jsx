@@ -2,11 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Transition from '../../utils/Transition';
 import UserAvatar from '../../images/user-avatar-32.png';
-
+import warning from '../../assets/img/warning.png';
 function DropdownProfile({ align }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [nickname, setNickname] = useState('Admin UKS');
   const [email, setEmail] = useState('admin@uks.com');
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false); // State for logout confirmation popup
   const trigger = useRef(null);
   const dropdown = useRef(null);
   const navigate = useNavigate();
@@ -39,12 +40,25 @@ function DropdownProfile({ align }) {
   }, []);
 
   const handleLogout = () => {
+    // Show confirmation popup instead of logging out immediately
+    setShowLogoutConfirm(true);
+    setDropdownOpen(false); // Close dropdown when showing popup
+  };
+
+  const confirmLogout = () => {
+    // Proceed with logout
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('user');
     window.dispatchEvent(new Event("storage"));
     navigate('/');
+    setShowLogoutConfirm(false);
+  };
+
+  const cancelLogout = () => {
+    // Close popup without logging out
+    setShowLogoutConfirm(false);
   };
 
   // Close dropdown on outside click
@@ -122,6 +136,35 @@ function DropdownProfile({ align }) {
           </ul>
         </div>
       </Transition>
+
+      {/* Logout Confirmation Popup */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md text-center shadow-lg relative">
+            <div className="flex justify-center mb-4">
+              <img src={warning} alt="Warning" className="w-16 h-16" />
+            </div>
+            <h2 className="text-xl font-bold text-red-600 mb-2">Yakin ingin Logout Akun?</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+              Fitur ini digunakan untuk keluar dari sistem secara aman. Saat pengguna menekan tombol logout, seluruh pengaturan dan data yang belum tersimpan akan dihapus. Tolong simpan dulu progressmu sebelum logout kalau sudah logout saja.
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={cancelLogout}
+                className="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100"
+              >
+                Batal
+              </button>
+              <button
+                onClick={confirmLogout}
+                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              >
+                Lanjutkan, Logout Akun
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -233,11 +233,21 @@ const EditProfile = () => {
 
         {loading && <p className="text-gray-600">Saving...</p>}
 
-
         <div className="flex flex-col lg:flex-row gap-12">
           <div className="lg:w-2/3 space-y-4">
-            <InputField label="Name" name="name" value={formData.name} onChange={handleChange} />
-            <InputField label="Email" name="email" value={formData.email} onChange={handleChange} />
+            <InputField
+              label="Name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              readOnly
+            />
+            <InputField
+              label="Email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+            />
             <InputField
               label="Nomor Telepon"
               name="phone_number"
@@ -260,9 +270,9 @@ const EditProfile = () => {
                       onClick={() => handleGenderClick(value)}
                       className={`w-12 h-12 cursor-pointer p-1 rounded-full border-2 ${
                         formData.gender === value
-                          ? value === "m"
+                          ? value === "male"
                             ? "border-blue-500"
-                            : value === "f"
+                            : value === "female"
                             ? "border-pink-500"
                             : "border-gray-500"
                           : "border-transparent"
@@ -342,8 +352,6 @@ const EditProfile = () => {
               </button>
             </div>
           </div>
-
-     
         </div>
       </div>
     </LayoutProfile>

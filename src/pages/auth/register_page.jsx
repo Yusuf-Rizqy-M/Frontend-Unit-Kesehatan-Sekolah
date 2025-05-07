@@ -33,7 +33,16 @@ const RegisterPage = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === "name_department") {
+    if (name === "role") {
+      // Reset class-related fields if role is admin
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+        class: value === "admin" ? "" : prev.class,
+        name_department: value === "admin" ? "" : prev.name_department,
+        name_grades: value === "admin" ? "" : prev.name_grades,
+      }));
+    } else if (name === "name_department") {
       setFormData((prev) => ({
         ...prev,
         [name]: value,
@@ -243,38 +252,40 @@ const RegisterPage = () => {
             </select>
           </div>
 
-          <div className="mb-4">
-            <label className="text-xs font-semibold text-gray-600 mb-1 block">Kelas & Jurusan</label>
-            <div className="flex flex-col md:flex-row gap-2">
-              <select name="class" value={formData.class} onChange={handleChange}
-                className="flex-1 px-4 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm text-black focus:outline-none focus:ring-2 focus:ring-cyan-400">
-                <option value="">Kelas</option>
-                <option value="10">10</option>
-                <option value="11">11</option>
-                <option value="12">12</option>
-              </select>
+          {formData.role === "user" && (
+            <div className="mb-4">
+              <label className="text-xs font-semibold text-gray-600 mb-1 block">Kelas & Jurusan</label>
+              <div className="flex flex-col md:flex-row gap-2">
+                <select name="class" value={formData.class} onChange={handleChange}
+                  className="flex-1 px-4 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm text-black focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                  <option value="">Kelas</option>
+                  <option value="10">10</option>
+                  <option value="11">11</option>
+                  <option value="12">12</option>
+                </select>
 
-              <select name="name_department" value={formData.name_department} onChange={handleChange}
-                className="flex-1 px-4 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm text-black focus:outline-none focus:ring-2 focus:ring-cyan-400">
-                <option value="">Jurusan</option>
-                <option value="RPL">RPL</option>
-                <option value="DKV DG">DKV DG</option>
-                <option value="DKV TG">DKV TG</option>
-                <option value="Animasi 3D">Animasi 3D</option>
-                <option value="Animasi 2D">Animasi 2D</option>
-              </select>
+                <select name="name_department" value={formData.name_department} onChange={handleChange}
+                  className="flex-1 px-4 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm text-black focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                  <option value="">Jurusan</option>
+                  <option value="RPL">RPL</option>
+                  <option value="DKV DG">DKV DG</option>
+                  <option value="DKV TG">DKV TG</option>
+                  <option value="Animasi 3D">Animasi 3D</option>
+                  <option value="Animasi 2D">Animasi 2D</option>
+                </select>
 
-              <select name="name_grades" value={formData.name_grades} onChange={handleChange}
-                disabled={!formData.name_department}
-                className="flex-1 px-4 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm text-black focus:outline-none focus:ring-2 focus:ring-cyan-400">
-                <option value="">No. Kelas</option>
-                {formData.name_department &&
-                  gradeOptions[formData.name_department].map((grade) => (
-                    <option key={grade} value={grade}>{grade}</option>
-                  ))}
-              </select>
+                <select name="name_grades" value={formData.name_grades} onChange={handleChange}
+                  disabled={!formData.name_department}
+                  className="flex-1 px-4 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm text-black focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                  <option value="">No. Kelas</option>
+                  {formData.name_department &&
+                    gradeOptions[formData.name_department].map((grade) => (
+                      <option key={grade} value={grade}>{grade}</option>
+                    ))}
+                </select>
+              </div>
             </div>
-          </div>
+          )}
 
           <button type="submit"
             className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 rounded-md text-sm transition-colors duration-200">

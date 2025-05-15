@@ -5,7 +5,7 @@ import UksImg from "../../assets/img/doctor_img_rounded.png";
 import LogoImg from "../../assets/img/UKS2.png";
 
 const gradeOptions = {
-  RPL: ["RPL 1", "RPL 2"],
+  RPL: ["RPL 1", " Diploma"],
   "Animasi 3D": ["Animasi 3D 1", "Animasi 3D 2", "Animasi 3D 3"],
   "Animasi 2D": ["Animasi 2D 4", "Animasi 2D 5"],
   "DKV DG": ["DKV DG 1", "DKV DG 2", "DKV DG 3"],
@@ -57,6 +57,13 @@ const RegisterPage = () => {
     e.preventDefault();
     setError(null);
 
+    // Password length validation
+    if (formData.password.length < 8 || formData.confirm_password.length < 8) {
+      setError("Password minimal 8 karakter.");
+      return;
+    }
+
+    // Password confirmation match validation
     if (formData.password !== formData.confirm_password) {
       setError("Password dan konfirmasi tidak sama.");
       return;

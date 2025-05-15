@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import DoctorImg from "../assets/img/doctor_img.png";
+import '../assets/style/index.css';
 
 const HeroSection = () => {
   const [refLeft, inViewLeft] = useInView({ triggerOnce: false });
@@ -33,7 +34,7 @@ const HeroSection = () => {
         ref={refRight}
         className="md:w-1/2 flex justify-center mt-6 md:mt-0"
         initial={{ opacity: 0, x: 100 }}
-        animate={inViewRight ? { opacity: 1, x: 0 } : { opacity: 0, x: 100 }}
+        animate={inViewRight ? { opacity: 1, x: 0 } : { opacity: 0, x: 0 }}
         transition={{ duration: 0.8, delay: 0.3 }}
       >
         <img

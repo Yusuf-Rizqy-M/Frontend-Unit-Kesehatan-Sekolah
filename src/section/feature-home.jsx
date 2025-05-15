@@ -10,7 +10,7 @@ const fadeInLeft = {
 };
 
 const fadeInRight = {
-  hidden: { opacity: 0, x: 50 },
+  hidden: { opacity: 0, x: 1 },
   visible: { opacity: 1, x: 0 },
 };
 

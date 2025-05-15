@@ -64,8 +64,10 @@ export default function UploadBlog() {
               Upload new article
             </h1>
 
-            <div className="rounded-[10px] p-4 flex items-center gap-4 mb-1">
-              <div className="relative flex-1">
+            <div className="bg-[#9BC7B6] dark:bg-[#051D4E] rounded-[10px] p-4 flex items-center gap-4 mb-6">
+              <div className="relative flex-1 min-w-0">
+                <span className="absolute inset-y-0 left-3 flex items-center text-[#6D9C9D] dark:text-gray-400">
+                </span>
                 <input
                   type="text"
                   placeholder="Masukkan judul"

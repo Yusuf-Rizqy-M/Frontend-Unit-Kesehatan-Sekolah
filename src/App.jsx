@@ -21,6 +21,7 @@ import InfoProfile from "./pages/user/info_profile";
 import EditProfile from "./pages/user/edit_profile";
 import AntreUser from "./pages/user/antre-user";
 import AntreAfter from "./pages/user/antre-after";
+import Antrian from "./pages/user/antrian";
 
 // Edukasi sections
 import MentalEdu from "./section/mental-edu";
@@ -30,16 +31,22 @@ import KebersihanDiri from "./section/kebersihandiri-edu";
 import PolaHidupSehat from "./section/hidupsehat-edu";
 
 // Admin
-import Dashboard from "./pages/admin/dashboard";
+import Dashboard from "./pages/admin/Dashboard";
 import ManajemenUser from "./pages/admin/ManajemenUser";
 import UploadBlog from "./pages/admin/upload_blog";
+import KategoriPage from "./pages/admin/Kategori";
+import StudentMedicalRecord from "./pages/admin/rekam_medis_siswa";
+import MedicalRecord from "./pages/admin/detail_rekam_medas"; // Already imported
+import RekamMedisSiswa from "./pages/admin/rekam_medis_siswa"; // Already imported
+import DetailRekamMedisSiswa from "./pages/admin/detail_rekam_medas";
+import EditRekamMedis from "./pages/admin/form_edit_amnesa";
+import FormAnamnesa from "./pages/admin/form_tambah_amnesa";
+import FormAnamnesaView from "./pages/admin/form_view_amnesa";
 
 // Routes
 import ProtectedRoute from "./routes/protectedRoute";
 import UserRoute from "./routes/userRoute";
 import NotFound from "./pages/notfound";
-
-
 
 function App() {
   const location = useLocation();
@@ -58,7 +65,6 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/otp" element={<OtpPage />} />
         <Route path="/gantipassword" element={<GantiPasswordPage />} />
-       
 
         {/* User protected routes */}
         <Route
@@ -175,6 +181,14 @@ function App() {
             </UserRoute>
           }
         />
+        <Route
+          path="/antrian"
+          element={
+            <UserRoute>
+              <Antrian />
+            </UserRoute>
+          }
+        />
 
         {/* Admin dashboard route */}
         <Route
@@ -194,10 +208,80 @@ function App() {
           }
         />
         <Route
+          path="/kategori"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <KategoriPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/rekammedis"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <StudentMedicalRecord />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/uploadblog"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <UploadBlog />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Medical Record Routes */}
+        <Route
+          path="/MedicalRecord/:id"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <DetailRekamMedisSiswa />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* New Routes for MedicalRecord and RekamMedisSiswa */}
+        <Route
+          path="/rekammedis-siswa"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <RekamMedisSiswa />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/rekammedis/detail/:id"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <MedicalRecord />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* New Medical Record Routes */}
+        <Route
+          path="/rekammedis/edit/:recordId"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <EditRekamMedis />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/rekammedis/add"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <FormAnamnesa />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/rekammedis/view/:recordId"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <FormAnamnesaView />
             </ProtectedRoute>
           }
         />

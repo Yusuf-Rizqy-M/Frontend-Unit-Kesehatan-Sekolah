@@ -1,5 +1,5 @@
 import React from "react";
-import { FaUserCog, FaInfoCircle, FaSignOutAlt } from "react-icons/fa";
+import { FaUserCog, FaInfoCircle, FaSignOutAlt, FaStethoscope, FaListOl } from "react-icons/fa";
 import { NavLink, Link } from "react-router-dom";
 import UksLogo from "../../assets/img/UKS2.png";
 
@@ -38,6 +38,32 @@ const SidebarProfile = () => {
           >
             <FaInfoCircle />
             <span className="text-left">Edit Profile</span>
+          </NavLink>
+          <NavLink
+            to="/kondisi"
+            className={({ isActive }) =>
+              `flex items-center justify-start gap-2 w-full px-4 py-2 rounded-md transition-colors duration-200 ${
+                isActive
+                  ? "text-white bg-teal-600 hover:bg-teal-700"
+                  : "text-teal-700 bg-white hover:bg-teal-50 hover:text-teal-800 hover:shadow-md"
+              }`
+            }
+          >
+            <FaStethoscope />
+            <span className="text-left">Kondisi</span>
+          </NavLink>
+          <NavLink
+            to="/antrian"
+            className={({ isActive }) =>
+              `flex items-center justify-start gap-2 w-full px-4 py-2 rounded-md transition-colors duration-200 ${
+                isActive
+                  ? "text-white bg-teal-600 hover:bg-teal-700"
+                  : "text-teal-700 bg-white hover:bg-teal-50 hover:text-teal-800 hover:shadow-md"
+              }`
+            }
+          >
+            <FaListOl />
+            <span className="text-left">Antrian</span>
           </NavLink>
         </nav>
       </div>

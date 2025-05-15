@@ -1,22 +1,15 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from '../../partials/Sidebar';
 import Header from '../../partials/Header';
-import { User, Users } from 'lucide-react';
+import { User, Users, AlertTriangle } from 'lucide-react';
 import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
 import axios from 'axios';
-
-// Define gradeOptions as per RegisterPage
-const gradeOptions = {
-  RPL: ["RPL 1", "RPL 2"],
-  "Animasi 3D": ["Animasi 3D 1", "Animasi 3D 2", "Animasi 3D 3"],
-  "Animasi 2D": ["Animasi 2D 4", "Animasi 2D 5"],
-  "DKV DG": ["DKV DG 1", "DKV DG 2", "DKV DG 3"],
-  "DKV TG": ["DKV TG 4", "DKV TG 5"],
-};
 
 export default function ManajemenUser() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [users, setUsers] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [grades, setGrades] = useState([]);
   const [totalStudents, setTotalStudents] = useState(0);
   const [totalAdmins, setTotalAdmins] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -30,6 +23,8 @@ export default function ManajemenUser() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState(null);
   const [editForm, setEditForm] = useState({
@@ -37,10 +32,20 @@ export default function ManajemenUser() {
     class: "",
     name_grades: ""
   });
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState("success");
   const usersPerPage = 10;
 
   const getToken = () => {
     return localStorage.getItem('token') || sessionStorage.getItem('token');
+  };
+
+  const showToastMessage = (message, type = "success") => {
+    setToastMessage(message);
+    setToastType(type);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
   };
 
   const fetchUsers = async () => {
@@ -57,13 +62,15 @@ export default function ManajemenUser() {
     try {
       const response = await axios.get('https://api-uks.rplrus.com/api/users', {
         headers: { Authorization: `Bearer ${token}` },
+        params: { status: 'active' }
       });
 
       if (response.data.status) {
         const userData = response.data.data;
-        setUsers(userData);
-        setTotalStudents(userData.filter(user => user.role === 'user').length);
-        setTotalAdmins(userData.filter(user => user.role === 'admin').length);
+        const activeUsers = userData.filter(user => user.status === 'active');
+        setUsers(activeUsers);
+        setTotalStudents(activeUsers.filter(user => user.role === 'user').length);
+        setTotalAdmins(activeUsers.filter(user => user.role === 'admin').length);
       } else {
         setError('Failed to retrieve users: ' + response.data.message);
       }
@@ -75,6 +82,56 @@ export default function ManajemenUser() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDepartments = async () => {
+    const token = getToken();
+    if (!token) {
+      setError('No admin token found. Please log in as an admin.');
+      return;
+    }
+
+    try {
+      const response = await axios.get('https://api-uks.rplrus.com/api/departments', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      // Remove duplicates by creating a unique list based on department name
+      const uniqueDepartments = Array.from(
+        new Map(response.data.map(dept => [dept.name, dept])).values()
+      );
+      setDepartments(uniqueDepartments);
+    } catch (err) {
+      if (err.response && err.response.status === 401) {
+        setError('Unauthorized: Invalid or expired admin token. Please log in again.');
+      } else {
+        setError('Error fetching departments: ' + err.message);
+      }
+    }
+  };
+
+  const fetchGrades = async () => {
+    const token = getToken();
+    if (!token) {
+      setError('No admin token found. Please log in as an admin.');
+      return;
+    }
+
+    try {
+      const response = await axios.get('https://api-uks.rplrus.com/api/grades', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      // Remove duplicates by creating a unique list based on grade name
+      const uniqueGrades = Array.from(
+        new Map(response.data.map(grade => [grade.name, grade])).values()
+      );
+      setGrades(uniqueGrades);
+    } catch (err) {
+      if (err.response && err.response.status === 401) {
+        setError('Unauthorized: Invalid or expired admin token. Please log in again.');
+      } else {
+        setError('Error fetching grades: ' + err.message);
+      }
     }
   };
 
@@ -127,10 +184,11 @@ export default function ManajemenUser() {
       );
 
       if (response.data.status) {
-        await fetchUsers(); // Refresh user list
+        await fetchUsers();
         setShowEditModal(false);
         setSelectedUser(null);
         setEditForm({ name_department: "", class: "", name_grades: "" });
+        showToastMessage("User updated successfully");
       } else {
         setModalError('Failed to update user: ' + response.data.message);
       }
@@ -145,8 +203,56 @@ export default function ManajemenUser() {
     }
   };
 
+  const softDeleteUser = async (id) => {
+    const token = getToken();
+    if (!token) {
+      showToastMessage('No admin token found. Please log in as an admin.', 'error');
+      return;
+    }
+
+    try {
+      const response = await axios.delete(`https://api-uks.rplrus.com/api/users/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.data.status) {
+        await fetchUsers();
+        showToastMessage(response.data.message);
+        setShowDeleteConfirm(false);
+        setUserToDelete(null);
+      } else {
+        showToastMessage('Failed to delete user: ' + response.data.message, 'error');
+      }
+    } catch (err) {
+      if (err.response && err.response.status === 401) {
+        showToastMessage('Unauthorized: Invalid or expired admin token. Please log in again.', 'error');
+      } else {
+        showToastMessage('Error deleting user: ' + err.message, 'error');
+      }
+    }
+  };
+
+  const handleDeleteClick = (id, name) => {
+    setUserToDelete({ id, name });
+    setShowDeleteConfirm(true);
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteConfirm(false);
+    setUserToDelete(null);
+  };
+
+  const confirmDelete = () => {
+    if (userToDelete) {
+      softDeleteUser(userToDelete.id);
+    }
+  };
+
   useEffect(() => {
-    fetchUsers();
+    const fetchData = async () => {
+      await Promise.all([fetchUsers(), fetchDepartments(), fetchGrades()]);
+    };
+    fetchData();
   }, []);
 
   const filteredUsers = users.filter(user => {
@@ -155,7 +261,8 @@ export default function ManajemenUser() {
     const matchesGrade = gradeFilter ? user.name_grades === gradeFilter : true;
     const matchesClass = classFilter ? user.class === classFilter : true;
     const matchesRole = roleFilter ? user.role === roleFilter : true;
-    return matchesSearch && matchesDepartment && matchesGrade && matchesClass && matchesRole;
+    const isActive = user.status === 'active';
+    return matchesSearch && matchesDepartment && matchesGrade && matchesClass && matchesRole && isActive;
   });
 
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
@@ -209,7 +316,9 @@ export default function ManajemenUser() {
     if (e.target.classList.contains('modal-overlay')) {
       setShowViewModal(false);
       setShowEditModal(false);
+      setShowDeleteConfirm(false);
       setSelectedUser(null);
+      setUserToDelete(null);
       setEditForm({ name_department: "", class: "", name_grades: "" });
     }
   };
@@ -256,7 +365,11 @@ export default function ManajemenUser() {
             <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto">
               <p className="text-red-500">{error}</p>
               <button
-                onClick={fetchUsers}
+                onClick={() => {
+                  fetchUsers();
+                  fetchDepartments();
+                  fetchGrades();
+                }}
                 className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
               >
                 Retry
@@ -275,6 +388,22 @@ export default function ManajemenUser() {
         <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
         <main className="grow">
           <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto">
+            {/* Toast Notification */}
+            {showToast && (
+              <div className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 ${
+                toastType === 'success' ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'
+              } px-4 py-2 rounded-lg shadow-md flex items-center gap-2 animate-fade-in-out z-50`}>
+                <div className={`rounded-full p-1 ${
+                  toastType === 'success' ? 'bg-green-600' : 'bg-red-600'
+                }`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414L9 13.414l4.707-4.707z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <span className="font-medium text-sm">{toastMessage}</span>
+              </div>
+            )}
+
             <h1 className="text-2xl md:text-3xl text-gray-800 dark:text-white font-bold mb-6">Manajemen User</h1>
 
             <div className="flex gap-6 mb-6">
@@ -335,8 +464,8 @@ export default function ManajemenUser() {
                 className="w-[200px] rounded-[10px] bg-white dark:bg-gray-700 text-[#6D9C9D] dark:text-gray-200 text-left pl-5 py-2 focus:outline-none appearance-none"
               >
                 <option value="">Jurusan</option>
-                {Object.keys(gradeOptions).map((dept) => (
-                  <option key={dept} value={dept}>{dept}</option>
+                {departments.map((dept) => (
+                  <option key={dept.id} value={dept.name}>{dept.name}</option>
                 ))}
               </select>
               <select
@@ -347,9 +476,11 @@ export default function ManajemenUser() {
               >
                 <option value="">No. Kelas</option>
                 {departmentFilter &&
-                  gradeOptions[departmentFilter].map((grade) => (
-                    <option key={grade} value={grade}>{grade}</option>
-                  ))}
+                  grades
+                    .filter(grade => grade.department_name === departmentFilter)
+                    .map((grade) => (
+                      <option key={grade.id} value={grade.name}>{grade.name}</option>
+                    ))}
               </select>
               <select
                 value={roleFilter}
@@ -393,7 +524,10 @@ export default function ManajemenUser() {
                           className={`text-gray-500 ${user.role === 'admin' ? 'opacity-50 pointer-events-none' : 'hover:text-yellow-500 cursor-pointer'}`}
                           onClick={user.role !== 'admin' ? () => handleEditClick(user.id) : undefined}
                         />
-                        <FaTrash className="text-gray-500 hover:text-red-500 cursor-pointer" />
+                        <FaTrash
+                          className="text-gray-500 hover:text-red-500 cursor-pointer"
+                          onClick={() => handleDeleteClick(user.id, user.name)}
+                        />
                       </td>
                     </tr>
                   ))}
@@ -433,6 +567,37 @@ export default function ManajemenUser() {
                 </button>
               </div>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteConfirm && userToDelete && (
+              <div className="fixed inset-0 flex items-center justify-center z-50 modal-overlay">
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md text-center shadow-lg relative animate-scale-in">
+                  <div className="flex justify-center mb-4">
+                    <div className="p-2 rounded-full border-2 border-orange-500">
+                      <AlertTriangle className="w-12 h-12 text-orange-500" />
+                    </div>
+                  </div>
+                  <h2 className="text-xl font-bold text-orange-600 mb-2">Nonaktifkan Akun {userToDelete.name}?</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                    Fitur ini digunakan untuk menonaktifkan akun pengguna "{userToDelete.name}" secara aman. Setelah dinonaktifkan, akun tidak akan muncul di sistem hingga diaktifkan kembali oleh admin. Pastikan Anda yakin sebelum melanjutkan.
+                  </p>
+                  <div className="flex justify-center gap-4">
+                    <button
+                      onClick={cancelDelete}
+                      className="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      onClick={confirmDelete}
+                      className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
+                    >
+                      Lanjutkan, Nonaktifkan Akun
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* View Modal for User Details */}
             {showViewModal && selectedUser && (
@@ -505,8 +670,8 @@ export default function ManajemenUser() {
                             className="w-full rounded-[10px] bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 pl-3 py-2 focus:outline-none border border-gray-300 dark:border-gray-600"
                           >
                             <option value="">Select Department</option>
-                            {Object.keys(gradeOptions).map((dept) => (
-                              <option key={dept} value={dept}>{dept}</option>
+                            {departments.map((dept) => (
+                              <option key={dept.id} value={dept.name}>{dept.name}</option>
                             ))}
                           </select>
                         </div>
@@ -535,9 +700,11 @@ export default function ManajemenUser() {
                           >
                             <option value="">Select Grade</option>
                             {editForm.name_department &&
-                              gradeOptions[editForm.name_department].map((grade) => (
-                                <option key={grade} value={grade}>{grade}</option>
-                              ))}
+                              grades
+                                .filter(grade => grade.department_name === editForm.name_department)
+                                .map((grade) => (
+                                  <option key={grade.id} value={grade.name}>{grade.name}</option>
+                                ))}
                           </select>
                         </div>
                       </div>
@@ -567,6 +734,23 @@ export default function ManajemenUser() {
           </div>
         </main>
       </div>
+
+      {/* CSS for Modal Animation */}
+      <style jsx>{`
+        .animate-scale-in {
+          animation: scaleIn 0.2s ease-out;
+        }
+        @keyframes scaleIn {
+          from {
+            transform: scale(0.8);
+            opacity: 0;
+          }
+          to {
+            transform: scale(1);
+            opacity: 1;
+          }
+        }
+      `}</style>
     </div>
   );
 }

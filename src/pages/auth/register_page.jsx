@@ -1,16 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthService from "../../services/authService";
 import UksImg from "../../assets/img/doctor_img_rounded.png";
 import LogoImg from "../../assets/img/UKS2.png";
-
-const gradeOptions = {
-  RPL: ["RPL 1", " Diploma"],
-  "Animasi 3D": ["Animasi 3D 1", "Animasi 3D 2", "Animasi 3D 3"],
-  "Animasi 2D": ["Animasi 2D 4", "Animasi 2D 5"],
-  "DKV DG": ["DKV DG 1", "DKV DG 2", "DKV DG 3"],
-  "DKV TG": ["DKV TG 4", "DKV TG 5"],
-};
+import axios from "axios";
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -24,17 +17,91 @@ const RegisterPage = () => {
     name_department: "",
     name_grades: "",
   });
-
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState(null);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [departments, setDepartments] = useState([]);
+  const [grades, setGrades] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState(null);
+
+  const getToken = () => {
+    return localStorage.getItem("token") || sessionStorage.getItem("token");
+  };
+
+  const fetchDepartments = async () => {
+    setLoading(true);
+    setFetchError(null);
+    const token = getToken();
+    if (!token) {
+      setFetchError("No token found. Please log in.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await axios.get("https://api-uks.rplrus.com/api/departments", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      // Remove duplicates by creating a unique list based on department name
+      const uniqueDepartments = Array.from(
+        new Map(response.data.map((dept) => [dept.name, dept])).values()
+      );
+      setDepartments(uniqueDepartments);
+    } catch (err) {
+      if (err.response && err.response.status === 401) {
+        setFetchError("Unauthorized: Invalid or expired token. Please log in again.");
+      } else {
+        setFetchError("Error fetching departments: " + err.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchGrades = async () => {
+    setLoading(true);
+    setFetchError(null);
+    const token = getToken();
+    if (!token) {
+      setFetchError("No token found. Please log in.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await axios.get("https://api-uks.rplrus.com/api/grades", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      // Remove duplicates by creating a unique list based on grade name
+      const uniqueGrades = Array.from(
+        new Map(response.data.map((grade) => [grade.name, grade])).values()
+      );
+      setGrades(uniqueGrades);
+    } catch (err) {
+      if (err.response && err.response.status === 401) {
+        setFetchError("Unauthorized: Invalid or expired token. Please log in again.");
+      } else {
+        setFetchError("Error fetching grades: " + err.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      await Promise.all([fetchDepartments(), fetchGrades()]);
+    };
+    fetchData();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === "role") {
-      // Reset class-related fields if role is admin
       setFormData((prev) => ({
         ...prev,
         [name]: value,
@@ -57,15 +124,21 @@ const RegisterPage = () => {
     e.preventDefault();
     setError(null);
 
-    // Password length validation
     if (formData.password.length < 8 || formData.confirm_password.length < 8) {
       setError("Password minimal 8 karakter.");
+      setToastMessage("Password minimal 8 karakter.");
+      setIsSuccess(false);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
       return;
     }
 
-    // Password confirmation match validation
     if (formData.password !== formData.confirm_password) {
       setError("Password dan konfirmasi tidak sama.");
+      setToastMessage("Password dan konfirmasi tidak sama.");
+      setIsSuccess(false);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
       return;
     }
 
@@ -73,6 +146,7 @@ const RegisterPage = () => {
       const token = localStorage.getItem("token");
       await AuthService.register(formData, token);
       setToastMessage("Register Berhasil");
+      setIsSuccess(true);
       setShowToast(true);
       setTimeout(() => {
         setShowToast(false);
@@ -81,6 +155,7 @@ const RegisterPage = () => {
     } catch (err) {
       const msg = err.response?.data?.message || "Registrasi gagal.";
       setToastMessage(msg);
+      setIsSuccess(false);
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     }
@@ -88,19 +163,40 @@ const RegisterPage = () => {
 
   return (
     <div className="flex min-h-screen font-poppins bg-white relative">
-      {/* Toast */}
       {showToast && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-green-200 text-green-800 px-4 py-2 rounded-lg shadow-md flex items-center gap-2 animate-fade-in-out z-50">
-          <div className="bg-green-600 rounded-full p-1">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414L9 13.414l4.707-4.707z" clipRule="evenodd" />
+        <div
+          className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg shadow-md flex items-center gap-2 animate-fade-in-out z-50 ${
+            isSuccess ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
+          }`}
+        >
+          <div
+            className={`rounded-full p-1 ${isSuccess ? "bg-green-600" : "bg-red-600"}`}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4 text-white"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              {isSuccess ? (
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414L9 13.414l4.707-4.707z"
+                  clipRule="evenodd"
+                />
+              ) : (
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  clipRule="evenodd"
+                />
+              )}
             </svg>
           </div>
           <span className="font-medium text-sm">{toastMessage}</span>
         </div>
       )}
 
-      {/* Kiri */}
       <div className="w-1/2 bg-[#DDF6FF] flex flex-col justify-center items-center p-12 relative">
         <div className="absolute top-0 left-0 w-32 h-32 bg-cyan-500 rounded-full opacity-40 -translate-x-1/2 -translate-y-1/2" />
         <div className="absolute bottom-10 left-10 w-8 h-8 bg-cyan-500 rotate-45" />
@@ -118,7 +214,6 @@ const RegisterPage = () => {
         </div>
       </div>
 
-      {/* Kanan */}
       <div className="w-1/2 flex flex-col justify-center items-center p-12">
         <div className="w-full max-w-sm flex flex-col items-start mb-8">
           <img src={LogoImg} alt="Logo" className="w-16 h-16 mb-4 object-contain" />
@@ -127,17 +222,29 @@ const RegisterPage = () => {
 
         <form className="w-full max-w-sm text-left" onSubmit={handleSubmit}>
           {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+          {fetchError && <p className="text-red-500 text-sm mb-4">{fetchError}</p>}
+          {loading && <p className="text-gray-600 text-sm mb-4">Loading departments and grades...</p>}
 
           <div className="mb-4">
             <label className="text-xs font-semibold text-gray-600 mb-1 block">Email Address</label>
-            <input name="email" type="email" value={formData.email} onChange={handleChange}
-              className="w-full px-4 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm text-black focus:outline-none focus:ring-2 focus:ring-cyan-400" />
+            <input
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full px-4 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm text-black focus:outline-none focus:ring-2 focus:ring-cyan-400"
+            />
           </div>
 
           <div className="mb-4">
             <label className="text-xs font-semibold text-gray-600 mb-1 block">Create Username</label>
-            <input name="name" type="text" value={formData.name} onChange={handleChange}
-              className="w-full px-4 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm text-black focus:outline-none focus:ring-2 focus:ring-cyan-400" />
+            <input
+              name="name"
+              type="text"
+              value={formData.name}
+              onChange={handleChange}
+              className="w-full px-4 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm text-black focus:outline-none focus:ring-2 focus:ring-cyan-400"
+            />
           </div>
 
           <div className="mb-4 relative">
@@ -252,8 +359,12 @@ const RegisterPage = () => {
 
           <div className="mb-4">
             <label className="text-xs font-semibold text-gray-600 mb-1 block">Role</label>
-            <select name="role" value={formData.role} onChange={handleChange}
-              className="w-full px-4 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm text-black focus:outline-none focus:ring-2 focus:ring-cyan-400">
+            <select
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              className="w-full px-4 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm text-black focus:outline-none focus:ring-2 focus:ring-cyan-400"
+            >
               <option value="user">User</option>
               <option value="admin">Admin</option>
             </select>
@@ -263,44 +374,65 @@ const RegisterPage = () => {
             <div className="mb-4">
               <label className="text-xs font-semibold text-gray-600 mb-1 block">Kelas & Jurusan</label>
               <div className="flex flex-col md:flex-row gap-2">
-                <select name="class" value={formData.class} onChange={handleChange}
-                  className="flex-1 px-4 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm text-black focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                <select
+                  name="class"
+                  value={formData.class}
+                  onChange={handleChange}
+                  className="flex-1 px-4 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm text-black focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                >
                   <option value="">Kelas</option>
                   <option value="10">10</option>
                   <option value="11">11</option>
                   <option value="12">12</option>
                 </select>
 
-                <select name="name_department" value={formData.name_department} onChange={handleChange}
-                  className="flex-1 px-4 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm text-black focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                <select
+                  name="name_department"
+                  value={formData.name_department}
+                  onChange={handleChange}
+                  className="flex-1 px-4 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm text-black focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                >
                   <option value="">Jurusan</option>
-                  <option value="RPL">RPL</option>
-                  <option value="DKV DG">DKV DG</option>
-                  <option value="DKV TG">DKV TG</option>
-                  <option value="Animasi 3D">Animasi 3D</option>
-                  <option value="Animasi 2D">Animasi 2D</option>
+                  {departments.map((dept) => (
+                    <option key={dept.id} value={dept.name}>
+                      {dept.name}
+                    </option>
+                  ))}
                 </select>
 
-                <select name="name_grades" value={formData.name_grades} onChange={handleChange}
+                <select
+                  name="name_grades"
+                  value={formData.name_grades}
+                  onChange={handleChange}
                   disabled={!formData.name_department}
-                  className="flex-1 px-4 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm text-black focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                  className="flex-1 px-4 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm text-black focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                >
                   <option value="">No. Kelas</option>
                   {formData.name_department &&
-                    gradeOptions[formData.name_department].map((grade) => (
-                      <option key={grade} value={grade}>{grade}</option>
-                    ))}
+                    grades
+                      .filter((grade) => grade.department_name === formData.name_department)
+                      .map((grade) => (
+                        <option key={grade.id} value={grade.name}>
+                          {grade.name}
+                        </option>
+                      ))}
                 </select>
               </div>
             </div>
           )}
 
-          <button type="submit"
-            className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 rounded-md text-sm transition-colors duration-200">
+          <button
+            type="submit"
+            className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 rounded-md text-sm transition-colors duration-200"
+          >
             Sign Up
           </button>
 
-          <button type="button" onClick={() => navigate("/dashboard")}
-            className="w-full mt-2 text-cyan-600 text-sm hover:underline text-center">
+          <button
+            type="button"
+            onClick={() => navigate("/dashboard")}
+            className="w-full mt-2 text-cyan-600 text-sm hover:underline text-center"
+          >
             Kembali ke Dashboard
           </button>
         </form>

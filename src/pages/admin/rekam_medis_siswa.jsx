@@ -20,6 +20,7 @@ const RekamMedisSiswa = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success');
+  const [isDarkMode, setIsDarkMode] = useState(false); // New state for dark mode
   const usersPerPage = 10;
   const navigate = useNavigate();
 
@@ -33,6 +34,33 @@ const RekamMedisSiswa = () => {
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
   };
+
+  // Toggle dark mode
+  const toggleDarkMode = () => {
+    setIsDarkMode((prev) => {
+      const newMode = !prev;
+      if (newMode) {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      }
+      return newMode;
+    });
+  };
+
+  // Initialize theme based on localStorage or system preference
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      setIsDarkMode(true);
+      document.documentElement.classList.add('dark');
+    } else {
+      setIsDarkMode(false);
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
 
   // Fetch students data
   const fetchStudents = async () => {
@@ -55,11 +83,12 @@ const RekamMedisSiswa = () => {
       if (response.data.status && response.data.data) {
         const activeStudents = response.data.data.filter(user => user.status === 'active');
         const mappedStudents = activeStudents.map(student => ({
-          id: student.name,
+          id: student.id,
+          name: student.name,
           gender: student.gender || 'N/A',
           kelas: student.class || 'N/A',
           namaKelas: student.name_grades || 'N/A',
-          department: student.name_department || 'N/A', // Add department field
+          department: student.name_department || 'N/A',
           role: student.role,
         }));
         setStudents(mappedStudents);
@@ -91,7 +120,6 @@ const RekamMedisSiswa = () => {
       const response = await axios.get('https://api-uks.rplrus.com/api/departments', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      // Remove duplicates by creating a unique list based on department name
       const uniqueDepartments = Array.from(
         new Map(response.data.map(dept => [dept.name, dept])).values()
       );
@@ -117,7 +145,6 @@ const RekamMedisSiswa = () => {
       const response = await axios.get('https://api-uks.rplrus.com/api/grades', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      // Remove duplicates by creating a unique list based on grade name
       const uniqueGrades = Array.from(
         new Map(response.data.map(grade => [grade.name, grade])).values()
       );
@@ -138,9 +165,9 @@ const RekamMedisSiswa = () => {
     fetchData();
   }, []);
 
-  // Filter users with corrected logic
+  // Filter users
   const filteredUsers = students.filter((student) => {
-    const matchesSearch = student.id.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = student.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesDepartment = departmentFilter ? student.department === departmentFilter : true;
     const matchesGrade = gradeFilter ? student.namaKelas === gradeFilter : true;
     const matchesClass = classFilter ? student.kelas.toString() === classFilter : true;
@@ -189,22 +216,24 @@ const RekamMedisSiswa = () => {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden font-sans">
+    <div className="flex h-screen overflow-hidden font-sans bg-gray-100 dark:bg-gray-900">
       <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       <div className="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
         <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
         <main className="grow">
           <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto">
+            {/* Dark Mode Toggle Button */}
+
             {/* Toast Notification */}
             {showToast && (
               <div
                 className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 ${
-                  toastType === 'success' ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'
+                  toastType === 'success' ? 'bg-green-200 text-green-800 dark:bg-green-800 dark:text-green-200' : 'bg-red-200 text-red-800 dark:bg-red-800 dark:text-red-200'
                 } px-4 py-2 rounded-lg shadow-md flex items-center gap-2 animate-fade-in-out z-50`}
               >
                 <div
                   className={`rounded-full p-1 ${
-                    toastType === 'success' ? 'bg-green-600' : 'bg-red-600'
+                    toastType === 'success' ? 'bg-green-600 dark:bg-green-500' : 'bg-red-600 dark:bg-red-500'
                   }`}
                 >
                   <svg
@@ -224,12 +253,12 @@ const RekamMedisSiswa = () => {
               </div>
             )}
 
-            <h2 className="text-2xl md:text-3xl text-gray-800 border-b-2 border-green-500 pb-2 mb-8 inline-block">
+            <h2 className="text-2xl md:text-3xl text-gray-800 dark:text-gray-200 border-b-2 border-green-500 dark:border-green-400 pb-2 mb-8 inline-block">
               Rekam Medis Siswa
             </h2>
 
             {error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+              <div className="bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-200 px-4 py-3 rounded mb-6">
                 {error}
                 <button
                   onClick={() => {
@@ -237,14 +266,14 @@ const RekamMedisSiswa = () => {
                     fetchDepartments();
                     fetchGrades();
                   }}
-                  className="ml-4 px-4 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                  className="ml-4 px-4 py-1 bg-green-600 dark:bg-green-500 text-white rounded hover:bg-green-700 dark:hover:bg-green-600"
                 >
                   Retry
                 </button>
               </div>
             )}
 
-            <div className="bg-[#9BC7B6] dark:bg-[#051D4E] rounded-[10px] p-4 flex items-center gap-4 mb-6">
+            <div className="bg-[#9BC7B6] dark:bg-[#1a2a5e] rounded-[10px] p-4 flex items-center gap-4 mb-6">
               <div className="relative flex-1 min-w-0">
                 <span className="absolute inset-y-0 left-3 flex items-center text-[#6D9C9D] dark:text-gray-400">
                   <svg
@@ -267,13 +296,13 @@ const RekamMedisSiswa = () => {
                   placeholder="Search"
                   value={searchQuery}
                   onChange={handleSearchChange}
-                  className="w-full pl-10 pr-4 py-2 rounded-[10px] bg-white dark:bg-gray-700 text-[#6D9C9D] dark:text-white placeholder-[#6D9C9D] dark:placeholder-gray-400 focus:outline-none"
+                  className="w-full pl-10 pr-4 py-2 rounded-[10px] bg-white dark:bg-gray-800 text-[#6D9C9D] dark:text-gray-200 placeholder-[#6D9C9D] dark:placeholder-gray-400 focus:outline-none"
                 />
               </div>
               <select
                 value={classFilter}
                 onChange={handleClassChange}
-                className="w-[150px] rounded-[10px] bg-white dark:bg-gray-700 text-[#6D9C9D] dark:text-gray-200 text-left pl-5 py-2 focus:outline-none appearance-none"
+                className="w-[150px] rounded-[10px] bg-white dark:bg-gray-800 text-[#6D9C9D] dark:text-gray-200 text-left pl-5 py-2 focus:outline-none appearance-none"
               >
                 <option value="">Kelas</option>
                 <option value="10">10</option>
@@ -285,7 +314,7 @@ const RekamMedisSiswa = () => {
               <select
                 value={departmentFilter}
                 onChange={handleDepartmentChange}
-                className="w-[200px] rounded-[10px] bg-white dark:bg-gray-700 text-[#6D9C9D] dark:text-gray-200 text-left pl-5 py-2 focus:outline-none appearance-none"
+                className="w-[200px] rounded-[10px] bg-white dark:bg-gray-800 text-[#6D9C9D] dark:text-gray-200 text-left pl-5 py-2 focus:outline-none appearance-none"
               >
                 <option value="">Jurusan</option>
                 {departments.map((dept) => (
@@ -298,7 +327,7 @@ const RekamMedisSiswa = () => {
                 value={gradeFilter}
                 onChange={handleGradeChange}
                 disabled={!departmentFilter}
-                className="w-[200px] rounded-[10px] bg-white dark:bg-gray-700 text-[#6D9C9D] dark:text-gray-200 text-left pl-5 py-2 focus:outline-none appearance-none"
+                className="w-[200px] rounded-[10px] bg-white dark:bg-gray-800 text-[#6D9C9D] dark:text-gray-200 text-left pl-5 py-2 focus:outline-none appearance-none"
               >
                 <option value="">No. Kelas</option>
                 {departmentFilter &&
@@ -313,7 +342,7 @@ const RekamMedisSiswa = () => {
               <select
                 value={roleFilter}
                 onChange={handleRoleChange}
-                className="w-[120px] rounded-[10px] bg-white dark:bg-gray-700 text-[#6D9C9D] dark:text-gray-200 text-left pl-5 py-2 focus:outline-none appearance-none"
+                className="w-[120px] rounded-[10px] bg-white dark:bg-gray-800 text-[#6D9C9D] dark:text-gray-200 text-left pl-5 py-2 focus:outline-none appearance-none"
               >
                 <option value="">Role</option>
                 <option value="user">User</option>
@@ -324,18 +353,19 @@ const RekamMedisSiswa = () => {
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="bg-gray-100">
-                    <th className="p-3 text-left">Nama</th>
-                    <th className="p-3 text-left">Jenis Kelamin</th>
-                    <th className="p-3 text-left">Kelas</th>
-                    <th className="p-3 text-left">Nama Kelas</th>
-                    <th className="p-3 text-left">Action</th>
+                  <tr className="bg-gray-100 dark:bg-gray-800">
+                    <th className="p-3 text-left text-gray-800 dark:text-gray-200">ID</th>
+                    <th className="p-3 text-left text-gray-800 dark:text-gray-200">Nama</th>
+                    <th className="p-3 text-left text-gray-800 dark:text-gray-200">Jenis Kelamin</th>
+                    <th className="p-3 text-left text-gray-800 dark:text-gray-200">Kelas</th>
+                    <th className="p-3 text-left text-gray-800 dark:text-gray-200">Nama Kelas</th>
+                    <th className="p-3 text-left text-gray-800 dark:text-gray-200">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan="5" className="text-center p-4 text-gray-500">
+                      <td colSpan="6" className="text-center p-4 text-gray-500 dark:text-gray-400">
                         Loading...
                       </td>
                     </tr>
@@ -343,16 +373,17 @@ const RekamMedisSiswa = () => {
                     currentUsers.map((student) => (
                       <tr
                         key={student.id}
-                        className="border-b-4 border-gray-200 hover:bg-gray-50"
+                        className="border-b-4 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
                       >
-                        <td className="p-3">{student.id}</td>
-                        <td className="p-3">{student.gender}</td>
-                        <td className="p-3">{student.kelas}</td>
-                        <td className="p-3">{student.namaKelas}</td>
+                        <td className="p-3 text-gray-800 dark:text-gray-200">{student.id}</td>
+                        <td className="p-3 text-gray-800 dark:text-gray-200">{student.name}</td>
+                        <td className="p-3 text-gray-800 dark:text-gray-200">{student.gender}</td>
+                        <td className="p-3 text-gray-800 dark:text-gray-200">{student.kelas}</td>
+                        <td className="p-3 text-gray-800 dark:text-gray-200">{student.namaKelas}</td>
                         <td className="p-3">
                           <button
                             onClick={() => handleNavigateToDetails(student)}
-                            className="text-xl text-gray-600 hover:text-gray-800"
+                            className="text-xl text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
                           >
                             ›
                           </button>
@@ -361,7 +392,7 @@ const RekamMedisSiswa = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="5" className="text-center p-4 text-gray-500">
+                      <td colSpan="6" className="text-center p-4 text-gray-500 dark:text-gray-400">
                         Tidak ada data siswa.
                       </td>
                     </tr>
@@ -370,7 +401,7 @@ const RekamMedisSiswa = () => {
               </table>
             </div>
 
-            <div className="flex justify-between items-center mt-6 text-sm dark:text-gray-300">
+            <div className="flex justify-between items-center mt-6 text-sm text-gray-600 dark:text-gray-300">
               <p>
                 Showing{' '}
                 {filteredUsers.length === 0 ? 0 : indexOfFirstUser + 1}–{Math.min(indexOfLastUser, filteredUsers.length)} of{' '}
@@ -380,7 +411,7 @@ const RekamMedisSiswa = () => {
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className="px-3 py-1 border rounded text-gray-600 dark:text-gray-300 disabled:opacity-50"
+                  className="px-3 py-1 border rounded text-gray-600 dark:text-gray-300 disabled:opacity-50 dark:border-gray-600"
                 >
                   ← Sebelumnya
                 </button>
@@ -390,8 +421,8 @@ const RekamMedisSiswa = () => {
                     onClick={() => handlePageChange(page)}
                     className={`px-3 py-1 border rounded ${
                       currentPage === page
-                        ? 'bg-green-600 dark:bg-[#204ECF] text-white'
-                        : 'text-gray-600 dark:text-gray-300'
+                        ? 'bg-green-600 dark:bg-green-500 text-white'
+                        : 'text-gray-600 dark:text-gray-300 dark:border-gray-600'
                     }`}
                   >
                     {page}
@@ -400,7 +431,7 @@ const RekamMedisSiswa = () => {
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-1 border rounded text-gray-600 dark:text-gray-300 disabled:opacity-50"
+                  className="px-3 py-1 border rounded text-gray-600 dark:text-gray-300 disabled:opacity-50 dark:border-gray-600"
                 >
                   Berikutnya →
                 </button>

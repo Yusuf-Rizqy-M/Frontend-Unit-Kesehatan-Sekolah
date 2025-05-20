@@ -93,7 +93,7 @@ const OtpPage = () => {
         <div className="absolute bottom-10 left-10 w-12 h-12 bg-cyan-500 rotate-45" />
         <div className="absolute top-20 right-10 w-6 h-6 bg-cyan-500 rotate-45" />
 
-        {/* isi */}
+        {/* Content */}
         <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">
           Kode <br /> OOTP
         </h1>
@@ -111,7 +111,6 @@ const OtpPage = () => {
       </div>
 
       <div className="w-1/2 flex flex-col items-center justify-center p-10 bg-white">
-        {" "}
         <img
           src={LogoImg}
           alt="Logo"
@@ -131,7 +130,7 @@ const OtpPage = () => {
             Kode OOTP
           </label>
 
-          <div className="flex gap-4 mb-6">
+          <div className="flex gap-4 mb-6 justify-center">
             {[1, 2, 3, 4].map((i, index) => (
               <input
                 key={index}

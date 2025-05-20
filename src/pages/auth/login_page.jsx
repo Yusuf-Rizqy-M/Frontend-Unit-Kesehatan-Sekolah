@@ -1,16 +1,16 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import useLogin from "../../hooks/useLogin";
-import UksImg2 from "../../assets/img/doctor_img_rounded.png";
-import LogoImg from "../../assets/img/UKS2.png";
-import { Link } from "react-router-dom";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import useLogin from '../../hooks/useLogin';
+import UksImg2 from '../../assets/img/doctor_img_rounded.png';
+import LogoImg from '../../assets/img/UKS2.png';
+import { Link } from 'react-router-dom';
 
 const LoginPage = () => {
   const { login, loading, error } = useLogin();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // State untuk show/hide password
+  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
 
@@ -20,15 +20,14 @@ const LoginPage = () => {
     const data = await login(email, password, remember);
     if (data) {
       const role = data.user.role;
-      if (role === "admin") {
-        navigate("/dashboard");
+      if (role === 'admin') {
+        navigate('/dashboard');
       } else {
-        navigate("/");
+        navigate('/');
       }
     }
   };
 
-  // Fungsi untuk toggle show/hide password
   const toggleShowPassword = () => {
     setShowPassword((prev) => !prev);
   };
@@ -77,7 +76,7 @@ const LoginPage = () => {
           <div className="mb-5 relative">
             <label className="block text-xs font-semibold mb-1 text-black">Password</label>
             <input
-              type={showPassword ? "text" : "password"}
+              type={showPassword ? 'text' : 'password'}
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -87,7 +86,7 @@ const LoginPage = () => {
               type="button"
               onClick={toggleShowPassword}
               className="absolute inset-y-0 right-0 flex items-center pr-3 mt-6 text-gray-500 hover:text-cyan-500 focus:outline-none"
-              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
               {showPassword ? (
                 <svg
@@ -141,7 +140,7 @@ const LoginPage = () => {
           </div>
 
           {error && (
-            <div className="mb-4 text-sm text-red-500">
+            <div className="mb-4 text-sm text-red-500 bg-red-100 p-2 rounded">
               {error}
             </div>
           )}
@@ -151,7 +150,7 @@ const LoginPage = () => {
             disabled={loading}
             className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-2 rounded-full text-sm transition"
           >
-            {loading ? "Logging in..." : "Login"}
+            {loading ? 'Logging in...' : 'Login'}
           </button>
 
           <div className="text-center mt-4">
@@ -162,8 +161,10 @@ const LoginPage = () => {
         </form>
 
         <p className="mt-8 text-sm text-gray-700 text-center">
-          Belum punya akun?{" "}
-          <a href="/RegisterPage" className="text-blue-600 hover:underline">Daftar di sini</a>
+          Belum punya akun?{' '}
+          <a href="/RegisterPage" className="text-blue-600 hover:underline">
+            Daftar di sini
+          </a>
         </p>
       </div>
     </div>

@@ -1,31 +1,55 @@
+import { useState, useEffect } from 'react';
 import LayoutProfile from "../../components/user/layout_profile";
 import { FaUserMd } from 'react-icons/fa';
 
 function Kondisi() {
-  const historyData = [
-    {
-      date: '10/04/2025',
-      user: 'Admin uks',
-      status: 'Stabil',
-      weight: 50,
-      height: 160,
-      pulse: 50,
-      bloodPressure: '117/70/60',
-      temperature: 34,
-      spo2: '??',
-    },
-    {
-      date: '10/04/2025',
-      user: 'Yusuf',
-      status: 'Stabil',
-      weight: 50,
-      height: 160,
-      pulse: 50,
-      bloodPressure: '117/70/60',
-      temperature: 34,
-      spo2: '??',
-    },
-  ];
+  const [historyData, setHistoryData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchHealthConditions = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('No token found');
+        }
+
+        const response = await fetch('https://api-uks.rplrus.com/api/health-conditions-one', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch health conditions');
+        }
+
+        const result = await response.json();
+        if (result.status && result.data) {
+          setHistoryData(result.data);
+        } else {
+          throw new Error('Invalid response format');
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHealthConditions();
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
     <LayoutProfile>
@@ -42,37 +66,41 @@ function Kondisi() {
             >
               {/* Tanggal */}
               <div className="text-sm font-bold text-black mb-3 border-b border-gray-300 pb-1">
-                {item.date}
+                {new Date(item.created_at).toLocaleDateString('en-GB')}
               </div>
 
               {/* Header user + status */}
               <div className="flex items-center gap-2 mb-4">
                 <FaUserMd className="text-teal-600 w-4 h-4" />
                 <div className="text-sm text-gray-800 leading-tight">
-                  <div className="font-medium">{item.user}</div>
+                  <div className="font-medium">User ID: {item.user_id}</div>
                   <div className="text-teal-600 text-xs">{item.status}</div>
                 </div>
               </div>
 
               {/* Informasi kondisi */}
               <div className="text-sm text-gray-700 space-y-1.5">
-                <span>Berat badan = {item.weight}</span>
-                <div>Tinggi badan = {item.height}</div>
-                <div>Tensi = {item.bloodPressure}</div>
-                <div>Temperature = {item.temperature}</div>
-                <div>SpO2 = {item.spo2}</div>
-                <span>Nadi = {item.pulse}</span>
+                <span>Berat badan = {item.weight} kg</span>
+                <div>Tinggi badan = {item.height} cm</div>
+                <div>Tensi = {item.tension}</div>
+                <div>Temperature = {item.temperature} °C</div>
+                <div>SpO2 = {item.spo2}%</div>
+                <span>Nadi = {item.pulse} bpm</span>
               </div>
 
               {/* Anamnesa dan Terapi */}
               <div className="mt-4 space-y-3">
                 <div>
                   <p className="text-sm font-medium text-gray-800 mb-1">Anamnesa</p>
-                  <div className="bg-green-100 h-16 rounded-md"></div>
+                  <div className="bg-green-100 h-16 rounded-md p-2 text-sm text-gray-700">
+                    {item.anamnesis}
+                  </div>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-800 mb-1">Terapi</p>
-                  <div className="bg-green-100 h-16 rounded-md"></div>
+                  <div className="bg-green-100 h-16 rounded-md p-2 text-sm text-gray-700">
+                    {item.therapy}
+                  </div>
                 </div>
               </div>
             </div>

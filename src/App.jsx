@@ -39,9 +39,7 @@ import StudentMedicalRecord from "./pages/admin/rekam_medis_siswa";
 import MedicalRecord from "./pages/admin/detail_rekam_medas"; // Already imported
 import RekamMedisSiswa from "./pages/admin/rekam_medis_siswa"; // Already imported
 import DetailRekamMedisSiswa from "./pages/admin/detail_rekam_medas";
-import EditRekamMedis from "./pages/admin/form_edit_amnesa";
-import FormAnamnesa from "./pages/admin/form_tambah_amnesa";
-import FormAnamnesaView from "./pages/admin/form_view_amnesa";
+
 
 // Routes
 import ProtectedRoute from "./routes/protectedRoute";
@@ -248,40 +246,6 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <RekamMedisSiswa />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/rekammedis/detail/:id"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <MedicalRecord />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* New Medical Record Routes */}
-        <Route
-          path="/rekammedis/edit/:recordId"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <EditRekamMedis />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/rekammedis/add"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <FormAnamnesa />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/rekammedis/view/:recordId"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <FormAnamnesaView />
             </ProtectedRoute>
           }
         />

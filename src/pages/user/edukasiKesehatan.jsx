@@ -13,7 +13,6 @@ function EdukasiKesehatan() {
     <Layout>
       <main>
       <section className="relative w-full flex justify-center items-center bg-white mb-20 min-h-[300px]  mt-[-250px]">
-          {/* Kotak */}
           <div className="w-[1200px] h-[200px] bg-[#75CCD1] rounded-[20px] flex items-center shadow-md pl-12 pt-6">
             <h2 className="text-4xl font-bold text-white text-left leading-tight">
               Jelajahi <br /> berbagai <span className="text-[#005A79]">Edukasi kesehatan</span>
@@ -26,7 +25,6 @@ function EdukasiKesehatan() {
           Apa yang ingin <span className="text-[#005A79]">dibaca?</span>
         </h2>
         
-        {/* changed */}
         <div className="flex flex-wrap justify-center gap-6 mt-10">
           <Link to="/kesehatanmental">
             <EducationCard title="Kesehatan Mental" icon={MentalHealth} />

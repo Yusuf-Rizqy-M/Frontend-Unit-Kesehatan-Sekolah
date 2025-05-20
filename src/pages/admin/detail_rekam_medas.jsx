@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
 import Sidebar from '../../partials/Sidebar';
 import Header from '../../partials/Header';
 import { FaEdit, FaTrash } from 'react-icons/fa';
@@ -13,93 +12,583 @@ const DetailRekamMedisSiswa = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [medicalRecords, setMedicalRecords] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 10;
 
-  // Fetch medical records from API
+  // Form visibility states
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [showViewForm, setShowViewForm] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState(null);
+
+  // Retrieve token from storage
+  const getToken = () => {
+    return localStorage.getItem('token') || sessionStorage.getItem('token');
+  };
+
+  // Fetch medical records for the student
   useEffect(() => {
-    const fetchMedicalRecords = async () => {
-      if (!student?.id) {
-        console.error('Student ID is missing');
-        setError('Student ID is required');
-        return;
-      }
+    if (!student?.id) {
+      console.error('Student ID is missing');
+      return;
+    }
 
-      setLoading(true);
+    const fetchMedicalRecords = async () => {
       try {
-        const response = await axios.get(
-          `https://api-uks.rplrus.com/api/health-conditions?student_id=${student.id}`
-        );
-        setMedicalRecords(response.data || []);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching medical records:', err);
-        setError('Failed to load medical records. Please try again.');
-      } finally {
-        setLoading(false);
+        const token = getToken();
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+
+        const response = await fetch(`https://api-uks.rplrus.com/api/healthcondition/${student.id}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch medical records');
+        }
+
+        const data = await response.json();
+        // Filter only active records
+        setMedicalRecords(data.data?.filter(record => record.status === 'active') || []);
+      } catch (error) {
+        console.error('Error fetching medical records:', error);
       }
     };
 
     fetchMedicalRecords();
   }, [student?.id]);
 
-  // Handle new or updated records from navigation state
-  useEffect(() => {
-    if (state?.updatedRecord) {
-      setMedicalRecords((prev) =>
-        prev.map((r) => (r.id === state.updatedRecord.id ? state.updatedRecord : r))
-      );
-    } else if (state?.newRecord) {
-      setMedicalRecords((prev) => [...prev, state.newRecord]);
-    }
-  }, [state]);
-
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
+    setCurrentPage(1);
   };
 
   const handleAddRecord = () => {
-    if (student) {
-      navigate('/rekammedis/add', { state: { student } });
-    } else {
-      console.log('No student data available to add record.');
-    }
+    setShowAddForm(true);
   };
 
   const handleViewRecordDetail = (recordId) => {
-    const selectedRecord = medicalRecords.find((record) => record.id === recordId);
-    navigate(`/rekammedis/view/${recordId}`, {
-      state: { student, newRecord: selectedRecord },
-    });
+    const record = medicalRecords.find((r) => r.id === recordId);
+    setSelectedRecord(record);
+    setShowViewForm(true);
   };
 
   const handleEditRecord = (record) => {
-    navigate(`/rekammedis/edit/${record.id}`, { state: { student, record } });
+    setSelectedRecord(record);
+    setShowEditForm(true);
   };
 
   const handleDeleteRecord = async (recordId) => {
-    if (window.confirm('Apakah Anda yakin ingin menghapus rekam medis ini?')) {
+    if (window.confirm('Apakah Anda yakin ingin menonaktifkan rekam medis ini?')) {
       try {
-        await axios.delete(`https://api-uks.rplrus.com/api/health-conditions/${recordId}`);
+        const token = getToken();
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+
+        const response = await fetch(
+          `https://api-uks.rplrus.com/api/health-conditions/${student.id}/${recordId}`,
+          {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to mark health condition as inactive');
+        }
+
+        // Remove the record from display (since it's now inactive)
         setMedicalRecords(medicalRecords.filter((record) => record.id !== recordId));
-      } catch (err) {
-        console.error('Error deleting record:', err);
-        setError('Failed to delete record. Please try again.');
+      } catch (error) {
+        console.error('Error marking record as inactive:', error);
       }
     }
   };
 
   const filteredMedicalRecords = medicalRecords.filter((record) =>
     (
-      record.anamnesa?.toLowerCase().includes(searchQueryJUSTIFYtoLowerCase()) ||
-      record.date?.includes(searchQuery) ||
-      record.terapi?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      record.doctor?.toLowerCase().includes(searchQuery.toLowerCase())
+      record.anamnesis?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      record.created_at?.includes(searchQuery) ||
+      record.therapy?.toLowerCase().includes(searchQuery.toLowerCase())
     ) ?? false
   );
 
+  const totalPages = Math.ceil(filteredMedicalRecords.length / recordsPerPage) || 1;
+  const indexOfLastRecord = currentPage * recordsPerPage;
+  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+  const currentRecords = filteredMedicalRecords.slice(indexOfFirstRecord, indexOfLastRecord);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
   const handleBack = () => {
     navigate('/rekammedis');
+  };
+
+  // Add Form Component
+  const AddForm = () => {
+    const [formData, setFormData] = useState({
+      tension: '',
+      temperature: '',
+      height: '',
+      weight: '',
+      spo2: '',
+      pulse: '',
+      therapy: '',
+      anamnesis: '',
+    });
+    const [error, setError] = useState(null);
+
+    const popupRef = useRef(null);
+
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (popupRef.current && !popupRef.current.contains(event.target)) {
+          setShowAddForm(false);
+        }
+      };
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }, []);
+
+    const handleFormChange = (e) => {
+      const { name, value } = e.target;
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleSave = async (e) => {
+      e.preventDefault();
+      try {
+        const token = getToken();
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+
+        const response = await fetch('https://api-uks.rplrus.com/api/health-conditions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            user_id: student.id,
+            admin_id: JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user')).id,
+            tension: parseInt(formData.tension),
+            temperature: parseInt(formData.temperature),
+            height: parseFloat(formData.height),
+            weight: parseFloat(formData.weight),
+            spo2: parseInt(formData.spo2),
+            pulse: parseInt(formData.pulse),
+            therapy: formData.therapy,
+            anamnesis: formData.anamnesis,
+            status: 'active',
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to create health condition');
+        }
+
+        const newRecord = await response.json();
+        setMedicalRecords((prev) => [...prev, newRecord.data]);
+        setShowAddForm(false);
+      } catch (error) {
+        setError(error.message);
+        console.error('Error creating health condition:', error);
+      }
+    };
+
+    const handleCancel = () => {
+      setShowAddForm(false);
+    };
+
+    return (
+      <div className="fixed inset-0 bg-transparent flex items-center justify-center z-50 font-sans">
+        <div ref={popupRef} className="bg-white rounded-lg p-6 w-full max-w-3xl shadow-lg">
+          <div className="flex items-center mb-4">
+            <button
+              onClick={handleCancel}
+              className="mr-2 text-teal-800 hover:text-teal-600 transition-colors"
+              aria-label="Kembali"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+            <h2 className="text-lg font-semibold text-gray-800">Tambah Rekam Medis</h2>
+          </div>
+          {error && <p className="text-red-500 mb-4">{error}</p>}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Anamnesis</label>
+              <textarea
+                name="anamnesis"
+                value={formData.anamnesis}
+                onChange={handleFormChange}
+                placeholder="Masukkan anamnesis"
+                className="w-full h-24 p-4 rounded-lg bg-[#E6F0FA] text-gray-800 focus:outline-none resize-none"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-6 gap-2">
+              {[
+                { label: 'Tensi', name: 'tension', placeholder: '120' },
+                { label: 'Nadi', name: 'pulse', placeholder: '80' },
+                { label: 'Suhu', name: 'temperature', placeholder: '36.5' },
+                { label: 'SpO2', name: 'spo2', placeholder: '98' },
+                { label: 'Tinggi Badan', name: 'height', placeholder: '170.00' },
+                { label: 'Berat Badan', name: 'weight', placeholder: '60.00' },
+              ].map(({ label, name, placeholder }, idx) => (
+                <div key={idx}>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
+                  <input
+                    type="text"
+                    name={name}
+                    value={formData[name]}
+                    onChange={handleFormChange}
+                    placeholder={placeholder}
+                    className="w-full p-2 rounded-lg bg-[#E6F0FA] text-center text-gray-800 focus:outline-none"
+                    required
+                  />
+                </div>
+              ))}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Terapi</label>
+              <textarea
+                name="therapy"
+                value={formData.therapy}
+                onChange={handleFormChange}
+                placeholder="Masukkan terapi"
+                className="w-full h-24 p-4 rounded-lg bg-[#E6F0FA] text-gray-800 focus:outline-none resize-none"
+                required
+              />
+            </div>
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                onClick={handleCancel}
+                className="px-4 py-2 bg-[#B3E5FC] text-teal-800 rounded-lg hover:bg-[#81D4FA] transition-colors font-semibold"
+              >
+                Batalkan
+              </button>
+              <button
+                onClick={handleSave}
+                className="px-4 py-2 bg-[#26A69A] text-white rounded-lg hover:bg-[#1E887D] transition-colors font-semibold"
+              >
+                Simpan
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Edit Form Component
+  const EditForm = ({ record }) => {
+    const [formData, setFormData] = useState({
+      tension: record?.tension || '',
+      temperature: record?.temperature || '',
+      height: record?.height || '',
+      weight: record?.weight || '',
+      spo2: record?.spo2 || '',
+      pulse: record?.pulse || '',
+      therapy: record?.therapy || '',
+      anamnesis: record?.anamnesis || '',
+    });
+    const [error, setError] = useState(null);
+
+    const popupRef = useRef(null);
+
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (popupRef.current && !popupRef.current.contains(event.target)) {
+          setShowEditForm(false);
+        }
+      };
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }, []);
+
+    const handleFormChange = (e) => {
+      const { name, value } = e.target;
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleSave = async (e) => {
+      e.preventDefault();
+      try {
+        const token = getToken();
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+
+        const response = await fetch(
+          `https://api-uks.rplrus.com/api/health-conditions/${student.id}/${record.id_user_condition}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              tension: parseInt(formData.tension),
+              temperature: parseInt(formData.temperature),
+              height: parseFloat(formData.height),
+              weight: parseFloat(formData.weight),
+              spo2: parseInt(formData.spo2),
+              pulse: parseInt(formData.pulse),
+              therapy: formData.therapy,
+              anamnesis: formData.anamnesis,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to update health condition');
+        }
+
+        const updatedRecord = await response.json();
+        setMedicalRecords((prev) =>
+          prev.map((r) => (r.id === record.id ? updatedRecord.data : r))
+        );
+        setShowEditForm(false);
+      } catch (error) {
+        setError(error.message);
+        console.error('Error updating health condition:', error);
+      }
+    };
+
+    const handleCancel = () => {
+      setShowEditForm(false);
+    };
+
+    return (
+      <div className="fixed inset-0 bg-transparent flex items-center justify-center z-50 font-sans">
+        <div ref={popupRef} className="bg-white rounded-lg p-6 w-full max-w-3xl shadow-lg">
+          <div className="flex items-center mb-4">
+            <button
+              onClick={handleCancel}
+              className="mr-2 text-teal-800 hover:text-teal-600 transition-colors"
+              aria-label="Kembali"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+            <h2 className="text-lg font-semibold text-gray-800">Edit Rekam Medis</h2>
+          </div>
+          {error && <p className="text-red-500 mb-4">{error}</p>}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Anamnesis</label>
+              <textarea
+                name="anamnesis"
+                value={formData.anamnesis}
+                onChange={handleFormChange}
+                placeholder="Masukkan anamnesis"
+                className="w-full h-24 p-4 rounded-lg bg-[#E6F0FA] text-gray-800 focus:outline-none resize-none"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-6 gap-2">
+              {[
+                { label: 'Tensi', name: 'tension', placeholder: '120' },
+                { label: 'Nadi', name: 'pulse', placeholder: '80' },
+                { label: 'Suhu', name: 'temperature', placeholder: '36.5' },
+                { label: 'SpO2', name: 'spo2', placeholder: '98' },
+                { label: 'Tinggi Badan', name: 'height', placeholder: '170.00' },
+                { label: 'Berat Badan', name: 'weight', placeholder: '60.00' },
+              ].map(({ label, name, placeholder }, idx) => (
+                <div key={idx}>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
+                  <input
+                    type="text"
+                    name={name}
+                    value={formData[name]}
+                    onChange={handleFormChange}
+                    placeholder={placeholder}
+                    className="w-full p-2 rounded-lg bg-[#E6F0FA] text-center text-gray-800 focus:outline-none"
+                    required
+                  />
+                </div>
+              ))}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Terapi</label>
+              <textarea
+                name="therapy"
+                value={formData.therapy}
+                onChange={handleFormChange}
+                placeholder="Masukkan terapi"
+                className="w-full h-24 p-4 rounded-lg bg-[#E6F0FA] text-gray-800 focus:outline-none resize-none"
+                required
+              />
+            </div>
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                onClick={handleCancel}
+                className="px-4 py-2 bg-[#B3E5FC] text-teal-800 rounded-lg hover:bg-[#81D4FA] transition-colors font-semibold"
+              >
+                Batalkan
+              </button>
+              <button
+                onClick={handleSave}
+                className="px-4 py-2 bg-[#26A69A] text-white rounded-lg hover:bg-[#1E887D] transition-colors font-semibold"
+              >
+                Simpan
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // View Form Component
+  const ViewForm = ({ record }) => {
+    const [recordData, setRecordData] = useState(record);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+      const fetchRecord = async () => {
+        try {
+          const token = getToken();
+          if (!token) {
+            throw new Error('No authentication token found');
+          }
+
+          const response = await fetch(
+            `https://api-uks.rplrus.com/api/healthcondition/${record.id}`,
+            {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error('Failed to fetch health condition');
+          }
+
+          const data = await response.json();
+          setRecordData(data.data);
+        } catch (error) {
+          setError(error.message);
+          console.error('Error fetching health condition:', error);
+        }
+      };
+
+      fetchRecord();
+    }, [record.id]);
+
+    const handleCancel = () => {
+      setShowViewForm(false);
+    };
+
+    return (
+      <div className="fixed inset-0 bg-transparent flex items-center justify-center z-50 font-sans">
+        <div className="bg-white rounded-lg p-6 w-full max-w-3xl shadow-lg">
+          <div className="flex items-center mb-4">
+            <button
+              onClick={handleCancel}
+              className="mr-2 text-teal-800 hover:text-teal-600 transition-colors"
+              aria-label="Kembali"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+            <h2 className="text-lg font-semibold text-gray-800">Lihat Rekam Medis</h2>
+          </div>
+          {error && <p className="text-red-500 mb-4">{error}</p>}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Anamnesis</label>
+              <p className="w-full h-24 p-4 rounded-lg bg-[#E6F0FA] text-gray-800">{recordData.anamnesis || '-'}</p>
+            </div>
+            <div className="grid grid-cols-6 gap-2">
+              {[
+                { label: 'Tensi', name: 'tension' },
+                { label: 'Nadi', name: 'pulse' },
+                { label: 'Suhu', name: 'temperature' },
+                { label: 'SpO2', name: 'spo2' },
+                { label: 'Tinggi Badan', name: 'height' },
+                { label: 'Berat Badan', name: 'weight' },
+              ].map(({ label, name }, idx) => (
+                <div key={idx}>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
+                  <p className="w-full p-2 rounded-lg bg-[#E6F0FA] text-center text-gray-800">
+                    {recordData[name] || '-'}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Terapi</label>
+              <p className="w-full h-24 p-4 rounded-lg bg-[#E6F0FA] text-gray-800">{recordData.therapy || '-'}</p>
+            </div>
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                onClick={handleCancel}
+                className="px-4 py-2 bg-[#B3E5FC] text-teal-800 rounded-lg hover:bg-[#81D4FA] transition-colors font-semibold"
+              >
+                Kembali
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -237,31 +726,29 @@ const DetailRekamMedisSiswa = () => {
             </div>
             <div className="bg-white dark:bg-gray-800 rounded-[10px] p-6">
               <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Riwayat Medis</h3>
-              {loading && <p className="text-gray-600 dark:text-gray-300">Loading...</p>}
-              {error && <p className="text-red-500 mb-4">{error}</p>}
-              {filteredMedicalRecords.length > 0 ? (
+              {currentRecords.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead>
                       <tr className="bg-gray-100 dark:bg-gray-700">
+                        <th className="p-3 text-left text-gray-800 dark:text-gray-200">Nomor</th>
                         <th className="p-3 text-left text-gray-800 dark:text-gray-200">Tanggal</th>
-                        <th className="p-3 text-left text-gray-800 dark:text-gray-200">Anamnesa</th>
+                        <th className="p-3 text-left text-gray-800 dark:text-gray-200">Anamnesis</th>
                         <th className="p-3 text-left text-gray-800 dark:text-gray-200">Terapi</th>
-                        <th className="p-3 text-left text-gray-800 dark:text-gray-200">Dokter</th>
-                        <th className="p-3 text-left text-gray-800 dark:text-gray-200">Aksi</th>
+                        <th className="p-3 text-right w-24 text-gray-800 dark:text-gray-200"></th>
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredMedicalRecords.map((record, index) => (
+                      {currentRecords.map((record, index) => (
                         <tr
                           key={index}
                           className="border-b-2 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
                         >
-                          <td className="p-3 text-gray-600 dark:text-gray-300">{record.date || '-'}</td>
-                          <td className="p-3 text-gray-600 dark:text-gray-300">{record.anamnesa || '-'}</td>
-                          <td className="p-3 text-gray-600 dark:text-gray-300">{record.terapi || '-'}</td>
-                          <td className="p-3 text-gray-600 dark:text-gray-300">{record.doctor || '-'}</td>
-                          <td className="p-3 text-left">
+                          <td className="p-3 text-gray-600 dark:text-gray-300">{record.id_user_condition || '-'}</td>
+                          <td className="p-3 text-gray-600 dark:text-gray-300">{record.created_at?.split('T')[0] || '-'}</td>
+                          <td className="p-3 text-gray-600 dark:text-gray-300">{record.anamnesis || '-'}</td>
+                          <td className="p-3 text-gray-600 dark:text-gray-300">{record.therapy || '-'}</td>
+                          <td className="p-3 text-right">
                             <div className="flex items-center justify-between gap-2 h-full">
                               <div className="flex items-center gap-2">
                                 <FaEdit
@@ -270,14 +757,14 @@ const DetailRekamMedisSiswa = () => {
                                   aria-label="Edit rekam medis"
                                 />
                                 <FaTrash
-                                  onClick={() => handleDeleteRecord(record.id)}
+                                  onClick={() => handleDeleteRecord(record.id_user_condition)}
                                   className="w-5 h-5 text-red-500 dark:text-red-400 cursor-pointer hover:text-red-700 dark:hover:text-red-300"
-                                  aria-label="Hapus rekam medis"
+                                  aria-label="Nonaktifkan rekam medis"
                                 />
                               </div>
                               <svg
                                 onClick={() => handleViewRecordDetail(record.id)}
-                                className="w-5 h-5 text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200"
+                                className="w-8 h-8 text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -299,13 +786,50 @@ const DetailRekamMedisSiswa = () => {
                   </table>
                 </div>
               ) : (
-                <p className="text-gray-600 dark:text-gray-300">
-                  {loading ? 'Loading...' : 'Tidak ada rekam medis tersedia.'}
-                </p>
+                <p className="text-gray-600 dark:text-gray-300">Tidak ada rekam medis tersedia.</p>
               )}
+              <div className="flex justify-between items-center mt-6 text-sm dark:text-gray-300">
+                <p>
+                  Showing{' '}
+                  {filteredMedicalRecords.length === 0 ? 0 : indexOfFirstRecord + 1}–
+                  {Math.min(indexOfLastRecord, filteredMedicalRecords.length)} of{' '}
+                  {filteredMedicalRecords.length}
+                </p>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 border rounded text-gray-600 dark:text-gray-300 disabled:opacity-50"
+                  >
+                    ← Sebelumnya
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      className={`px-3 py-1 border rounded ${currentPage === page
+                          ? 'bg-green-600 dark:bg-[#204ECF] text-white'
+                          : 'text-gray-600 dark:text-gray-300'
+                        }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 border rounded text-gray-600 dark:text-gray-300 disabled:opacity-50"
+                  >
+                    Berikutnya →
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </main>
+        {showAddForm && <AddForm />}
+        {showEditForm && selectedRecord && <EditForm record={selectedRecord} />}
+        {showViewForm && selectedRecord && <ViewForm record={selectedRecord} />}
       </div>
     </div>
   );

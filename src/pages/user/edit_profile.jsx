@@ -36,7 +36,7 @@ const EditProfile = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
 
-  // Ambil data profile awal dari API
+  // Fetch profile data from API
   const fetchProfileData = async () => {
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
@@ -57,14 +57,13 @@ const EditProfile = () => {
       }
 
       const result = await response.json();
-      console.log("Profile data:", result); // Log untuk debugging
       if (result.status) {
         const data = result.data;
         setFormData({
           name: data.name || "",
           email: data.email || "",
           phone_number: data.phone_number || "",
-          gender: data.gender || "", // "" untuk null
+          gender: data.gender || "",
           name_department: data.name_department || "",
           name_grades: data.name_grades || "",
           class: data.class || "",
@@ -81,13 +80,38 @@ const EditProfile = () => {
     }
   };
 
-  // Panggil API saat komponen dimuat
   useEffect(() => {
     fetchProfileData();
   }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    // Validation for phone number fields (only numbers)
+    if (name === "phone_number" || name === "no_hp_parent") {
+      if (/^\d*$/.test(value)) {
+        setFormData((prev) => ({ ...prev, [name]: value }));
+      }
+      return;
+    }
+
+    // Validation for absent field (numbers between 1 and 40)
+    if (name === "absent") {
+      if (value === "" || (/^\d*$/.test(value) && value >= 1 && value <= 40)) {
+        setFormData((prev) => ({ ...prev, [name]: value }));
+      }
+      return;
+    }
+
+    // Validation for name fields (only letters and spaces)
+    if (name === "name" || name === "name_parent" || name === "name_walikelas") {
+      if (/^[A-Za-z\s]*$/.test(value)) {
+        setFormData((prev) => ({ ...prev, [name]: value }));
+      }
+      return;
+    }
+
+    // Default case for other fields
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -100,14 +124,13 @@ const EditProfile = () => {
   };
 
   const handleGenderClick = (gender) => {
-    console.log("Selected gender:", gender); // Log untuk debugging
     setFormData((prev) => ({ ...prev, gender }));
   };
 
   const getGenderInfo = (gender) => {
     if (gender === "male") return { icon: MaleIcon, text: "Male" };
     if (gender === "female") return { icon: FemaleIcon, text: "Female" };
-    return { icon: NeutralIcon, text: "Neutral" };
+    return { icon: NeutralIcon, text: "No Gender" };
   };
 
   const handleSubmit = async () => {
@@ -156,8 +179,6 @@ const EditProfile = () => {
         absent: parseInt(formData.absent) || null,
       };
 
-      console.log("Payload:", payload); // Log payload untuk debugging
-
       const response = await fetch("https://api-uks.rplrus.com/api/user/update", {
         method: "PUT",
         headers: {
@@ -168,8 +189,6 @@ const EditProfile = () => {
       });
 
       const result = await response.json();
-      console.log("API response:", result); // Log respons untuk debugging
-
       if (result.status) {
         setSuccess("Profile updated successfully!");
         setToastMessage("Profile updated successfully!");
@@ -194,7 +213,6 @@ const EditProfile = () => {
   return (
     <LayoutProfile>
       <div className="bg-white min-h-screen py-10 px-6 lg:px-16">
-        {/* Toast Notification */}
         {showToast && (
           <div
             className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg shadow-md flex items-center gap-2 animate-fade-in-out z-50 ${
@@ -211,7 +229,7 @@ const EditProfile = () => {
                 {success ? (
                   <path
                     fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414L9 13.414l4.707-4.707z"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707 1 z"
                     clipRule="evenodd"
                   />
                 ) : (
@@ -253,6 +271,7 @@ const EditProfile = () => {
               name="phone_number"
               value={formData.phone_number}
               onChange={handleChange}
+              type="tel"
             />
 
             <div>
@@ -261,7 +280,7 @@ const EditProfile = () => {
                 {[
                   { value: "male", text: "Male" },
                   { value: "female", text: "Female" },
-                  { value: "", text: "Neutral" },
+                  { value: "", text: "No Gender" },
                 ].map(({ value, text }) => (
                   <div key={value} className="flex flex-col items-center">
                     <img
@@ -325,6 +344,7 @@ const EditProfile = () => {
               name="no_hp_parent"
               value={formData.no_hp_parent}
               onChange={handleChange}
+              type="tel"
             />
             <InputField
               label="Nama Walikelas"
@@ -338,6 +358,8 @@ const EditProfile = () => {
               value={formData.absent}
               onChange={handleChange}
               type="number"
+              min="1"
+              max="40"
             />
 
             <div className="justify-center mt-8">
@@ -358,7 +380,7 @@ const EditProfile = () => {
   );
 };
 
-const InputField = ({ label, name, value, onChange, readOnly, type = "text" }) => (
+const InputField = ({ label, name, value, onChange, readOnly, type = "text", min, max }) => (
   <div>
     <label className="block text-sm font-medium text-gray-800 mb-1">{label}</label>
     <input
@@ -367,6 +389,8 @@ const InputField = ({ label, name, value, onChange, readOnly, type = "text" }) =
       value={value}
       onChange={onChange}
       readOnly={readOnly}
+      min={min}
+      max={max}
       className={`w-full max-w-lg px-3 py-2 rounded-lg border border-gray-300 text-sm ${
         readOnly ? "bg-gray-200 cursor-not-allowed" : ""
       }`}

@@ -1,28 +1,28 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from '../../partials/Sidebar';
 import Header from '../../partials/Header';
-import { FaTrash, FaEye, FaEdit } from "react-icons/fa";
+import { FaTrash, FaEye, FaEdit, FaPlus } from "react-icons/fa";
 import axios from "axios";
 
-const KategoriPage = () => {
+const StaffPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [categories, setCategories] = useState([]);
+  const [staffs, setStaffs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedStaff, setSelectedStaff] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false); // New state for dark mode
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
-  const [newCategory, setNewCategory] = useState({ title: "", description: "", image: null });
-  const [editCategory, setEditCategory] = useState({ id: null, title: "", description: "", image: null });
+  const [newStaff, setNewStaff] = useState({ name: "", role: "", wa: "", image: null });
+  const [editStaff, setEditStaff] = useState({ id: null, name: "", role: "", wa: "", image: null });
   const [successMessage, setSuccessMessage] = useState(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
+  const [waError, setWaError] = useState(null); // State for phone number error
 
-  // Base API URL
   const API_URL = "https://api-uks.rplrus.com/api";
 
   // Toggle dark mode
@@ -40,7 +40,7 @@ const KategoriPage = () => {
     });
   };
 
-  // Initialize theme based on localStorage or system preference
+  // Initialize theme
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -52,16 +52,12 @@ const KategoriPage = () => {
     }
   }, []);
 
-  // Fetch categories from API
+  // Fetch staff data
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchStaffs = async () => {
       try {
-        const response = await axios.get(`${API_URL}/categories`);
-        if (response.data.status) {
-          setCategories(response.data.data);
-        } else {
-          setError("Failed to fetch categories.");
-        }
+        const response = await axios.get(`${API_URL}/staff`);
+        setStaffs(response.data);
       } catch (err) {
         setError("Error fetching data: " + err.message);
       } finally {
@@ -69,47 +65,94 @@ const KategoriPage = () => {
       }
     };
 
-    fetchCategories();
+    fetchStaffs();
   }, []);
 
   // Handle view button click
-  const handleView = (category) => {
-    setSelectedCategory(category);
+  const handleView = (staff) => {
+    setSelectedStaff(staff);
     setIsModalOpen(true);
   };
 
   // Handle edit button click
-  const handleEdit = (category) => {
-    setEditCategory({
-      id: category.id,
-      title: category.title,
-      description: category.description,
+  const handleEdit = (staff) => {
+    setEditStaff({
+      id: staff.id,
+      name: staff.name,
+      role: staff.role,
+      wa: staff.wa,
       image: null,
     });
     setIsEditModalOpen(true);
   };
 
-  // Close modal
+  // Close modals
   const closeModal = () => {
     setIsModalOpen(false);
-    setSelectedCategory(null);
+    setSelectedStaff(null);
   };
 
-  // Close edit modal
   const closeEditModal = () => {
     setIsEditModalOpen(false);
-    setEditCategory({ id: null, title: "", description: "", image: null });
+    setEditStaff({ id: null, name: "", role: "", wa: "", image: null });
+    setWaError(null); // Clear phone number error
   };
 
-  // Close add modal
   const closeAddModal = () => {
     setIsAddModalOpen(false);
-    setNewCategory({ title: "", description: "", image: null });
+    setNewStaff({ name: "", role: "", wa: "", image: null });
     setError(null);
+    setWaError(null); // Clear phone number error
   };
 
-  // Handle adding a new category
-  const handleAddCategory = async (e) => {
+  // Validate phone number (only numbers)
+  const validatePhoneNumber = (value) => {
+    // Allow only digits
+    const phoneRegex = /^\d*$/;
+    return phoneRegex.test(value);
+  };
+
+  // Validate phone number length (at least 8 digits)
+  const isPhoneNumberValid = (value) => {
+    return value.length >= 8;
+  };
+
+  // Handle input changes for new staff
+  const handleInputChange = (e) => {
+    const { name, value, files } = e.target;
+    if (name === "wa") {
+      if (validatePhoneNumber(value)) {
+        setNewStaff({ ...newStaff, [name]: value });
+        setWaError(null);
+      } else {
+        setWaError("Nomor WA hanya boleh berisi angka");
+      }
+    } else if (name === "image" && files) {
+      setNewStaff({ ...newStaff, [name]: files[0] });
+    } else {
+      setNewStaff({ ...newStaff, [name]: value });
+    }
+  };
+
+  // Handle input changes for edit staff
+  const handleEditInputChange = (e) => {
+    const { name, value, files } = e.target;
+    if (name === "wa") {
+      if (validatePhoneNumber(value)) {
+        setEditStaff({ ...editStaff, [name]: value });
+        setWaError(null);
+      } else {
+        setWaError("Nomor WA hanya boleh berisi angka");
+      }
+    } else if (name === "image" && files) {
+      setEditStaff({ ...editStaff, [name]: files[0] });
+    } else {
+      setEditStaff({ ...editStaff, [name]: value });
+    }
+  };
+
+  // Handle adding a new staff
+  const handleAddStaff = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem('token');
     if (!token) {
@@ -117,36 +160,39 @@ const KategoriPage = () => {
       return;
     }
 
+    // Validate phone number length
+    if (!isPhoneNumberValid(newStaff.wa)) {
+      setWaError("Nomor WA harus memiliki minimal 8 digit");
+      return;
+    }
+
     const formData = new FormData();
-    formData.append("title", newCategory.title);
-    formData.append("description", newCategory.description);
-    if (newCategory.image) {
-      formData.append("image", newCategory.image);
+    formData.append("name", newStaff.name);
+    formData.append("role", newStaff.role);
+    formData.append("wa", newStaff.wa);
+    if (newStaff.image) {
+      formData.append("image", newStaff.image);
     }
 
     try {
-      const response = await axios.post(`${API_URL}/categories`, formData, {
+      const response = await axios.post(`${API_URL}/staff`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
         },
       });
 
-      if (response.data.status) {
-        setCategories([...categories, response.data.data]);
-        closeAddModal();
-        setSuccessMessage("Kategori berhasil dibuat");
-        setTimeout(() => setSuccessMessage(null), 3000);
-      } else {
-        setError("Failed to add category: " + response.data.message);
-      }
+      setStaffs([...staffs, response.data.data]);
+      closeAddModal();
+      setSuccessMessage("Staff berhasil ditambahkan");
+      setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err) {
-      setError("Error adding category: " + (err.response?.data?.message || err.message));
+      setError("Error adding staff: " + (err.response?.data?.message || err.message));
     }
   };
 
-  // Handle updating a category
-  const handleUpdateCategory = async (e) => {
+  // Handle updating a staff
+  const handleUpdateStaff = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem('token');
     if (!token) {
@@ -154,32 +200,35 @@ const KategoriPage = () => {
       return;
     }
 
+    // Validate phone number length
+    if (!isPhoneNumberValid(editStaff.wa)) {
+      setWaError("Nomor WA harus memiliki minimal 8 digit");
+      return;
+    }
+
     const formData = new FormData();
-    formData.append("title", editCategory.title);
-    formData.append("description", editCategory.description);
-    if (editCategory.image) {
-      formData.append("image", editCategory.image);
+    formData.append("name", editStaff.name);
+    formData.append("role", editStaff.role);
+    formData.append("wa", editStaff.wa);
+    if (editStaff.image) {
+      formData.append("image", editStaff.image);
     }
     formData.append("_method", "PUT");
 
     try {
-      const response = await axios.post(`${API_URL}/categories/${editCategory.id}`, formData, {
+      const response = await axios.post(`${API_URL}/staff/${editStaff.id}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
         },
       });
 
-      if (response.data.status) {
-        setCategories(categories.map(cat => cat.id === editCategory.id ? response.data.data : cat));
-        closeEditModal();
-        setSuccessMessage("Kategori berhasil diedit");
-        setTimeout(() => setSuccessMessage(null), 3000);
-      } else {
-        setError("Failed to update category: " + response.data.message);
-      }
+      setStaffs(staffs.map(staff => staff.id === editStaff.id ? response.data.data : staff));
+      closeEditModal();
+      setSuccessMessage("Staff berhasil diedit");
+      setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err) {
-      setError("Error updating category: " + (err.response?.data?.message || err.message));
+      setError("Error updating staff: " + (err.response?.data?.message || err.message));
     }
   };
 
@@ -199,57 +248,38 @@ const KategoriPage = () => {
     }
 
     try {
-      const response = await axios.delete(`${API_URL}/categories/${deleteId}`, {
+      await axios.delete(`${API_URL}/staff/${deleteId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      if (response.data.status) {
-        setCategories(categories.filter(cat => cat.id !== deleteId));
-        setIsConfirmModalOpen(false);
-        setSuccessMessage("Kategori berhasil dihapus");
-        setTimeout(() => setSuccessMessage(null), 3000);
-      } else {
-        setError("Failed to delete category: " + response.data.message);
-      }
+      setStaffs(staffs.filter(staff => staff.id !== deleteId));
+      setIsConfirmModalOpen(false);
+      setSuccessMessage("Staff berhasil dihapus");
+      setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err) {
-      setError("Error deleting category: " + (err.response?.data?.message || err.message));
+      setError("Error deleting staff: " + (err.response?.data?.message || err.message));
     } finally {
       setDeleteId(null);
-    }
-  };
-
-  // Handle input changes for new category
-  const handleInputChange = (e) => {
-    const { name, value, files } = e.target;
-    if (name === "image" && files) {
-      setNewCategory({ ...newCategory, [name]: files[0] });
-    } else {
-      setNewCategory({ ...newCategory, [name]: value });
-    }
-  };
-
-  // Handle input changes for edit category
-  const handleEditInputChange = (e) => {
-    const { name, value, files } = e.target;
-    if (name === "image" && files) {
-      setEditCategory({ ...editCategory, [name]: files[0] });
-    } else {
-      setEditCategory({ ...editCategory, [name]: value });
     }
   };
 
   // Function to get the correct image URL
   const getImageUrl = (image) => {
     if (!image) return "/placeholder.png";
+    // Remove redundant prefix from the image URL
+    const prefix = "https://api-uks.rplrus.com/storage/";
+    if (image.startsWith(prefix + prefix)) {
+      return image.replace(prefix + prefix, prefix);
+    }
     return image;
   };
 
   // Pagination logic
-  const totalPages = Math.ceil(categories.length / itemsPerPage);
+  const totalPages = Math.ceil(staffs.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentCategories = categories.slice(indexOfFirstItem, indexOfLastItem);
+  const currentStaffs = staffs.slice(indexOfFirstItem, indexOfLastItem);
 
   // Handle page change
   const handlePageChange = (pageNumber) => {
@@ -285,29 +315,14 @@ const KategoriPage = () => {
 
         <main className="grow p-6">
           <div className="w-full max-w-7xl mx-auto">
-            {/* Dark Mode Toggle Button */}
-
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl text-gray-800 dark:text-gray-200 font-bold">Kategori</h2>
+              <h2 className="text-2xl text-gray-800 dark:text-gray-200 font-bold">Staff</h2>
               <button
                 className="flex items-center gap-2 bg-teal-500 dark:bg-teal-600 text-white px-4 py-2 rounded-full hover:bg-teal-600 dark:hover:bg-teal-700 transition-colors duration-200"
                 onClick={() => setIsAddModalOpen(true)}
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                <span>Tambahkan Kategori</span>
+                <FaPlus className="w-5 h-5" />
+                <span>Menambahkan Staff</span>
               </button>
             </div>
 
@@ -337,29 +352,31 @@ const KategoriPage = () => {
               <div className="text-center text-gray-500 dark:text-gray-400">Loading...</div>
             ) : error ? (
               <div className="text-center text-red-500 dark:text-red-400">{error}</div>
-            ) : categories.length === 0 ? (
-              <div className="text-center text-gray-500 dark:text-gray-400">No categories available.</div>
+            ) : staffs.length === 0 ? (
+              <div className="text-center text-gray-500 dark:text-gray-400">No staff available.</div>
             ) : (
               <table className="w-full text-sm bg-white dark:bg-gray-800 shadow-sm">
                 <thead>
                   <tr className="text-left text-gray-500 dark:text-gray-300">
                     <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">No</th>
                     <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">Name</th>
-                    <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">Deskripsi</th>
-                    <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium text-center">Gambar</th>
+                    <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">Role</th>
+                    <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">WA</th>
+                    <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium text-center">Image</th>
                     <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {currentCategories.map((category, index) => (
-                    <tr key={category.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                  {currentStaffs.map((staff, index) => (
+                    <tr key={staff.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
                       <td className="py-3 px-4 text-gray-700 dark:text-gray-200">{indexOfFirstItem + index + 1}</td>
-                      <td className="py-3 px-4 text-gray-700 dark:text-gray-200">{category.title}</td>
-                      <td className="py-3 px-4 text-gray-700 dark:text-gray-200 italic">{category.description}</td>
+                      <td className="py-3 px-4 text-gray-700 dark:text-gray-200">{staff.name}</td>
+                      <td className="py-3 px-4 text-gray-700 dark:text-gray-200">{staff.role}</td>
+                      <td className="py-3 px-4 text-gray-700 dark:text-gray-200">{staff.wa}</td>
                       <td className="py-3 px-4 text-center">
                         <img
-                          src={getImageUrl(category.image)}
-                          alt={category.title}
+                          src={getImageUrl(staff.image)}
+                          alt={staff.name}
                           className="w-6 object-contain inline-block"
                           onError={(e) => (e.target.src = "/placeholder.png")}
                         />
@@ -368,19 +385,19 @@ const KategoriPage = () => {
                         <div className="flex justify-center gap-2">
                           <button
                             className="text-gray-500 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400"
-                            onClick={() => handleView(category)}
+                            onClick={() => handleView(staff)}
                           >
                             <FaEye className="w-4 h-4" />
                           </button>
                           <button
                             className="text-gray-500 dark:text-gray-300 hover:text-green-500 dark:hover:text-green-400"
-                            onClick={() => handleEdit(category)}
+                            onClick={() => handleEdit(staff)}
                           >
                             <FaEdit className="w-4 h-4" />
                           </button>
                           <button
                             className="text-gray-500 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400"
-                            onClick={() => handleDeleteConfirm(category.id)}
+                            onClick={() => handleDeleteConfirm(staff.id)}
                           >
                             <FaTrash className="w-4 h-4" />
                           </button>
@@ -395,7 +412,7 @@ const KategoriPage = () => {
             <div className="flex justify-between items-center mt-6 text-gray-500 dark:text-gray-300 text-sm">
               <span>
                 Showing {indexOfFirstItem + 1}-
-                {Math.min(indexOfLastItem, categories.length)} of {categories.length}
+                {Math.min(indexOfLastItem, staffs.length)} of {staffs.length}
               </span>
               <div className="flex space-x-1">
                 <button
@@ -475,16 +492,16 @@ const KategoriPage = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
-              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4">Tambah Kategori</h3>
-              <form onSubmit={handleAddCategory} className="space-y-4">
+              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4">Tambah Staff</h3>
+              <form onSubmit={handleAddStaff} className="space-y-4">
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-medium text-gray-700 dark:text-gray-300">Nama Kategori:</span>
+                    <span className="label-text font-medium text-gray-700 dark:text-gray-300">Nama Staff:</span>
                   </label>
                   <input
                     type="text"
-                    name="title"
-                    value={newCategory.title}
+                    name="name"
+                    value={newStaff.name}
                     onChange={handleInputChange}
                     className="input w-full rounded-lg bg-teal-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 placeholder-gray-500 dark:placeholder-gray-400"
                     required
@@ -493,16 +510,33 @@ const KategoriPage = () => {
                 </div>
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-medium text-gray-700 dark:text-gray-300">Deskripsi:</span>
+                    <span className="label-text font-medium text-gray-700 dark:text-gray-300">Role:</span>
                   </label>
-                  <textarea
-                    name="description"
-                    value={newCategory.description}
+                  <input
+                    type="text"
+                    name="role"
+                    value={newStaff.role}
                     onChange={handleInputChange}
-                    className="textarea w-full rounded-lg bg-teal-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 placeholder-gray-500 dark:placeholder-gray-400"
+                    className="input w-full rounded-lg bg-teal-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 placeholder-gray-500 dark:placeholder-gray-400"
                     required
                     aria-required="true"
                   />
+                </div>
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text font-medium text-gray-700 dark:text-gray-300">Nomor WA:</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="wa"
+                    value={newStaff.wa}
+                    onChange={handleInputChange}
+                    className="input w-full rounded-lg bg-teal-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 placeholder-gray-500 dark:placeholder-gray-400"
+                    required
+                    aria-required="true"
+                    placeholder="0812345678"
+                  />
+                  {waError && <p className="text-red-500 dark:text-red-400 text-sm mt-1">{waError}</p>}
                 </div>
                 <div className="form-control">
                   <label className="label">
@@ -527,7 +561,7 @@ const KategoriPage = () => {
                         d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                       />
                     </svg>
-                    <span>{newCategory.image ? newCategory.image.name : "Tambah Gambar"}</span>
+                    <span>{newStaff.image ? newStaff.image.name : "Tambah Gambar"}</span>
                   </button>
                   <input
                     id="file-input-add"
@@ -568,16 +602,16 @@ const KategoriPage = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
-              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4">Edit Kategori</h3>
-              <form onSubmit={handleUpdateCategory} className="space-y-4">
+              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4">Edit Staff</h3>
+              <form onSubmit={handleUpdateStaff} className="space-y-4">
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-medium text-gray-700 dark:text-gray-300">Nama Kategori:</span>
+                    <span className="label-text font-medium text-gray-700 dark:text-gray-300">Nama Staff:</span>
                   </label>
                   <input
                     type="text"
-                    name="title"
-                    value={editCategory.title}
+                    name="name"
+                    value={editStaff.name}
                     onChange={handleEditInputChange}
                     className="input w-full rounded-lg bg-teal-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 placeholder-gray-500 dark:placeholder-gray-400"
                     required
@@ -586,16 +620,33 @@ const KategoriPage = () => {
                 </div>
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-medium text-gray-700 dark:text-gray-300">Deskripsi:</span>
+                    <span className="label-text font-medium text-gray-700 dark:text-gray-300">Role:</span>
                   </label>
-                  <textarea
-                    name="description"
-                    value={editCategory.description}
+                  <input
+                    type="text"
+                    name="role"
+                    value={editStaff.role}
                     onChange={handleEditInputChange}
-                    className="textarea w-full rounded-lg bg-teal-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 placeholder-gray-500 dark:placeholder-gray-400"
+                    className="input w-full rounded-lg bg-teal-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 placeholder-gray-500 dark:placeholder-gray-400"
                     required
                     aria-required="true"
                   />
+                </div>
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text font-medium text-gray-700 dark:text-gray-300">Nomor WA:</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="wa"
+                    value={editStaff.wa}
+                    onChange={handleEditInputChange}
+                    className="input w-full rounded-lg bg-teal-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 placeholder-gray-500 dark:placeholder-gray-400"
+                    required
+                    aria-required="true"
+                    placeholder="0812345678"
+                  />
+                  {waError && <p className="text-red-500 dark:text-red-400 text-sm mt-1">{waError}</p>}
                 </div>
                 <div className="form-control">
                   <label className="label">
@@ -620,7 +671,7 @@ const KategoriPage = () => {
                         d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                       />
                     </svg>
-                    <span>{editCategory.image ? editCategory.image.name : "Tambah Gambar"}</span>
+                    <span>{editStaff.image ? editStaff.image.name : "Tambah Gambar"}</span>
                   </button>
                   <input
                     id="file-input-edit"
@@ -649,22 +700,26 @@ const KategoriPage = () => {
           </div>
         )}
 
-        {isModalOpen && selectedCategory && (
+        {isModalOpen && selectedStaff && (
           <div className="fixed inset-0 bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50">
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md shadow-lg z-60 relative">
               <div className="mb-4">
-                <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Jurusan</label>
-                <div className="bg-green-100 dark:bg-green-900 p-3 rounded">{selectedCategory.title}</div>
+                <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Nama</label>
+                <div className="bg-green-100 dark:bg-green-900 p-3 rounded">{selectedStaff.name}</div>
               </div>
               <div className="mb-4">
-                <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Deskripsi:</label>
-                <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded">{selectedCategory.description}</div>
+                <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Role</label>
+                <div className="bg-green-100 dark:bg-green-900 p-3 rounded">{selectedStaff.role}</div>
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Nomor WA:</label>
+                <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded">{selectedStaff.wa}</div>
               </div>
               <div className="mb-4">
                 <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Gambar:</label>
                 <img
-                  src={getImageUrl(selectedCategory.image)}
-                  alt={selectedCategory.title}
+                  src={getImageUrl(selectedStaff.image)}
+                  alt={selectedStaff.name}
                   className="w-full h-32 object-contain rounded"
                   onError={(e) => (e.target.src = "/placeholder.png")}
                 />
@@ -685,9 +740,9 @@ const KategoriPage = () => {
           <div className="fixed inset-0 bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50">
             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-2xl relative animate-fade-in">
               <div className="p-6 text-center">
-                <h3 className="text-xl font-bold text-red-600 dark:text-red-400 mb-2">Yakin ingin Menghapus Kategori?</h3>
+                <h3 className="text-xl font-bold text-red-600 dark:text-red-400 mb-2">Yakin ingin Menghapus Staff?</h3>
                 <p className="text-gray-600 dark:text-gray-300 mb-4">
-                  Fitur ini digunakan untuk menghapus kategori dari sistem secara aman. Saat pengguna menekan tombol hapus, seluruh pengaturan dan data kategori yang belum tersimpan akan dihapus. Pastikan untuk menyimpan progres Anda sebelum menghapus kategori.
+                  Fitur ini digunakan untuk menghapus staff dari sistem secara aman. Seluruh data staff akan dihapus. Pastikan untuk menyimpan progres Anda sebelum menghapus staff.
                 </p>
                 <div className="flex justify-center gap-4">
                   <button
@@ -732,4 +787,4 @@ const KategoriPage = () => {
   );
 };
 
-export default KategoriPage;
+export default StaffPage;

@@ -1,33 +1,60 @@
+import { useState, useEffect } from 'react';
 import Layout from '../../components/user/layout';
-import UksImg1 from "../../assets/img/hospital-room-interior.jpg";
-import UksImg2 from "../../assets/img/person_bg.png";
+import UksImg1 from '../../assets/img/hospital-room-interior.jpg';
+import UksImg2 from '../../assets/img/person_bg.png';
 
-const pengurusData = [
-  {
-    nama: "Budi Santoso",
-    jabatan: "Ketua UKS",
-    deskripsi: "Memzimpin dan mengkoordinasi seluruh kegiatan UKS di sekolah.",
-    foto: UksImg2,
-  },
-  {
-    nama: "Siti Aminah",
-    jabatan: "Wakil Ketua UKS",
-    deskripsi: "Membantu ketua dalam merancang program-program kesehatan siswa.",
-    foto: UksImg2,
-  },
-  {
-    nama: "Andi Wijaya",
-    jabatan: "Sekretaris UKS",
-    deskripsi: "Mengelola administrasi dan dokumentasi kegiatan UKS.",
-    foto: UksImg2,
-  },
-];
+// Fetch staff data from the API
+const fetchPengurusData = async () => {
+  try {
+    const response = await fetch('https://api-uks.rplrus.com/api/staff');
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    const data = await response.json();
+    // Map API fields to match the component's expected structure
+    const mappedData = data.map(item => ({
+      nama: item.name,
+      jabatan: item.role,
+      deskripsi: `Bertugas sebagai ${item.role.toLowerCase()} untuk mendukung program kesehatan sekolah.`,
+      foto: item.image.replace('https://api-uks.rplrus.com/storage/https://api-uks.rplrus.com/storage/', 'https://api-uks.rplrus.com/storage/') || UksImg2,
+    }));
+    // Cache the data in localStorage
+    localStorage.setItem('pengurusData', JSON.stringify(mappedData));
+    return mappedData;
+  } catch (error) {
+    console.error('Error fetching pengurus data:', error);
+    // Try to load cached data from localStorage
+    const cachedData = localStorage.getItem('pengurusData');
+    return cachedData ? JSON.parse(cachedData) : [];
+  }
+};
 
 export default function AboutUs() {
+  const [pengurusData, setPengurusData] = useState([]);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    // Fetch data when component mounts
+    const loadData = async () => {
+      const cachedData = localStorage.getItem('pengurusData');
+      if (cachedData) {
+        // Use cached data immediately to avoid delay
+        setPengurusData(JSON.parse(cachedData));
+      }
+      const data = await fetchPengurusData();
+      if (data.length === 0 && !cachedData) {
+        setError('Gagal memuat data tim kesehatan. Silakan coba lagi nanti.');
+      } else {
+        setPengurusData(data);
+        setError(null);
+      }
+    };
+    loadData();
+  }, []);
+
   return (
     <Layout>
       <div className="bg-white text-black">
-
         {/* Section: Apa Itu UKS */}
         <section className="min-h-[80vh] flex items-center px-6 md:px-20 py-20">
           <div className="grid md:grid-cols-2 gap-10 items-center w-full">
@@ -73,7 +100,7 @@ export default function AboutUs() {
 
         {/* Section: Mengenal Para Pengurus */}
         <section className="min-h-[80vh] flex flex-col justify-center items-center px-6 md:px-20 py-20 text-center">
-        <div className="space-y-12 w-full">
+          <div className="space-y-12 w-full">
             <div>
               <h2 className="text-2xl font-bold">Mengenal Para Pengurus UKS</h2>
               <div className="w-100 h-1 bg-teal-500 mb-4 mx-auto"></div>
@@ -84,27 +111,32 @@ export default function AboutUs() {
             </div>
 
             <div className="flex flex-col md:flex-row justify-center gap-16">
-              {pengurusData.map((pengurus, index) => (
-                <div
-                  key={index}
-                  className="flex flex-col items-center space-y-6 p-8 bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300"
-                >
-                  <img
-                    src={pengurus.foto}
-                    alt={pengurus.nama}
-                    className="w-44 h-44 object-cover rounded-full"
-                  />
-                  <h3 className="font-semibold text-lg">{pengurus.nama}</h3>
-                  <p className="text-gray-500 text-sm">{pengurus.jabatan}</p>
-                  <p className="text-gray-500 text-sm max-w-xs text-center">
-                    {pengurus.deskripsi}
-                  </p>
-                </div>
-              ))}
+              {error ? (
+                <p className="text-red-500">{error}</p>
+              ) : pengurusData.length > 0 ? (
+                pengurusData.map((pengurus, index) => (
+                  <div
+                    key={index}
+                    className="flex flex-col items-center space-y-6 p-8 bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300"
+                  >
+                    <img
+                      src={pengurus.foto}
+                      alt={pengurus.nama}
+                      className="w-44 h-44 object-cover rounded-full"
+                    />
+                    <h3 className="font-semibold text-lg">{pengurus.nama}</h3>
+                    <p className="text-gray-500 text-sm">{pengurus.jabatan}</p>
+                    <p className="text-gray-500 text-sm max-w-xs text-center">
+                      {pengurus.deskripsi}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500">Loading pengurus data...</p>
+              )}
             </div>
           </div>
         </section>
-
       </div>
     </Layout>
   );

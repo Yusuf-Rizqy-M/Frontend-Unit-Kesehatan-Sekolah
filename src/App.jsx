@@ -20,7 +20,6 @@ import AboutUs from "./pages/user/about_us";
 import InfoProfile from "./pages/user/info_profile";
 import EditProfile from "./pages/user/edit_profile";
 import AntreUser from "./pages/user/antre-user";
-import AntreAfter from "./pages/user/antre-after";
 import Antrian from "./pages/user/antrian";
 
 // Edukasi sections
@@ -39,12 +38,15 @@ import StudentMedicalRecord from "./pages/admin/rekam_medis_siswa";
 import MedicalRecord from "./pages/admin/detail_rekam_medas"; // Already imported
 import RekamMedisSiswa from "./pages/admin/rekam_medis_siswa"; // Already imported
 import DetailRekamMedisSiswa from "./pages/admin/detail_rekam_medas";
+import staff_admin from "./pages/admin/staff_admin";
+import RekamAntri from "./pages/admin/rekam_antri_siswa";
 
 
 // Routes
 import ProtectedRoute from "./routes/protectedRoute";
 import UserRoute from "./routes/userRoute";
 import NotFound from "./pages/notfound";
+import Staff from "./pages/admin/staff_admin";
 
 function App() {
   const location = useLocation();
@@ -129,14 +131,6 @@ function App() {
             </UserRoute>
           }
         />
-        <Route
-          path="/antreafter"
-          element={
-            <UserRoute>
-              <AntreAfter />
-            </UserRoute>
-          }
-        />
 
         {/* Edukasi detail routes */}
         <Route
@@ -218,6 +212,22 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <StudentMedicalRecord />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/staff_admin"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <Staff />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/rekamantri"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <RekamAntri />
             </ProtectedRoute>
           }
         />

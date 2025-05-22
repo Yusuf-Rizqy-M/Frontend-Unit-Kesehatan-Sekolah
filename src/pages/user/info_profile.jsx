@@ -1,21 +1,25 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import LayoutProfile from "../../components/user/layout_profile";
 import ProfileImg from "../../assets/img/doctor_img_rounded.png";
 import MaleIcon from "../../assets/img/gendermale.png";
 import FemaleIcon from "../../assets/img/genderfemale.png";
-import NeutralIcon from "../../assets/img/genderno.png"; // Impor ikon untuk gender null
+import NeutralIcon from "../../assets/img/genderno.png";
 
 const InfoProfile = () => {
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
-  // Fungsi untuk memanggil API
+  // Function to fetch profile data from API
   const fetchProfileData = async () => {
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
       if (!token) {
-        throw new Error("No token found, please login again.");
+        setError("Please log in to continue");
+        navigate("/login");
+        return;
       }
 
       const response = await fetch("https://api-uks.rplrus.com/api/user", {
@@ -27,28 +31,48 @@ const InfoProfile = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch profile data");
+        const result = await response.json();
+        throw new Error(result.message || `Failed to fetch profile data: ${response.statusText}`);
       }
 
       const result = await response.json();
-      if (result.status) {
-        setProfileData(result.data);
+      console.log("API response:", result); // Debug response
+      // Check if response has expected data
+      const data = result.data && typeof result.data === "object" ? result.data : null;
+      if (result.status && data) {
+        setProfileData(data);
+        // Cache the data in localStorage
+        localStorage.setItem("profileData", JSON.stringify(data));
       } else {
-        throw new Error(result.message || "Failed to retrieve profile");
+        throw new Error(result.message || "Invalid response format");
       }
-      setLoading(false);
     } catch (err) {
-      setError(err.message);
+      console.error("Fetch error:", err);
+      // Try to load cached data from localStorage
+      const cachedData = localStorage.getItem("profileData");
+      if (cachedData) {
+        setProfileData(JSON.parse(cachedData));
+        setError(null);
+      } else {
+        setError(err.message === "Please log in to continue" ? err.message : "Tidak dapat terhubung ke server. Silakan coba lagi nanti.");
+      }
+    } finally {
       setLoading(false);
     }
   };
 
-  // Panggil API saat komponen dimuat
+  // Fetch data on component mount
   useEffect(() => {
+    // Check for cached data first
+    const cachedData = localStorage.getItem("profileData");
+    if (cachedData) {
+      setProfileData(JSON.parse(cachedData));
+      setLoading(false);
+    }
     fetchProfileData();
-  }, []);
+  }, [navigate]);
 
-  // Data default untuk form, sesuai dengan respons API
+  // Default form fields
   const defaultFormFields = [
     { label: "Name", key: "name" },
     { label: "Email", key: "email" },
@@ -62,28 +86,73 @@ const InfoProfile = () => {
     { label: "Absent", key: "absent" },
   ];
 
-  // Fungsi untuk memilih ikon dan teks berdasarkan jenis kelamin
+  // Function to select icon and text based on gender
   const getGenderInfo = (gender) => {
     if (gender === "male") {
       return { icon: MaleIcon, text: "Male" };
     } else if (gender === "female") {
       return { icon: FemaleIcon, text: "Female" };
     }
-    return { icon: NeutralIcon, text: "No Gender" }; // Untuk gender null atau tidak valid
+    return { icon: NeutralIcon, text: "No Gender" };
   };
 
   return (
     <LayoutProfile>
+      <style>
+        {`
+          .double-spinner {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            margin: 0 auto;
+          }
+          .spinner-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 4px solid transparent;
+            border-radius: 50%;
+            animation: spin 1.5s linear infinite;
+          }
+          .spinner-ring.outer {
+            border-top-color: #4FB7BD;
+            border-bottom-color: #4FB7BD;
+            animation-direction: normal;
+          }
+          .spinner-ring.inner {
+            border-top-color: #93D3CC;
+            border-bottom-color: #93D3CC;
+            animation-direction: reverse;
+            width: 40px;
+            height: 40px;
+            top: 10px;
+            left: 10px;
+          }
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}
+      </style>
       <div className="bg-[#E3F7F6]">
         <main className="bg-[#F9FCFD] min-h-screen overflow-y-auto pt-10 px-6 lg:px-16 py-10">
           <h2 className="text-xl font-semibold border-b-2 border-gray-400 pb-2 text-[#303030] text-left w-[80%]">
             Info Profile
           </h2>
 
-          {loading && <p>Loading profile data...</p>}
-          {error && <p className="text-red-500">{error}</p>}
-
-          {!loading && !error && (
+          {loading ? (
+            <div className="flex flex-col items-center justify-center h-[calc(100vh-100px)]">
+              <div className="double-spinner">
+                <div className="spinner-ring outer"></div>
+                <div className="spinner-ring inner"></div>
+              </div>
+              <p className="text-gray-500 mt-4">Memuat...</p>
+            </div>
+          ) : error ? (
+            <p className="text-red-500 text-center text-lg">{error}</p>
+          ) : !profileData ? (
+            <p className="text-gray-600 text-center text-lg">Tidak ada data profil tersedia</p>
+          ) : (
             <div className="mt-6 flex flex-col lg:flex-row gap-12">
               {/* Left: Info Form */}
               <div className="lg:w-2/3 w-full space-y-4">
@@ -121,7 +190,13 @@ const InfoProfile = () => {
               </div>
 
               {/* Right: Profile Image */}
-      
+              <div className="lg:w-1/3 w-full flex justify-center lg:justify-end">
+                <img
+                  src={ProfileImg}
+                  alt="Profile"
+                  className="w-48 h-48 lg:w-64 lg:h-64 rounded-full object-cover"
+                />
+              </div>
             </div>
           )}
         </main>

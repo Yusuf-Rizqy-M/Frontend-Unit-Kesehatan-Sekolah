@@ -55,9 +55,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
     <div className="min-w-fit">
       {/* Sidebar backdrop (mobile only) */}
       <div
-        className={`fixed inset-0 bg-gray-900/30 z-40 lg:hidden lg:z-auto transition-opacity duration-200 ${
-          sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
+        className={`fixed inset-0 bg-gray-900/30 z-40 lg:hidden lg:z-auto transition-opacity duration-200 ${sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
         aria-hidden="true"
       ></div>
 
@@ -65,13 +64,11 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
       <div
         id="sidebar"
         ref={sidebar}
-        className={`flex lg:flex! flex-col absolute z-40 left-0 top-0 lg:static lg:left-auto lg:top-auto lg:translate-x-0 h-[100dvh] overflow-y-scroll lg:overflow-y-auto no-scrollbar w-64 lg:w-20 lg:sidebar-expanded:!w-64 2xl:w-64! shrink-0 bg-white dark:bg-gray-800 p-4 transition-all duration-200 ease-in-out ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-64"
-        } ${
-          variant === "v2"
+        className={`flex lg:flex! flex-col absolute z-40 left-0 top-0 lg:static lg:left-auto lg:top-auto lg:translate-x-0 h-[100dvh] overflow-y-scroll lg:overflow-y-auto no-scrollbar w-64 lg:w-20 lg:sidebar-expanded:!w-64 2xl:w-64! shrink-0 bg-white dark:bg-gray-800 p-4 transition-all duration-200 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-64"
+          } ${variant === "v2"
             ? "border-r border-gray-200 dark:border-gray-700/60"
             : "rounded-r-2xl shadow-xs"
-        }`}
+          }`}
       >
         {/* Sidebar header */}
         <div className="flex justify-between mb-10 pr-3 sm:px-2">
@@ -125,11 +122,10 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                     <React.Fragment>
                       <a
                         href="#0"
-                        className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
-                          pathname === "/" || pathname.includes("dashboard")
+                        className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${pathname === "/" || pathname.includes("dashboard")
                             ? ""
                             : "hover:text-gray-900 dark:hover:text-white"
-                        }`}
+                          }`}
                         onClick={(e) => {
                           e.preventDefault();
                           handleClick();
@@ -139,11 +135,10 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
                             <svg
-                              className={`shrink-0 fill-current ${
-                                pathname === "/" || pathname.includes("dashboard")
+                              className={`shrink-0 fill-current ${pathname === "/" || pathname.includes("dashboard")
                                   ? "text-violet-500"
                                   : "text-gray-400 dark:text-gray-500"
-                              }`}
+                                }`}
                               xmlns="http://www.w3.org/2000/svg"
                               width="16"
                               height="16"
@@ -158,9 +153,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                           </div>
                           <div className="flex shrink-0 ml-2">
                             <svg
-                              className={`w-3 h-3 shrink-0 ml-1 fill-current text-gray-400 dark:text-gray-500 ${
-                                open && "rotate-180"
-                              }`}
+                              className={`w-3 h-3 shrink-0 ml-1 fill-current text-gray-400 dark:text-gray-500 ${open && "rotate-180"
+                                }`}
                               viewBox="0 0 12 12"
                             >
                               <path d="M5.9 11.4L.5 6l1.4-1.4 4 4 4-4L11.3 6z" />
@@ -170,9 +164,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                       </a>
                       <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
                         <ul
-                          className={`pl-8 mt-1 flex flex-col items-start ${
-                            !open && "hidden"
-                          }`}
+                          className={`pl-8 mt-1 flex flex-col items-start ${!open && "hidden"
+                            }`}
                         >
                           <li className="mb-1 last:mb-0">
                             <NavLink
@@ -199,7 +192,9 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
               {/* Rekam Medis */}
               <SidebarLinkGroup
                 activecondition={
-                  pathname.includes("rekammedis") || pathname.includes("rekamantri")
+                  pathname.includes("rekammedis") ||
+                  pathname.includes("rekamantri") ||
+                  pathname.includes("MedicalRecord") // Sertakan MedicalRecord untuk menjaga menu induk aktif
                 }
               >
                 {(handleClick, open) => {
@@ -207,12 +202,12 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                     <React.Fragment>
                       <a
                         href="#0"
-                        className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
-                          pathname.includes("rekammedis") ||
-                          pathname.includes("rekamantri")
+                        className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${pathname.includes("rekammedis") ||
+                            pathname.includes("rekamantri") ||
+                            pathname.includes("MedicalRecord")
                             ? ""
                             : "hover:text-gray-900 dark:hover:text-white"
-                        }`}
+                          }`}
                         onClick={(e) => {
                           e.preventDefault();
                           handleClick();
@@ -222,12 +217,12 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
                             <svg
-                              className={`shrink-0 fill-current ${
-                                pathname.includes("rekammedis") ||
-                                pathname.includes("rekamantri")
+                              className={`shrink-0 fill-current ${pathname.includes("rekammedis") ||
+                                  pathname.includes("rekamantri") ||
+                                  pathname.includes("MedicalRecord")
                                   ? "text-violet-500"
                                   : "text-gray-400 dark:text-gray-500"
-                              }`}
+                                }`}
                               xmlns="http://www.w3.org/2000/svg"
                               width="16"
                               height="16"
@@ -237,14 +232,13 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                               <path d="M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2ZM4 8a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z" />
                             </svg>
                             <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                              Rekam Medis
+                              Rekap data medis 
                             </span>
                           </div>
                           <div className="flex shrink-0 ml-2">
                             <svg
-                              className={`w-3 h-3 shrink-0 ml-1 fill-current text-gray-400 dark:text-gray-500 ${
-                                open && "rotate-180"
-                              }`}
+                              className={`w-3 h-3 shrink-0 ml-1 fill-current text-gray-400 dark:text-gray-500 ${open && "rotate-180"
+                                }`}
                               viewBox="0 0 12 12"
                             >
                               <path d="M5.9 11.4L.5 6l1.4-1.4 4 4 4-4L11.3 6z" />
@@ -254,9 +248,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                       </a>
                       <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
                         <ul
-                          className={`pl-8 mt-1 flex flex-col items-start ${
-                            !open && "hidden"
-                          }`}
+                          className={`pl-8 mt-1 flex flex-col items-start ${!open && "hidden"
+                            }`}
                         >
                           <li className="mb-1 last:mb-0">
                             <NavLink
@@ -264,13 +257,13 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                               to="/rekammedis"
                               className={({ isActive }) =>
                                 "block transition duration-150 truncate " +
-                                (isActive
+                                (isActive || pathname.includes("MedicalRecord") // Sorot Rekam Medis Siswa saat di MedicalRecord
                                   ? "text-violet-500"
                                   : "text-gray-500/90 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200")
                               }
                             >
                               <span className="text-sm font-medium lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                                Rekam Medis Siswa
+                                Rekap Medis Siswa
                               </span>
                             </NavLink>
                           </li>
@@ -286,7 +279,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                               }
                             >
                               <span className="text-sm font-medium lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                                Rekam Antrian Siswa
+                                Rekap Antrian Siswa
                               </span>
                             </NavLink>
                           </li>
@@ -303,11 +296,10 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                     <React.Fragment>
                       <a
                         href="#0"
-                        className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
-                          pathname.includes("manajemenuser")
+                        className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${pathname.includes("manajemenuser")
                             ? ""
                             : "hover:text-gray-900 dark:hover:text-white"
-                        }`}
+                          }`}
                         onClick={(e) => {
                           e.preventDefault();
                           handleClick();
@@ -317,11 +309,10 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
                             <svg
-                              className={`shrink-0 fill-current ${
-                                pathname.includes("manajemenuser")
+                              className={`shrink-0 fill-current ${pathname.includes("manajemenuser")
                                   ? "text-violet-500"
                                   : "text-gray-400 dark:text-gray-500"
-                              }`}
+                                }`}
                               xmlns="http://www.w3.org/2000/svg"
                               width="16"
                               height="16"
@@ -335,9 +326,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                           </div>
                           <div className="flex shrink-0 ml-2">
                             <svg
-                              className={`w-3 h-3 shrink-0 ml-1 fill-current text-gray-400 dark:text-gray-500 ${
-                                open && "rotate-180"
-                              }`}
+                              className={`w-3 h-3 shrink-0 ml-1 fill-current text-gray-400 dark:text-gray-500 ${open && "rotate-180"
+                                }`}
                               viewBox="0 0 12 12"
                             >
                               <path d="M5.9 11.4L.5 6l1.4-1.4 4 4 4-4L11.3 6z" />
@@ -347,9 +337,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                       </a>
                       <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
                         <ul
-                          className={`pl-8 mt-1 flex flex-col items-start ${
-                            !open && "hidden"
-                          }`}
+                          className={`pl-8 mt-1 flex flex-col items-start ${!open && "hidden"
+                            }`}
                         >
                           <li className="mb-1 last:mb-0">
                             <NavLink
@@ -382,11 +371,10 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                     <React.Fragment>
                       <a
                         href="#0"
-                        className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
-                          pathname.includes("kategori") || pathname.includes("article")
+                        className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${pathname.includes("kategori") || pathname.includes("article")
                             ? ""
                             : "hover:text-gray-900 dark:hover:text-white"
-                        }`}
+                          }`}
                         onClick={(e) => {
                           e.preventDefault();
                           handleClick();
@@ -396,11 +384,10 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
                             <svg
-                              className={`shrink-0 fill-current ${
-                                pathname.includes("kategori") || pathname.includes("article")
+                              className={`shrink-0 fill-current ${pathname.includes("kategori") || pathname.includes("article")
                                   ? "text-violet-500"
                                   : "text-gray-400 dark:text-gray-500"
-                              }`}
+                                }`}
                               xmlns="http://www.w3.org/2000/svg"
                               width="16"
                               height="16"
@@ -415,9 +402,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                           </div>
                           <div className="flex shrink-0 ml-2">
                             <svg
-                              className={`w-3 h-3 shrink-0 ml-1 fill-current text-gray-400 dark:text-gray-500 ${
-                                open && "rotate-180"
-                              }`}
+                              className={`w-3 h-3 shrink-0 ml-1 fill-current text-gray-400 dark:text-gray-500 ${open && "rotate-180"
+                                }`}
                               viewBox="0 0 12 12"
                             >
                               <path d="M5.9 11.4L.5 6l1.4-1.4 4 4 4-4L11.3 6z" />
@@ -427,9 +413,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                       </a>
                       <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
                         <ul
-                          className={`pl-8 mt-1 flex flex-col items-start ${
-                            !open && "hidden"
-                          }`}
+                          className={`pl-8 mt-1 flex flex-col items-start ${!open && "hidden"
+                            }`}
                         >
                           <li className="mb-1 last:mb-0">
                             <NavLink
@@ -478,11 +463,10 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                     <React.Fragment>
                       <a
                         href="#0"
-                        className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
-                          pathname.includes("department") || pathname.includes("kelas")
+                        className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${pathname.includes("department") || pathname.includes("kelas")
                             ? ""
                             : "hover:text-gray-900 dark:hover:text-white"
-                        }`}
+                          }`}
                         onClick={(e) => {
                           e.preventDefault();
                           handleClick();
@@ -492,11 +476,10 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
                             <svg
-                              className={`shrink-0 fill-current ${
-                                pathname.includes("department") || pathname.includes("kelas")
+                              className={`shrink-0 fill-current ${pathname.includes("department") || pathname.includes("kelas")
                                   ? "text-violet-500"
                                   : "text-gray-400 dark:text-gray-500"
-                              }`}
+                                }`}
                               xmlns="http://www.w3.org/2000/svg"
                               width="16"
                               height="16"
@@ -511,9 +494,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                           </div>
                           <div className="flex shrink-0 ml-2">
                             <svg
-                              className={`w-3 h-3 shrink-0 ml-1 fill-current text-gray-400 dark:text-gray-500 ${
-                                open && "rotate-180"
-                              }`}
+                              className={`w-3 h-3 shrink-0 ml-1 fill-current text-gray-400 dark:text-gray-500 ${open && "rotate-180"
+                                }`}
                               viewBox="0 0 12 12"
                             >
                               <path d="M5.9 11.4L.5 6l1.4-1.4 4 4 4-4L11.3 6z" />
@@ -523,9 +505,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                       </a>
                       <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
                         <ul
-                          className={`pl-8 mt-1 flex flex-col items-start ${
-                            !open && "hidden"
-                          }`}
+                          className={`pl-8 mt-1 flex flex-col items-start ${!open && "hidden"
+                            }`}
                         >
                           <li className="mb-1 last:mb-0">
                             <NavLink
@@ -572,11 +553,10 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                     <React.Fragment>
                       <a
                         href="#0"
-                        className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
-                          pathname.includes("staff_admin")
+                        className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${pathname.includes("staff_admin")
                             ? ""
                             : "hover:text-gray-900 dark:hover:text-white"
-                        }`}
+                          }`}
                         onClick={(e) => {
                           e.preventDefault();
                           handleClick();
@@ -586,11 +566,10 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
                             <svg
-                              className={`shrink-0 fill-current ${
-                                pathname.includes("staff_admin")
+                              className={`shrink-0 fill-current ${pathname.includes("staff_admin")
                                   ? "text-violet-500"
                                   : "text-gray-400 dark:text-gray-500"
-                              }`}
+                                }`}
                               xmlns="http://www.w3.org/2000/svg"
                               width="16"
                               height="16"
@@ -605,9 +584,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                           </div>
                           <div className="flex shrink-0 ml-2">
                             <svg
-                              className={`w-3 h-3 shrink-0 ml-1 fill-current text-gray-400 dark:text-gray-500 ${
-                                open && "rotate-180"
-                              }`}
+                              className={`w-3 h-3 shrink-0 ml-1 fill-current text-gray-400 dark:text-gray-500 ${open && "rotate-180"
+                                }`}
                               viewBox="0 0 12 12"
                             >
                               <path d="M5.9 11.4L.5 6l1.4-1.4 4 4 4-4L11.3 6z" />
@@ -617,9 +595,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                       </a>
                       <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
                         <ul
-                          className={`pl-8 mt-1 flex flex-col items-start ${
-                            !open && "hidden"
-                          }`}
+                          className={`pl-8 mt-1 flex flex-col items-start ${!open && "hidden"
+                            }`}
                         >
                           <li className="mb-1 last:mb-0">
                             <NavLink
@@ -656,13 +633,12 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                     <React.Fragment>
                       <a
                         href="#0"
-                        className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
-                          pathname.includes("settings") ||
-                          pathname.includes("account") ||
-                          pathname.includes("profile")
+                        className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${pathname.includes("settings") ||
+                            pathname.includes("account") ||
+                            pathname.includes("profile")
                             ? ""
                             : "hover:text-gray-900 dark:hover:text-white"
-                        }`}
+                          }`}
                         onClick={(e) => {
                           e.preventDefault();
                           handleClick();
@@ -672,13 +648,12 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
                             <svg
-                              className={`shrink-0 fill-current ${
-                                pathname.includes("settings") ||
-                                pathname.includes("account") ||
-                                pathname.includes("profile")
+                              className={`shrink-0 fill-current ${pathname.includes("settings") ||
+                                  pathname.includes("account") ||
+                                  pathname.includes("profile")
                                   ? "text-violet-500"
                                   : "text-gray-400 dark:text-gray-500"
-                              }`}
+                                }`}
                               xmlns="http://www.w3.org/2000/svg"
                               width="16"
                               height="16"
@@ -695,9 +670,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                           </div>
                           <div className="flex shrink-0 ml-2">
                             <svg
-                              className={`w-3 h-3 shrink-0 ml-1 fill-current text-gray-400 dark:text-gray-500 ${
-                                open && "rotate-180"
-                              }`}
+                              className={`w-3 h-3 shrink-0 ml-1 fill-current text-gray-400 dark:text-gray-500 ${open && "rotate-180"
+                                }`}
                               viewBox="0 0 12 12"
                             >
                               <path d="M5.9 11.4L.5 6l1.4-1.4 4 4 4-4L11.3 6z" />
@@ -707,9 +681,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                       </a>
                       <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
                         <ul
-                          className={`pl-8 mt-1 flex flex-col items-start ${
-                            !open && "hidden"
-                          }`}
+                          className={`pl-8 mt-1 flex flex-col items-start ${!open && "hidden"
+                            }`}
                         >
                           <li className="mb-1 last:mb-0">
                             <NavLink
@@ -792,11 +765,10 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                     <React.Fragment>
                       <a
                         href="#0"
-                        className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${
-                          pathname.includes("register") || pathname.includes("forgot-password")
+                        className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${pathname.includes("register") || pathname.includes("forgot-password")
                             ? ""
                             : "hover:text-gray-900 dark:hover:text-white"
-                        }`}
+                          }`}
                         onClick={(e) => {
                           e.preventDefault();
                           handleClick();
@@ -806,11 +778,10 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
                             <svg
-                              className={`shrink-0 fill-current ${
-                                pathname.includes("register") || pathname.includes("forgot-password")
+                              className={`shrink-0 fill-current ${pathname.includes("register") || pathname.includes("forgot-password")
                                   ? "text-violet-500"
                                   : "text-gray-400 dark:text-gray-500"
-                              }`}
+                                }`}
                               xmlns="http://www.w3.org/2000/svg"
                               width="16"
                               height="16"
@@ -824,9 +795,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                           </div>
                           <div className="flex shrink-0 ml-2">
                             <svg
-                              className={`w-3 h-3 shrink-0 ml-1 fill-current text-gray-400 dark:text-gray-500 ${
-                                open && "rotate-180"
-                              }`}
+                              className={`w-3 h-3 shrink-0 ml-1 fill-current text-gray-400 dark:text-gray-500 ${open && "rotate-180"
+                                }`}
                               viewBox="0 0 12 12"
                             >
                               <path d="M5.9 11.4L.5 6l1.4-1.4 4 4 4-4L11.3 6z" />
@@ -836,9 +806,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                       </a>
                       <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
                         <ul
-                          className={`pl-8 mt-1 flex flex-col items-start ${
-                            !open && "hidden"
-                          }`}
+                          className={`pl-8 mt-1 flex flex-col items-start ${!open && "hidden"
+                            }`}
                         >
                           <li className="mb-1 last:mb-0">
                             <NavLink

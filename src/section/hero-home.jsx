@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import DoctorImg from "../assets/img/doctor_img.png";
 
+
 const HeroSection = () => {
   const [refLeft, inViewLeft] = useInView({ triggerOnce: false });
   const [refRight, inViewRight] = useInView({ triggerOnce: false });

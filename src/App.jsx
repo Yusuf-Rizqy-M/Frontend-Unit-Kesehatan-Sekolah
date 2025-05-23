@@ -34,19 +34,17 @@ import Dashboard from "./pages/admin/Dashboard";
 import ManajemenUser from "./pages/admin/ManajemenUser";
 import UploadBlog from "./pages/admin/upload_blog";
 import KategoriPage from "./pages/admin/Kategori";
-import StudentMedicalRecord from "./pages/admin/rekam_medis_siswa";
-import MedicalRecord from "./pages/admin/detail_rekam_medas"; // Already imported
-import RekamMedisSiswa from "./pages/admin/rekam_medis_siswa"; // Already imported
+import RekamMedisSiswa from "./pages/admin/rekam_medis_siswa";
 import DetailRekamMedisSiswa from "./pages/admin/detail_rekam_medas";
-import staff_admin from "./pages/admin/staff_admin";
+import Staff from "./pages/admin/staff_admin";
 import RekamAntri from "./pages/admin/rekam_antri_siswa";
-
+import DetailRekamAntri from "./pages/admin/detail_rekam_antri";
+import Artikel from "./pages/admin/artikel";
 
 // Routes
 import ProtectedRoute from "./routes/protectedRoute";
 import UserRoute from "./routes/userRoute";
 import NotFound from "./pages/notfound";
-import Staff from "./pages/admin/staff_admin";
 
 function App() {
   const location = useLocation();
@@ -173,6 +171,14 @@ function App() {
             </UserRoute>
           }
         />
+         <Route
+          path="/artikel"
+          element={
+            <UserRoute>
+              <Artikel />
+            </UserRoute>
+          }
+        />
         <Route
           path="/antrian"
           element={
@@ -182,7 +188,7 @@ function App() {
           }
         />
 
-        {/* Admin dashboard route */}
+        {/* Admin dashboard routes */}
         <Route
           path="/dashboard"
           element={
@@ -211,7 +217,7 @@ function App() {
           path="/rekammedis"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
-              <StudentMedicalRecord />
+              <RekamMedisSiswa />
             </ProtectedRoute>
           }
         />
@@ -228,6 +234,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <RekamAntri />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/rekamantri/detailrekamantri/:userId"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <DetailRekamAntri />
             </ProtectedRoute>
           }
         />
@@ -250,7 +264,6 @@ function App() {
           }
         />
 
-        {/* New Routes for MedicalRecord and RekamMedisSiswa */}
         <Route
           path="/rekammedis-siswa"
           element={

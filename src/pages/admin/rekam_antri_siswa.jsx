@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Sidebar from "../../partials/Sidebar";
 import Header from "../../partials/Header";
 import { User, Users } from "lucide-react";
@@ -15,13 +16,16 @@ export default function RekamAntrian() {
   const [currentQueue, setCurrentQueue] = useState(null);
   const [latestQueue, setLatestQueue] = useState(null);
   const [queueData, setQueueData] = useState([]);
+  const [userData, setUserData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState("success");
   const [updatingStatus, setUpdatingStatus] = useState({});
   const [filterMode, setFilterMode] = useState("today");
+  const navigate = useNavigate();
 
   moment.locale("id");
 
@@ -50,7 +54,6 @@ export default function RekamAntrian() {
           },
         };
 
-        // Always fetch today's data for the panels
         const [
           completedRes,
           waitingRes,
@@ -73,19 +76,22 @@ export default function RekamAntrian() {
         setTotalWaiting(waitingRes.data.data.total_waiting || 0);
         setTotalProcessing(processingRes.data.data.total_processing || 0);
         setTotalSkipped(skippedRes.data.data.total_skipped || 0);
-        setCurrentQueue(currentQueueRes.data.data || { queue_number: "N/A", status: "Unknown", reason: "Unknown" });
-        setLatestQueue(latestQueueRes.data.data || { queue_number: "N/A", status: "Unknown", reason: "Unknown" });
+        setCurrentQueue(
+          currentQueueRes.data.data || { queue_number: "N/A", status: "Unknown", reason: "Unknown" }
+        );
+        setLatestQueue(
+          latestQueueRes.data.data || { queue_number: "N/A", status: "Unknown", reason: "Unknown" }
+        );
 
-        // Fetch table data based on filterMode
         let queueDataArray = [];
         if (filterMode === "today") {
           queueDataArray = Array.isArray(todayQueueRes.data.data) ? todayQueueRes.data.data : [];
         } else if (filterMode === "yesterday") {
           const yesterdayQueueRes = await axios.get("https://api-uks.rplrus.com/api/admin/queues/yesterday", config);
           queueDataArray = Array.isArray(yesterdayQueueRes.data.data) ? yesterdayQueueRes.data.data : [];
-        } else if (filterMode === "all" || filterMode === "history") {
-          const historyQueueRes = await axios.get("https://api-uks.rplrus.com/api/admin/queues/history", config);
-          queueDataArray = Array.isArray(historyQueueRes.data.data) ? historyQueueRes.data.data : [];
+        } else if (filterMode === "all") {
+          const allQueueRes = await axios.get("https://api-uks.rplrus.com/api/admin/queues/all", config);
+          queueDataArray = Array.isArray(allQueueRes.data.data) ? allQueueRes.data.data : [];
         }
 
         const formattedQueueData = queueDataArray.map((item) => ({
@@ -95,6 +101,8 @@ export default function RekamAntrian() {
           name: item.user?.name || "Unknown",
           submit: item.created_at ? moment(item.created_at).fromNow(true) : "Unknown",
           rawId: item.id,
+          userId: item.user?.id || null,
+          student: item.user || { id: item.user?.id || null },
         }));
         setQueueData(formattedQueueData);
       } catch (err) {
@@ -110,10 +118,77 @@ export default function RekamAntrian() {
       }
     };
 
-    fetchQueueData();
+    if (filterMode !== "history") {
+      fetchQueueData();
+    }
   }, [filterMode]);
 
-  const handleStatusChange = async (queueId, rawId, newStatus, prevStatus) => {
+  const fetchUserData = async () => {
+    try {
+      setHistoryLoading(true);
+      const token = getToken();
+      if (!token) {
+        throw new Error("No authentication token found. Please log in.");
+      }
+      const config = {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { status: "active" },
+      };
+
+      const response = await axios.get("https://api-uks.rplrus.com/api/users", config);
+      if (response.data.status && Array.isArray(response.data.data)) {
+        const mappedUsers = response.data.data
+          .filter((user) => user.status === "active")
+          .map((user) => ({
+            id: user.id,
+            name: user.name || "Unknown",
+            gender: user.gender || "N/A",
+            kelas: user.class || "N/A",
+            namaKelas: user.name_grades || "N/A",
+            department: user.name_department || "N/A",
+            role: user.role || "user",
+            phone_number: user.phone_number || null,
+            name_parent: user.name_parent || null,
+            no_hp_parent: user.no_hp_parent || null,
+            name_walikelas: user.name_walikelas || null,
+          }));
+        setUserData(mappedUsers);
+      } else {
+        throw new Error(response.data.message || "Invalid response format");
+      }
+    } catch (err) {
+      const errorMessage =
+        err.response?.status === 401
+          ? "Unauthorized: Invalid or expired token. Please log in again."
+          : "Failed to fetch user data: " + err.message;
+      setError(errorMessage);
+      showToastMessage(errorMessage, "error");
+      console.error("Fetch user error:", err);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (filterMode === "history" && userData.length === 0) {
+      fetchUserData();
+    }
+  }, [filterMode]);
+
+  const handleNavigateToDetails = (student) => {
+    if (student?.id) {
+      const path = `/MedicalRecord/${student.id}`;
+      navigate(path, { state: { student } });
+    } else {
+      showToastMessage("ID siswa tidak tersedia.", "error");
+    }
+  };
+
+  const handleNavigateToHistory = (user) => {
+    navigate(`/rekamantri/detailrekamantri/${user.id}`, { state: { user } });
+  };
+
+  const handleStatusChange = async (queueId, rawId, newStatus, prevStatus, student) => {
     try {
       setUpdatingStatus((prev) => ({ ...prev, [queueId]: true }));
       const token = getToken();
@@ -135,7 +210,14 @@ export default function RekamAntrian() {
             throw err;
           }
         }
+        handleNavigateToDetails(student);
       } else if (newStatus === "Selesai") {
+        const medicalRecordRes = await axios.get(`https://api-uks.rplrus.com/api/healthcondition/${student.id}`, config);
+        const hasMedicalRecord = medicalRecordRes.data.data?.some(record => record.status === 'active');
+        if (!hasMedicalRecord) {
+          showToastMessage("Silakan isi rekam medis terlebih dahulu.", "error");
+          return;
+        }
         try {
           response = await axios.post(`https://api-uks.rplrus.com/api/admin/queues/${rawId}/finish`, {}, config);
         } catch (err) {
@@ -170,7 +252,6 @@ export default function RekamAntrian() {
       setTotalCompleted((prev) => (prevStatus === "Selesai" ? prev - 1 : prev) + (newStatus === "Selesai" ? 1 : 0));
       setTotalSkipped((prev) => (prevStatus === "Skipped" ? prev - 1 : prev) + (newStatus === "Skipped" ? 1 : 0));
 
-      // Show success toast with API response message
       if (response?.data?.message) {
         showToastMessage(response.data.message, "success");
       }
@@ -190,17 +271,27 @@ export default function RekamAntrian() {
     }
   };
 
+  const getNextStatus = (currentStatus) => {
+    if (currentStatus === "Waiting") return "Processing";
+    if (currentStatus === "Processing") return "Selesai";
+    return null;
+  };
+
   const handleFilterChange = (mode) => {
     setFilterMode(mode);
   };
 
   const handleRetry = () => {
     setError(null);
-    setLoading(true);
-    setQueueData([]);
+    if (filterMode === "history") {
+      setHistoryLoading(true);
+      setUserData([]);
+      fetchUserData();
+    } else {
+      setLoading(true);
+      setQueueData([]);
+    }
   };
-
-  const statusOptions = ["Waiting", "Processing", "Selesai", "Skipped"];
 
   return (
     <div className="flex h-screen overflow-hidden font-sans">
@@ -254,7 +345,6 @@ export default function RekamAntrian() {
             `}
           </style>
           <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto">
-            {/* Toast Notification */}
             {showToast && (
               <div
                 className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 ${
@@ -309,60 +399,62 @@ export default function RekamAntrian() {
               </div>
             ) : (
               <>
-                <div className="flex gap-10 mb-6">
-                  <div className="flex items-center bg-white dark:bg-[#051D4E] rounded-[20px] shadow px-6 py-4 w-[220px]">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-[10px] border border-[#1B4A4F] dark:border-white mr-4">
-                      <User className="text-[#1B4A4F] dark:text-white w-6 h-6" />
+                {filterMode === "today" && (
+                  <div className="flex gap-10 mb-6">
+                    <div className="flex items-center bg-white dark:bg-[#051D4E] rounded-[20px] shadow px-6 py-4 w-[220px]">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-[10px] border border-[#1B4A4F] dark:border-white mr-4">
+                        <User className="text-[#1B4A4F] dark:text-white w-6 h-6" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-[#1B4A4F] dark:text-white font-medium">
+                          Total Antrian Selesai hari ini
+                        </p>
+                        <p className="text-[20px] font-bold text-[#1B4A4F] dark:text-white leading-tight">
+                          {totalCompleted}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm text-[#1B4A4F] dark:text-white font-medium">
-                        Total Antrian Selesai hari ini
-                      </p>
-                      <p className="text-[20px] font-bold text-[#1B4A4F] dark:text-white leading-tight">
-                        {totalCompleted}
-                      </p>
+                    <div className="flex items-center bg-white dark:bg-[#051D4E] rounded-[20px] shadow px-6 py-4 w-[220px]">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-[10px] border border-[#1B4A4F] dark:border-white mr-4">
+                        <Users className="text-[#1B4A4F] dark:text-white w-6 h-6" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-[#1B4A4F] dark:text-white font-medium">
+                          Total Antrian Menunggu
+                        </p>
+                        <p className="text-[20px] font-bold text-[#1B4A4F] dark:text-white leading-tight">
+                          {totalWaiting}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center bg-white dark:bg-[#051D4E] rounded-[20px] shadow px-6 py-4 w-[220px]">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-[10px] border border-[#1B4A4F] dark:border-white mr-4">
+                        <Users className="text-[#1B4A4F] dark:text-white w-6 h-6" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-[#1B4A4F] dark:text-white font-medium">
+                          Total Antrian Diproses
+                        </p>
+                        <p className="text-[20px] font-bold text-[#1B4A4F] dark:text-white leading-tight">
+                          {totalProcessing}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center bg-white dark:bg-[#051D4E] rounded-[20px] shadow px-6 py-4 w-[250px]">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-[10px] border border-[#1B4A4F] dark:border-white mr-4">
+                        <Users className="text-[#1B4A4F] dark:text-white w-6 h-6" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-[#1B4A4F] dark:text-white font-medium">
+                          Total Antrian Dibatalkan
+                        </p>
+                        <p className="text-[20px] font-bold text-[#1B4A4F] dark:text-white leading-tight">
+                          {totalSkipped}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center bg-white dark:bg-[#051D4E] rounded-[20px] shadow px-6 py-4 w-[220px]">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-[10px] border border-[#1B4A4F] dark:border-white mr-4">
-                      <Users className="text-[#1B4A4F] dark:text-white w-6 h-6" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-[#1B4A4F] dark:text-white font-medium">
-                        Total Antrian Menunggu
-                      </p>
-                      <p className="text-[20px] font-bold text-[#1B4A4F] dark:text-white leading-tight">
-                        {totalWaiting}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center bg-white dark:bg-[#051D4E] rounded-[20px] shadow px-6 py-4 w-[220px]">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-[10px] border border-[#1B4A4F] dark:border-white mr-4">
-                      <Users className="text-[#1B4A4F] dark:text-white w-6 h-6" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-[#1B4A4F] dark:text-white font-medium">
-                        Total Antrian Diproses
-                      </p>
-                      <p className="text-[20px] font-bold text-[#1B4A4F] dark:text-white leading-tight">
-                        {totalProcessing}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center bg-white dark:bg-[#051D4E] rounded-[20px] shadow px-6 py-4 w-[250px]">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-[10px] border border-[#1B4A4F] dark:border-white mr-4">
-                      <Users className="text-[#1B4A4F] dark:text-white w-6 h-6" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-[#1B4A4F] dark:text-white font-medium">
-                        Total Antrian Dibatalkan
-                      </p>
-                      <p className="text-[20px] font-bold text-[#1B4A4F] dark:text-white leading-tight">
-                        {totalSkipped}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                )}
 
                 <div className="flex justify-center mb-6">
                   <div className="grid grid-cols-12 gap-6 max-w-3xl">
@@ -437,74 +529,153 @@ export default function RekamAntrian() {
                   </button>
                 </div>
 
-                <div className="bg-white dark:bg-[#051D4E] rounded-[20px] shadow overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr className="bg-gray-100 dark:bg-[#0A2F6A] text-[#1B4A4F] dark:text-white">
-                          <th className="p-3 text-left">Id</th>
-                          <th className="p-3 text-left">Antrian</th>
-                          <th className="p-3 text-left">Reason</th>
-                          <th className="p-3 text-left">Status</th>
-                          <th className="p-3 text-left">Nama</th>
-                          <th className="p-3 text-left">Submit Sejak</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {queueData.length > 0 ? (
-                          queueData.map((item) => (
-                            <tr
-                              key={item.id}
-                              className="border-b-4 border-gray-200 hover:bg-gray-50 dark:hover:bg-[#0A2F6A]"
-                            >
-                              <td className="p-3">{item.rawId}</td>
-                              <td className="p-3 flex items-center">
-                                <span className="inline-block w-6 h-6 bg-[#1B4A4F] rounded-full mr-2"></span>
-                                {item.id}
-                              </td>
-                              <td className="p-3">{item.reason}</td>
-                              <td className="p-3">
-                                {updatingStatus[item.id] ? (
-                                  <span className="text-gray-500 dark:text-gray-400">Updating...</span>
-                                ) : (
-                                  <select
-                                    value={item.status}
-                                    onChange={(e) => handleStatusChange(item.id, item.rawId, e.target.value, item.status)}
-                                    className={`px-2 py-1 rounded-full text-sm font-medium ${
-                                      item.status === "Selesai"
-                                        ? "bg-green-100 text-green-800"
-                                        : item.status === "Waiting"
-                                        ? "bg-yellow-100 text-yellow-800"
-                                        : item.status === "Processing"
-                                        ? "bg-blue-100 text-blue-800"
-                                        : item.status === "Skipped"
-                                        ? "bg-red-100 text-red-800"
-                                        : "bg-gray-100 text-gray-800"
-                                    }`}
-                                    disabled={filterMode !== "today"}                                   >
-                                    {statusOptions.map((status) => (
-                                      <option key={status} value={status}>
-                                        {status}
-                                      </option>
-                                    ))}
-                                  </select>
-                                )}
-                              </td>
-                              <td className="p-3">{item.name}</td>
-                              <td className="p-3">{item.submit}</td>
+                {filterMode === "history" ? (
+                  <div className="bg-white dark:bg-[#051D4E] rounded-[20px] shadow overflow-hidden">
+                    {historyLoading ? (
+                      <div className="flex flex-col items-center justify-center h-[200px]">
+                        <div className="double-spinner">
+                          <div className="spinner-ring outer"></div>
+                          <div className="spinner-ring inner"></div>
+                        </div>
+                        <p className="text-gray-500 mt-4">Memuat history...</p>
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full border-collapse">
+                          <thead>
+                            <tr className="bg-gray-100 dark:bg-[#0A2F6A] text-[#1B4A4F] dark:text-white">
+                              <th className="p-3 text-left">Nama</th>
+                              <th className="p-3 text-left">Jenis Kelamin</th>
+                              <th className="p-3 text-left">Kelas</th>
+                              <th className="p-3 text-left">Nama Kelas</th>
+                              <th className="p-3 text-left">Action</th>
                             </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan="6" className="text-center p-4 text-gray-500 dark:text-gray-400">
-                              Tidak ada data antrian.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
+                          </thead>
+                          <tbody>
+                            {userData.length > 0 ? (
+                              userData.map((user) => (
+                                <tr
+                                  key={user.id}
+                                  className="border-b-4 border-gray-200 hover:bg-gray-50 dark:hover:bg-[#0A2F6A]"
+                                >
+                                  <td className="p-3">{user.name}</td>
+                                  <td className="p-3">{user.gender}</td>
+                                  <td className="p-3">{user.kelas}</td>
+                                  <td className="p-3">{user.namaKelas}</td>
+                                  <td className="p-3">
+                                    <button
+                                      onClick={() => handleNavigateToHistory(user)}
+                                      className="text-xl text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white"
+                                      aria-label="Lihat riwayat antrian"
+                                    >
+                                      ›
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan="5" className="text-center p-4 text-gray-500 dark:text-gray-400">
+                                  Tidak ada data siswa.
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
                   </div>
-                </div>
+                ) : (
+                  <div className="bg-white dark:bg-[#051D4E] rounded-[20px] shadow overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr className="bg-gray-100 dark:bg-[#0A2F6A] text-[#1B4A4F] dark:text-white">
+                            <th className="p-3 text-left">Antrian</th>
+                            <th className="p-3 text-left">Reason</th>
+                            <th className="p-3 text-left">Status</th>
+                            <th className="p-3 text-left">Nama</th>
+                            <th className="p-3 text-left">Submit Sejak</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {queueData.length > 0 ? (
+                            queueData.map((item) => (
+                              <tr
+                                key={item.id}
+                                className="border-b-4 border-gray-200 hover:bg-gray-50 dark:hover:bg-[#0A2F6A]"
+                              >
+                                <td className="p-3 flex items-center">
+                                  <span className="inline-block w-6 h-6 bg-[#1B4A4F] rounded-full mr-2"></span>
+                                  {item.id}
+                                </td>
+                                <td className="p-3">{item.reason}</td>
+                                <td className="p-3 flex gap-2 items-center">
+                                  {updatingStatus[item.id] ? (
+                                    <span className="text-gray-500 dark:text-gray-400">Updating...</span>
+                                  ) : item.status === "Selesai" ? (
+                                    <span className="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                      Selesai
+                                    </span>
+                                  ) : (
+                                    <>
+                                      <button
+                                        className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                          item.status === "Waiting"
+                                            ? "bg-yellow-100 text-yellow-800"
+                                            : item.status === "Processing"
+                                            ? "bg-blue-100 text-blue-800"
+                                            : item.status === "Skipped"
+                                            ? "bg-red-100 text-red-800"
+                                            : "bg-green-200 text-gray-800"
+                                        } disabled:opacity-50`}
+                                        disabled={filterMode !== "today" || !getNextStatus(item.status)}
+                                        onClick={() =>
+                                          handleStatusChange(
+                                            item.id,
+                                            item.rawId,
+                                            getNextStatus(item.status),
+                                            item.status,
+                                            item.student
+                                          )
+                                        }
+                                      >
+                                        {item.status === "Waiting"
+                                          ? "Proses"
+                                          : item.status === "Processing"
+                                          ? "Selesai"
+                                          : item.status}
+                                      </button>
+                                      {item.status === "Waiting" || item.status === "Processing" ? (
+                                        <button
+                                          className="px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 disabled:opacity-50"
+                                          disabled={filterMode !== "today"}
+                                          onClick={() =>
+                                            handleStatusChange(item.id, item.rawId, "Skipped", item.status, item.student)
+                                          }
+                                        >
+                                          Tolak
+                                        </button>
+                                      ) : null}
+                                    </>
+                                  )}
+                                </td>
+                                <td className="p-3">{item.name}</td>
+                                <td className="p-3">{item.submit}</td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan="5" className="text-center p-4 text-gray-500 dark:text-gray-400">
+                                Tidak ada data antrian.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </div>

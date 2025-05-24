@@ -164,7 +164,7 @@ export default function Navigation() {
                       className="flex items-center gap-3 px-4 py-2 text-sm text-gray-800 hover:bg-cyan-200"
                     >
                       <i className="fas fa-user-cog text-cyan-700 w-5 text-center" />{" "}
-                      Edit Profile
+                      Prefrence
                     </Link>
                     {/* <Link
                       to="/antrian"

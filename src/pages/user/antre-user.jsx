@@ -12,7 +12,7 @@ function AntreUser() {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(true);
   const [showNotification, setShowNotification] = useState(false);
-  const [latestQueueNumber, setLatestQueueNumber] = useState(null); // New state for latest queue number
+  const [latestQueueNumber, setLatestQueueNumber] = useState(null);
   const navigate = useNavigate();
 
   const apiUrl = 'https://api-uks.rplrus.com/api';
@@ -91,7 +91,7 @@ function AntreUser() {
     } catch (err) {
       setError('Failed to fetch latest queue number');
       console.error(err);
-      setLatestQueueNumber(0); // Fallback to 0 if API fails
+      setLatestQueueNumber(0);
     } finally {
       setLoading(false);
     }
@@ -115,7 +115,7 @@ function AntreUser() {
       setReason('');
       setHasActiveQueue(true);
       await fetchUserQueue();
-      await fetchLatestQueueNumber(); // Refresh latest queue number after creating a queue
+      await fetchLatestQueueNumber();
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create queue');
       console.error(err);
@@ -138,7 +138,7 @@ function AntreUser() {
       setHasActiveQueue(false);
       setShowNotification(false);
       await fetchCurrentActiveQueue();
-      await fetchLatestQueueNumber(); // Refresh latest queue number after canceling
+      await fetchLatestQueueNumber();
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to cancel queue');
       console.error(err);
@@ -155,7 +155,7 @@ function AntreUser() {
       await checkQueueStatus();
       await fetchCurrentActiveQueue();
       await fetchUserQueue();
-      await fetchLatestQueueNumber(); // Fetch latest queue number on mount
+      await fetchLatestQueueNumber();
     };
 
     fetchInitialData();
@@ -164,7 +164,7 @@ function AntreUser() {
       checkQueueStatus();
       fetchCurrentActiveQueue();
       fetchUserQueue();
-      fetchLatestQueueNumber(); // Poll latest queue number
+      fetchLatestQueueNumber();
     }, 30000);
 
     return () => clearInterval(interval);
@@ -181,7 +181,7 @@ function AntreUser() {
 
   // Calculate next queue number based on latest queue number
   const getNextQueueNumber = () => {
-    if (latestQueueNumber === null) return '01'; // Fallback if not yet loaded
+    if (latestQueueNumber === null) return '01';
     const nextNumber = parseInt(latestQueueNumber, 10) + 1;
     return isNaN(nextNumber) ? '01' : nextNumber.toString().padStart(2, '0');
   };
@@ -313,20 +313,19 @@ function AntreUser() {
                   Atau menunggu hingga istirahat tiba
                 </h3>
 
-                <div className="flex flex-wrap justify-center gap-6 mt-10 z-10 relative">
-                  {/* Antrean sekarang */}
-                  <div className="flex flex-col items-center w-full sm:w-[300px]">
+                <div className="flex flex-wrap justify-center gap-6 mt-10 z-10 relative">                  {/* Antrean sekarang */}
+                  <div className="flex flex-col items-center w-full sm:w-[400px]">
                     <h2 className="text-2xl font-semibold text-[#1C4245] mb-2">Antrean sekarang</h2>
-                    <div className="w-[300px] h-[200px] bg-[#93D3CC] rounded-xl shadow-lg flex items-center justify-center">
-                      <h1 className="text-white text-8xl font-bold">{currentQueue}</h1>
+                    <div className="w-[400px] h-[250px] bg-[#93D3CC] rounded-xl shadow-lg flex items-center justify-center">
+                      <h1 className="text-white text-7xl font-bold">{currentQueue}</h1>
                     </div>
                   </div>
 
                   {/* Antrean kamu */}
-                  <div className="flex flex-col items-center w-full sm:w-[300px]">
+                  <div className="flex flex-col items-center w-full sm:w-[400px]">
                     <h2 className="text-2xl font-semibold text-[#1C4245] mb-2">Antrean kamu</h2>
-                    <div className="w-[300px] h-[200px] bg-[#93D3CC] rounded-xl shadow-lg flex items-center justify-center">
-                      <h1 className="text-white text-8xl font-bold">{userQueue?.queue_number || 'N/A'}</h1>
+                    <div className="w-[400px] h-[250px] bg-[#93D3CC] rounded-xl shadow-lg flex items-center justify-center">
+                      <h1 className="text-white text-9xl font-bold">{userQueue?.queue_number || 'N/A'}</h1>
                     </div>
                     {userQueue && (
                       <div className="text-[#1C4245] mt-2 text-center">
@@ -356,8 +355,8 @@ function AntreUser() {
                 </h2>
 
                 {/* Kotak Rectangle */}
-                <div className="w-[250px] h-[150px] bg-[#93D3CC] mx-auto mt-6 rounded-xl shadow-lg z-10 relative flex items-center justify-center">
-                  <h1 className="text-[#FFFFFF] text-8xl font-bold">{currentQueue}</h1>
+                <div className="w-[350px] h-[200px] bg-[#93D3CC] mx-auto mt-6 rounded-xl shadow-lg z-10 relative flex items-center justify-center">
+                  <h1 className="text-[#FFFFFF] text-7xl font-bold">{currentQueue}</h1>
                 </div>
 
                 {/* Kotak Putih Bawah */}

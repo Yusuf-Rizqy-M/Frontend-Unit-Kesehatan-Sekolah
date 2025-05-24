@@ -8,5 +8,14 @@ export default defineConfig({
     commonjsOptions: {
       transformMixedEsModules: true,
     }
-  }
-})
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://api-uks.rplrus.com',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
+});

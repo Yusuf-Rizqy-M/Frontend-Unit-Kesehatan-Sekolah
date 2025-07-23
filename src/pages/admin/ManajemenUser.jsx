@@ -4,6 +4,7 @@ import Header from '../../partials/Header';
 import { User, Users, AlertTriangle } from 'lucide-react';
 import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
 import axios from 'axios';
+import UKS2Img from '../../assets/img/uks2.png'; // Favicon import
 
 export default function ManajemenUser() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -36,6 +37,15 @@ export default function ManajemenUser() {
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState("success");
   const usersPerPage = 10;
+
+  // Set document title and favicon
+  useEffect(() => {
+    document.title = 'Manajemen User';
+    const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
+    favicon.rel = 'icon';
+    favicon.href = UKS2Img;
+    document.head.appendChild(favicon);
+  }, []);
 
   const getToken = () => {
     return localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -75,10 +85,10 @@ export default function ManajemenUser() {
         setError('Failed to retrieve users: ' + response.data.message);
       }
     } catch (err) {
-      if (err.response && err.response.status === 401) {
+      if (err.response?.status === 401) {
         setError('Unauthorized: Invalid or expired admin token. Please log in again.');
       } else {
-        setError('Error fetching users: ' + err.message);
+        setError('Error fetching users: ' + (err.response?.data?.message || err.message));
       }
     } finally {
       setLoading(false);
@@ -96,16 +106,15 @@ export default function ManajemenUser() {
       const response = await axios.get('https://api-uks.rplrus.com/api/departments', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      // Remove duplicates by creating a unique list based on department name
       const uniqueDepartments = Array.from(
         new Map(response.data.map(dept => [dept.name, dept])).values()
       );
       setDepartments(uniqueDepartments);
     } catch (err) {
-      if (err.response && err.response.status === 401) {
+      if (err.response?.status === 401) {
         setError('Unauthorized: Invalid or expired admin token. Please log in again.');
       } else {
-        setError('Error fetching departments: ' + err.message);
+        setError('Error fetching departments: ' + (err.response?.data?.message || err.message));
       }
     }
   };
@@ -121,16 +130,15 @@ export default function ManajemenUser() {
       const response = await axios.get('https://api-uks.rplrus.com/api/grades', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      // Remove duplicates by creating a unique list based on grade name
       const uniqueGrades = Array.from(
         new Map(response.data.map(grade => [grade.name, grade])).values()
       );
       setGrades(uniqueGrades);
     } catch (err) {
-      if (err.response && err.response.status === 401) {
+      if (err.response?.status === 401) {
         setError('Unauthorized: Invalid or expired admin token. Please log in again.');
       } else {
-        setError('Error fetching grades: ' + err.message);
+        setError('Error fetching grades: ' + (err.response?.data?.message || err.message));
       }
     }
   };
@@ -158,10 +166,10 @@ export default function ManajemenUser() {
         return null;
       }
     } catch (err) {
-      if (err.response && err.response.status === 401) {
+      if (err.response?.status === 401) {
         setModalError('Unauthorized: Invalid or expired admin token. Please log in again.');
       } else {
-        setModalError('Error fetching user details: ' + err.message);
+        setModalError('Error fetching user details: ' + (err.response?.data?.message || err.message));
       }
       return null;
     } finally {
@@ -193,10 +201,10 @@ export default function ManajemenUser() {
         setModalError('Failed to update user: ' + response.data.message);
       }
     } catch (err) {
-      if (err.response && err.response.status === 401) {
+      if (err.response?.status === 401) {
         setModalError('Unauthorized: Invalid or expired admin token. Please log in again.');
       } else {
-        setModalError('Error updating user: ' + err.message);
+        setModalError('Error updating user: ' + (err.response?.data?.message || err.message));
       }
     } finally {
       setModalLoading(false);
@@ -224,10 +232,10 @@ export default function ManajemenUser() {
         showToastMessage('Failed to delete user: ' + response.data.message, 'error');
       }
     } catch (err) {
-      if (err.response && err.response.status === 401) {
+      if (err.response?.status === 401) {
         showToastMessage('Unauthorized: Invalid or expired admin token. Please log in again.', 'error');
       } else {
-        showToastMessage('Error deleting user: ' + err.message, 'error');
+        showToastMessage('Error deleting user: ' + (err.response?.data?.message || err.message), 'error');
       }
     }
   };
@@ -341,39 +349,82 @@ export default function ManajemenUser() {
 
   if (loading) {
     return (
-      <div className="flex h-screen overflow-hidden">
+      <div className="flex h-screen overflow-hidden font-sans">
         <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
         <div className="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
           <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
           <main className="grow">
             <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto">
-              <p>Loading...</p>
+              <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
+                <div className="double-spinner">
+                  <div className="spinner-ring outer"></div>
+                  <div className="spinner-ring inner"></div>
+                </div>
+                <p className="text-gray-500 mt-4">Memuat...</p>
+              </div>
             </div>
           </main>
         </div>
+        <style jsx>{`
+          .double-spinner {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            margin: 0 auto;
+          }
+          .spinner-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 4px solid transparent;
+            border-radius: 50%;
+            animation: spin 1.5s linear infinite;
+          }
+          .spinner-ring.outer {
+            border-top-color: #4FB7BD;
+            border-bottom-color: #4FB7BD;
+            animation-direction: normal;
+          }
+          .spinner-ring.inner {
+            border-top-color: #93D3CC;
+            border-bottom-color: #93D3CC;
+            animation-direction: reverse;
+            width: 40px;
+            height: 40px;
+            top: 10px;
+            left: 10px;
+          }
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex h-screen overflow-hidden">
+      <div className="flex h-screen overflow-hidden font-sans">
         <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
         <div className="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
           <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
           <main className="grow">
             <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto">
-              <p className="text-red-500">{error}</p>
-              <button
-                onClick={() => {
-                  fetchUsers();
-                  fetchDepartments();
-                  fetchGrades();
-                }}
-                className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-              >
-                Retry
-              </button>
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+                {error}
+                <button
+                  onClick={() => {
+                    fetchUsers();
+                    fetchDepartments();
+                    fetchGrades();
+                  }}
+                  className="ml-4 px-4 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                  aria-label="Coba lagi untuk mengambil data pengguna"
+                >
+                  Retry
+                </button>
+              </div>
             </div>
           </main>
         </div>
@@ -382,7 +433,7 @@ export default function ManajemenUser() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden font-sans">
       <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       <div className="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
         <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
@@ -390,15 +441,45 @@ export default function ManajemenUser() {
           <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto">
             {/* Toast Notification */}
             {showToast && (
-              <div className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 ${
-                toastType === 'success' ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'
-              } px-4 py-2 rounded-lg shadow-md flex items-center gap-2 animate-fade-in-out z-50`}>
-                <div className={`rounded-full p-1 ${
-                  toastType === 'success' ? 'bg-green-600' : 'bg-red-600'
-                }`}>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414L9 13.414l4.707-4.707z" clipRule="evenodd" />
-                  </svg>
+              <div
+                className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 ${
+                  toastType === "success"
+                    ? "bg-green-200 text-green-800"
+                    : "bg-red-200 text-red-800"
+                } px-4 py-2 rounded-lg shadow-md flex items-center gap-2 animate-fade-in-out z-50`}
+              >
+                <div
+                  className={`rounded-full p-1 ${
+                    toastType === "success" ? "bg-green-600" : "bg-red-600"
+                  }`}
+                >
+                  {toastType === "success" ? (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 text-white"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414L9 13.414l4.707-4.707z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 text-white"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  )}
                 </div>
                 <span className="font-medium text-sm">{toastMessage}</span>
               </div>
@@ -446,12 +527,14 @@ export default function ManajemenUser() {
                     placeholder-[#6D9C9D] dark:placeholder-gray-400
                     focus:outline-none
                   "
+                  aria-label="Cari pengguna berdasarkan nama"
                 />
               </div>
               <select
                 value={classFilter}
                 onChange={handleClassChange}
                 className="w-[150px] rounded-[10px] bg-white dark:bg-gray-700 text-[#6D9C9D] dark:text-gray-200 text-left pl-5 py-2 focus:outline-none appearance-none"
+                aria-label="Filter berdasarkan kelas"
               >
                 <option value="">Kelas</option>
                 <option value="10">10</option>
@@ -462,6 +545,7 @@ export default function ManajemenUser() {
                 value={departmentFilter}
                 onChange={handleDepartmentChange}
                 className="w-[200px] rounded-[10px] bg-white dark:bg-gray-700 text-[#6D9C9D] dark:text-gray-200 text-left pl-5 py-2 focus:outline-none appearance-none"
+                aria-label="Filter berdasarkan jurusan"
               >
                 <option value="">Jurusan</option>
                 {departments.map((dept) => (
@@ -473,6 +557,7 @@ export default function ManajemenUser() {
                 onChange={handleGradeChange}
                 disabled={!departmentFilter}
                 className="w-[200px] rounded-[10px] bg-white dark:bg-gray-700 text-[#6D9C9D] dark:text-gray-200 text-left pl-5 py-2 focus:outline-none appearance-none"
+                aria-label="Filter berdasarkan nomor kelas"
               >
                 <option value="">No. Kelas</option>
                 {departmentFilter &&
@@ -486,6 +571,7 @@ export default function ManajemenUser() {
                 value={roleFilter}
                 onChange={handleRoleChange}
                 className="w-[120px] rounded-[10px] bg-white dark:bg-gray-700 text-[#6D9C9D] dark:text-gray-200 text-left pl-5 py-2 focus:outline-none appearance-none"
+                aria-label="Filter berdasarkan peran"
               >
                 <option value="">Role</option>
                 <option value="user">User</option>
@@ -494,7 +580,7 @@ export default function ManajemenUser() {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="min-w-full text-sm text-left text-gray-700 dark:text-white">
+              <table className="min-w-full text-sm text-left text-gray-700 dark:text-white" role="grid">
                 <thead className="text-teal-600 uppercase text-xs border-b border-[#CDDDFF]">
                   <tr>
                     <th className="px-4 py-3">No</th>
@@ -507,41 +593,53 @@ export default function ManajemenUser() {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentUsers.map((user, index) => (
-                    <tr key={user.id} className="border-b border-[#CDDDFF]">
-                      <td className="px-4 py-2">{indexOfFirstUser + index + 1}</td>
-                      <td className="px-4 py-2">{user.name || '-'}</td>
-                      <td className="px-4 py-2">{user.class || '-'}</td>
-                      <td className="px-4 py-2">{user.name_grades || '-'}</td>
-                      <td className="px-4 py-2">{user.gender || '-'}</td>
-                      <td className="px-4 py-2">{user.phone_number || '-'}</td>
-                      <td className="px-4 py-2 flex gap-2">
-                        <FaEye
-                          className="text-gray-500 hover:text-blue-600 cursor-pointer"
-                          onClick={() => handleViewClick(user.id)}
-                        />
-                        <FaEdit
-                          className={`text-gray-500 ${user.role === 'admin' ? 'opacity-50 pointer-events-none' : 'hover:text-yellow-500 cursor-pointer'}`}
-                          onClick={user.role !== 'admin' ? () => handleEditClick(user.id) : undefined}
-                        />
-                        <FaTrash
-                          className="text-gray-500 hover:text-red-500 cursor-pointer"
-                          onClick={() => handleDeleteClick(user.id, user.name)}
-                        />
+                  {currentUsers.length > 0 ? (
+                    currentUsers.map((user, index) => (
+                      <tr key={user.id} className="border-b border-[#CDDDFF]">
+                        <td className="px-4 py-2">{indexOfFirstUser + index + 1}</td>
+                        <td className="px-4 py-2">{user.name || '-'}</td>
+                        <td className="px-4 py-2">{user.class || '-'}</td>
+                        <td className="px-4 py-2">{user.name_grades || '-'}</td>
+                        <td className="px-4 py-2">{user.gender || '-'}</td>
+                        <td className="px-4 py-2">{user.phone_number || '-'}</td>
+                        <td className="px-4 py-2 flex gap-2">
+                          <FaEye
+                            className="text-gray-500 hover:text-blue-600 cursor-pointer"
+                            onClick={() => handleViewClick(user.id)}
+                            aria-label={`Lihat detail pengguna ${user.name}`}
+                          />
+                          <FaEdit
+                            className={`text-gray-500 ${user.role === 'admin' ? 'opacity-50 pointer-events-none' : 'hover:text-yellow-500 cursor-pointer'}`}
+                            onClick={user.role !== 'admin' ? () => handleEditClick(user.id) : undefined}
+                            aria-label={`Edit pengguna ${user.name}`}
+                          />
+                          <FaTrash
+                            className="text-gray-500 hover:text-red-500 cursor-pointer"
+                            onClick={() => handleDeleteClick(user.id, user.name)}
+                            aria-label={`Hapus pengguna ${user.name}`}
+                          />
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="7" className="text-center p-4 text-gray-500 dark:text-gray-400">
+                        Tidak ada pengguna yang ditemukan.
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
 
             <div className="flex justify-between items-center mt-6 text-sm dark:text-gray-300">
-              <p>Showing {indexOfFirstUser + 1}–{Math.min(indexOfLastUser, filteredUsers.length)} of {filteredUsers.length}</p>
+              <p>Showing {filteredUsers.length === 0 ? 0 : indexOfFirstUser + 1}–{Math.min(indexOfLastUser, filteredUsers.length)} of {filteredUsers.length}</p>
               <div className="flex gap-1">
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
                   className="px-3 py-1 border rounded text-gray-600 dark:text-gray-300 disabled:opacity-50"
+                  aria-label="Halaman sebelumnya"
                 >
                   {'<'}
                 </button>
@@ -554,6 +652,7 @@ export default function ManajemenUser() {
                         ? 'bg-green-600 dark:bg-[#204ECF] text-white'
                         : 'text-gray-600 dark:text-gray-300'
                     }`}
+                    aria-label={`Pindah ke halaman ${page}`}
                   >
                     {page}
                   </button>
@@ -562,6 +661,7 @@ export default function ManajemenUser() {
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
                   className="px-3 py-1 border rounded text-gray-600 dark:text-gray-300 disabled:opacity-50"
+                  aria-label="Halaman berikutnya"
                 >
                   {'>'}
                 </button>
@@ -570,8 +670,8 @@ export default function ManajemenUser() {
 
             {/* Delete Confirmation Modal */}
             {showDeleteConfirm && userToDelete && (
-              <div className="fixed inset-0 flex items-center justify-center z-50 modal-overlay">
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md text-center shadow-lg relative animate-scale-in">
+              <div className="fixed inset-0 flex items-center justify-center z-50 modal-overlay" onClick={handleModalClick}>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md text-center shadow-lg animate-scale-in">
                   <div className="flex justify-center mb-4">
                     <div className="p-2 rounded-full border-2 border-orange-500">
                       <AlertTriangle className="w-12 h-12 text-orange-500" />
@@ -584,13 +684,15 @@ export default function ManajemenUser() {
                   <div className="flex justify-center gap-4">
                     <button
                       onClick={cancelDelete}
-                      className="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100"
+                      className="px-6 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600"
+                      aria-label={`Batal menonaktifkan akun ${userToDelete.name}`}
                     >
                       Batal
                     </button>
                     <button
                       onClick={confirmDelete}
                       className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
+                      aria-label={`Konfirmasi menonaktifkan akun ${userToDelete.name}`}
                     >
                       Lanjutkan, Nonaktifkan Akun
                     </button>
@@ -605,29 +707,35 @@ export default function ManajemenUser() {
                 className="fixed inset-0 bg-transparent flex items-center justify-center z-50 modal-overlay"
                 onClick={handleModalClick}
               >
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
-                  <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">User Details</h2>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md animate-scale-in">
+                  <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Detail Pengguna</h2>
                   {modalLoading ? (
-                    <p className="text-gray-600 dark:text-gray-300">Loading...</p>
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="double-spinner">
+                        <div className="spinner-ring outer"></div>
+                        <div className="spinner-ring inner"></div>
+                      </div>
+                      <p className="text-gray-600 dark:text-gray-300 mt-4">Memuat...</p>
+                    </div>
                   ) : modalError ? (
                     <p className="text-red-500">{modalError}</p>
                   ) : (
                     <div className="space-y-2">
-                      <p><strong>Name:</strong> {selectedUser.name || '-'}</p>
+                      <p><strong>Nama:</strong> {selectedUser.name || '-'}</p>
                       <p><strong>Email:</strong> {selectedUser.email || '-'}</p>
-                      <p><strong>Role:</strong> {selectedUser.role || '-'}</p>
-                      <p><strong>Phone Number:</strong> {selectedUser.phone_number || '-'}</p>
-                      <p><strong>Gender:</strong> {selectedUser.gender || '-'}</p>
+                      <p><strong>Peran:</strong> {selectedUser.role || '-'}</p>
+                      <p><strong>Nomor Telepon:</strong> {selectedUser.phone_number || '-'}</p>
+                      <p><strong>Jenis Kelamin:</strong> {selectedUser.gender || '-'}</p>
                       {selectedUser.role !== 'admin' && (
                         <>
-                          <p><strong>Department:</strong> {selectedUser.name_department || '-'}</p>
-                          <p><strong>Class:</strong> {selectedUser.class || '-'}</p>
-                          <p><strong>Grade:</strong> {selectedUser.name_grades || '-'}</p>
-                          <p><strong>Absent:</strong> {selectedUser.absent || '-'}</p>
+                          <p><strong>Jurusan:</strong> {selectedUser.name_department || '-'}</p>
+                          <p><strong>Kelas:</strong> {selectedUser.class || '-'}</p>
+                          <p><strong>Nama Kelas:</strong> {selectedUser.name_grades || '-'}</p>
+                          <p><strong>Absen:</strong> {selectedUser.absent || '-'}</p>
                         </>
                       )}
-                      <p><strong>Parent Phone:</strong> {selectedUser.no_hp_parent || '-'}</p>
-                      <p><strong>Parent Name:</strong> {selectedUser.name_parent || '-'}</p>
+                      <p><strong>Nama Orang Tua:</strong> {selectedUser.name_parent || '-'}</p>
+                      <p><strong>Nomor Telepon Orang Tua:</strong> {selectedUser.no_hp_parent || '-'}</p>
                       <p><strong>Wali Kelas:</strong> {selectedUser.name_walikelas || '-'}</p>
                     </div>
                   )}
@@ -637,9 +745,10 @@ export default function ManajemenUser() {
                         setShowViewModal(false);
                         setSelectedUser(null);
                       }}
-                      className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                      className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600"
+                      aria-label="Tutup modal detail pengguna"
                     >
-                      Close
+                      Tutup
                     </button>
                   </div>
                 </div>
@@ -652,53 +761,62 @@ export default function ManajemenUser() {
                 className="fixed inset-0 bg-transparent flex items-center justify-center z-50 modal-overlay"
                 onClick={handleModalClick}
               >
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
-                  <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Edit Class and Department</h2>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md animate-scale-in">
+                  <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Edit Kelas dan Jurusan</h2>
                   {modalLoading ? (
-                    <p className="text-gray-600 dark:text-gray-300">Loading...</p>
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="double-spinner">
+                        <div className="spinner-ring outer"></div>
+                        <div className="spinner-ring inner"></div>
+                      </div>
+                      <p className="text-gray-600 dark:text-gray-300 mt-4">Memuat...</p>
+                    </div>
                   ) : modalError ? (
                     <p className="text-red-500">{modalError}</p>
                   ) : (
                     <div>
                       <div className="space-y-4">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Department</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Jurusan</label>
                           <select
                             name="name_department"
                             value={editForm.name_department}
                             onChange={handleEditFormChange}
                             className="w-full rounded-[10px] bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 pl-3 py-2 focus:outline-none border border-gray-300 dark:border-gray-600"
+                            aria-label="Pilih jurusan"
                           >
-                            <option value="">Select Department</option>
+                            <option value="">Pilih Jurusan</option>
                             {departments.map((dept) => (
                               <option key={dept.id} value={dept.name}>{dept.name}</option>
                             ))}
                           </select>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Class</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Kelas</label>
                           <select
                             name="class"
                             value={editForm.class}
                             onChange={handleEditFormChange}
                             className="w-full rounded-[10px] bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 pl-3 py-2 focus:outline-none border border-gray-300 dark:border-gray-600"
+                            aria-label="Pilih kelas"
                           >
-                            <option value="">Select Class</option>
+                            <option value="">Pilih Kelas</option>
                             <option value="10">10</option>
                             <option value="11">11</option>
                             <option value="12">12</option>
                           </select>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Grade</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nama Kelas</label>
                           <select
                             name="name_grades"
                             value={editForm.name_grades}
                             onChange={handleEditFormChange}
                             disabled={!editForm.name_department}
                             className="w-full rounded-[10px] bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 pl-3 py-2 focus:outline-none border border-gray-300 dark:border-gray-600"
+                            aria-label="Pilih nama kelas"
                           >
-                            <option value="">Select Grade</option>
+                            <option value="">Pilih Nama Kelas</option>
                             {editForm.name_department &&
                               grades
                                 .filter(grade => grade.department_name === editForm.name_department)
@@ -715,15 +833,17 @@ export default function ManajemenUser() {
                             setSelectedUser(null);
                             setEditForm({ name_department: "", class: "", name_grades: "" });
                           }}
-                          className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                          className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600"
+                          aria-label="Batal mengedit pengguna"
                         >
-                          Cancel
+                          Batal
                         </button>
                         <button
                           onClick={handleEditSubmit}
                           className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                          aria-label="Simpan perubahan pengguna"
                         >
-                          Save
+                          Simpan
                         </button>
                       </div>
                     </div>
@@ -735,7 +855,7 @@ export default function ManajemenUser() {
         </main>
       </div>
 
-      {/* CSS for Modal Animation */}
+      {/* CSS for Animations */}
       <style jsx>{`
         .animate-scale-in {
           animation: scaleIn 0.2s ease-out;
@@ -749,6 +869,47 @@ export default function ManajemenUser() {
             transform: scale(1);
             opacity: 1;
           }
+        }
+        .animate-fade-in-out {
+          animation: fadeInOut 3s ease-in-out;
+        }
+        @keyframes fadeInOut {
+          0% { opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+        .double-spinner {
+          position: relative;
+          width: 60px;
+          height: 60px;
+          margin: 0 auto;
+        }
+        .spinner-ring {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          border: 4px solid transparent;
+          border-radius: 50%;
+          animation: spin 1.5s linear infinite;
+        }
+        .spinner-ring.outer {
+          border-top-color: #4FB7BD;
+          border-bottom-color: #4FB7BD;
+          animation-direction: normal;
+        }
+        .spinner-ring.inner {
+          border-top-color: #93D3CC;
+          border-bottom-color: #93D3CC;
+          animation-direction: reverse;
+          width: 40px;
+          height: 40px;
+          top: 10px;
+          left: 10px;
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
       `}</style>
     </div>

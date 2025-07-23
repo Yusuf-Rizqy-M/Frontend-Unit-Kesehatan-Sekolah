@@ -3,6 +3,7 @@ import Sidebar from '../../partials/Sidebar';
 import Header from '../../partials/Header';
 import { FaTrash, FaEye, FaEdit } from "react-icons/fa";
 import axios from "axios";
+import UKS2Img from '../../assets/img/uks2.png'; // Favicon import
 
 const KategoriPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -13,32 +14,28 @@ const KategoriPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false); // New state for dark mode
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
   const [newCategory, setNewCategory] = useState({ title: "", description: "", image: null });
   const [editCategory, setEditCategory] = useState({ id: null, title: "", description: "", image: null });
-  const [successMessage, setSuccessMessage] = useState(null);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState("success");
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
 
   // Base API URL
   const API_URL = "https://api-uks.rplrus.com/api";
 
-  // Toggle dark mode
-  const toggleDarkMode = () => {
-    setIsDarkMode((prev) => {
-      const newMode = !prev;
-      if (newMode) {
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-        localStorage.setItem('theme', 'light');
-      }
-      return newMode;
-    });
-  };
+  // Set document title and favicon
+  useEffect(() => {
+    document.title = 'Kategori';
+    const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
+    favicon.rel = 'icon';
+    favicon.href = UKS2Img;
+    document.head.appendChild(favicon);
+  }, []);
 
   // Initialize theme based on localStorage or system preference
   useEffect(() => {
@@ -56,14 +53,29 @@ const KategoriPage = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get(`${API_URL}/categories`);
+        setLoading(true);
+        setError(null);
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        if (!token) {
+          throw new Error("No authentication token found. Please log in.");
+        }
+        const response = await axios.get(`${API_URL}/categories`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         if (response.data.status) {
           setCategories(response.data.data);
         } else {
-          setError("Failed to fetch categories.");
+          setError("Failed to fetch categories: " + response.data.message);
+          setToastMessage("Failed to fetch categories.", "error");
+          setShowToast(true);
         }
       } catch (err) {
-        setError("Error fetching data: " + err.message);
+        const errorMessage = err.response?.status === 401
+          ? "Unauthorized: Invalid or expired token. Please log in again."
+          : "Error fetching categories: " + (err.response?.data?.message || err.message);
+        setError(errorMessage);
+        setToastMessage("Error fetching categories. Please try again.", "error");
+        setShowToast(true);
       } finally {
         setLoading(false);
       }
@@ -99,6 +111,7 @@ const KategoriPage = () => {
   const closeEditModal = () => {
     setIsEditModalOpen(false);
     setEditCategory({ id: null, title: "", description: "", image: null });
+    setError(null);
   };
 
   // Close add modal
@@ -111,9 +124,11 @@ const KategoriPage = () => {
   // Handle adding a new category
   const handleAddCategory = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (!token) {
       setError("No authentication token found. Please log in.");
+      setToastMessage("No authentication token found. Please log in.", "error");
+      setShowToast(true);
       return;
     }
 
@@ -135,22 +150,31 @@ const KategoriPage = () => {
       if (response.data.status) {
         setCategories([...categories, response.data.data]);
         closeAddModal();
-        setSuccessMessage("Kategori berhasil dibuat");
-        setTimeout(() => setSuccessMessage(null), 3000);
+        setToastMessage("Kategori berhasil dibuat", "success");
+        setShowToast(true);
       } else {
         setError("Failed to add category: " + response.data.message);
+        setToastMessage("Failed to add category.", "error");
+        setShowToast(true);
       }
     } catch (err) {
-      setError("Error adding category: " + (err.response?.data?.message || err.message));
+      const errorMessage = err.response?.status === 401
+        ? "Unauthorized: Invalid or expired token. Please log in again."
+        : "Error adding category: " + (err.response?.data?.message || err.message);
+      setError(errorMessage);
+      setToastMessage("Error adding category. Please try again.", "error");
+      setShowToast(true);
     }
   };
 
   // Handle updating a category
   const handleUpdateCategory = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (!token) {
       setError("No authentication token found. Please log in.");
+      setToastMessage("No authentication token found. Please log in.", "error");
+      setShowToast(true);
       return;
     }
 
@@ -173,13 +197,20 @@ const KategoriPage = () => {
       if (response.data.status) {
         setCategories(categories.map(cat => cat.id === editCategory.id ? response.data.data : cat));
         closeEditModal();
-        setSuccessMessage("Kategori berhasil diedit");
-        setTimeout(() => setSuccessMessage(null), 3000);
+        setToastMessage("Kategori berhasil diedit", "success");
+        setShowToast(true);
       } else {
         setError("Failed to update category: " + response.data.message);
+        setToastMessage("Failed to update category.", "error");
+        setShowToast(true);
       }
     } catch (err) {
-      setError("Error updating category: " + (err.response?.data?.message || err.message));
+      const errorMessage = err.response?.status === 401
+        ? "Unauthorized: Invalid or expired token. Please log in again."
+        : "Error updating category: " + (err.response?.data?.message || err.message);
+      setError(errorMessage);
+      setToastMessage("Error updating category. Please try again.", "error");
+      setShowToast(true);
     }
   };
 
@@ -191,9 +222,11 @@ const KategoriPage = () => {
 
   // Handle delete action
   const handleDelete = async () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (!token) {
       setError("No authentication token found. Please log in.");
+      setToastMessage("No authentication token found. Please log in.", "error");
+      setShowToast(true);
       setIsConfirmModalOpen(false);
       return;
     }
@@ -207,15 +240,23 @@ const KategoriPage = () => {
       if (response.data.status) {
         setCategories(categories.filter(cat => cat.id !== deleteId));
         setIsConfirmModalOpen(false);
-        setSuccessMessage("Kategori berhasil dihapus");
-        setTimeout(() => setSuccessMessage(null), 3000);
+        setToastMessage("Kategori berhasil dihapus", "success");
+        setShowToast(true);
       } else {
         setError("Failed to delete category: " + response.data.message);
+        setToastMessage("Failed to delete category.", "error");
+        setShowToast(true);
       }
     } catch (err) {
-      setError("Error deleting category: " + (err.response?.data?.message || err.message));
+      const errorMessage = err.response?.status === 401
+        ? "Unauthorized: Invalid or expired token. Please log in again."
+        : "Error deleting category: " + (err.response?.data?.message || err.message);
+      setError(errorMessage);
+      setToastMessage("Error deleting category. Please try again.", "error");
+      setShowToast(true);
     } finally {
       setDeleteId(null);
+      setIsConfirmModalOpen(false);
     }
   };
 
@@ -276,22 +317,72 @@ const KategoriPage = () => {
     return pageNumbers;
   };
 
-  return (
-    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
-      <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+  // Handle retry for error state
+  const handleRetry = () => {
+    setError(null);
+    setLoading(true);
+    setCategories([]);
+  };
 
+  return (
+    <div className="flex h-screen overflow-hidden font-sans bg-gray-50 dark:bg-gray-900">
+      <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       <div className="relative flex flex-col flex-1 overflow-y-auto">
         <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-
         <main className="grow p-6">
           <div className="w-full max-w-7xl mx-auto">
-            {/* Dark Mode Toggle Button */}
+            {/* Toast Notification */}
+            {showToast && (
+              <div
+                className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 ${
+                  toastType === "success"
+                    ? "bg-green-200 text-green-800"
+                    : "bg-red-200 text-red-800"
+                } px-4 py-2 rounded-lg shadow-md flex items-center gap-2 animate-fade-in-out z-50`}
+              >
+                <div
+                  className={`rounded-full p-1 ${
+                    toastType === "success" ? "bg-green-600" : "bg-red-600"
+                  }`}
+                >
+                  {toastType === "success" ? (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 text-white"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414L9 13.414l4.707-4.707z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 text-white"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  )}
+                </div>
+                <span className="font-medium text-sm">{toastMessage}</span>
+              </div>
+            )}
 
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl text-gray-800 dark:text-gray-200 font-bold">Kategori</h2>
               <button
                 className="flex items-center gap-2 bg-teal-500 dark:bg-teal-600 text-white px-4 py-2 rounded-full hover:bg-teal-600 dark:hover:bg-teal-700 transition-colors duration-200"
                 onClick={() => setIsAddModalOpen(true)}
+                aria-label="Tambahkan kategori baru"
               >
                 <svg
                   className="w-5 h-5"
@@ -311,165 +402,170 @@ const KategoriPage = () => {
               </button>
             </div>
 
-            {successMessage && (
-              <div
-                className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 px-4 py-2 rounded-lg shadow-md flex items-center gap-2 animate-fade-in-out z-50"
-              >
-                <div className="bg-green-600 dark:bg-green-500 rounded-full p-1">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4 text-white"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414L9 13.414l4.707-4.707z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-                <span className="font-medium text-sm">{successMessage}</span>
-              </div>
-            )}
-
             {loading ? (
-              <div className="text-center text-gray-500 dark:text-gray-400">Loading...</div>
+              <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
+                <div className="double-spinner">
+                  <div className="spinner-ring outer"></div>
+                  <div className="spinner-ring inner"></div>
+                </div>
+                <p className="text-gray-500 dark:text-gray-400 mt-4">Memuat...</p>
+              </div>
             ) : error ? (
-              <div className="text-center text-red-500 dark:text-red-400">{error}</div>
-            ) : categories.length === 0 ? (
-              <div className="text-center text-gray-500 dark:text-gray-400">No categories available.</div>
-            ) : (
-              <table className="w-full text-sm bg-white dark:bg-gray-800 shadow-sm">
-                <thead>
-                  <tr className="text-left text-gray-500 dark:text-gray-300">
-                    <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">No</th>
-                    <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">Name</th>
-                    <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">Deskripsi</th>
-                    <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium text-center">Gambar</th>
-                    <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium text-center">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentCategories.map((category, index) => (
-                    <tr key={category.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
-                      <td className="py-3 px-4 text-gray-700 dark:text-gray-200">{indexOfFirstItem + index + 1}</td>
-                      <td className="py-3 px-4 text-gray-700 dark:text-gray-200">{category.title}</td>
-                      <td className="py-3 px-4 text-gray-700 dark:text-gray-200 italic">{category.description}</td>
-                      <td className="py-3 px-4 text-center">
-                        <img
-                          src={getImageUrl(category.image)}
-                          alt={category.title}
-                          className="w-6 object-contain inline-block"
-                          onError={(e) => (e.target.src = "/placeholder.png")}
-                        />
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        <div className="flex justify-center gap-2">
-                          <button
-                            className="text-gray-500 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400"
-                            onClick={() => handleView(category)}
-                          >
-                            <FaEye className="w-4 h-4" />
-                          </button>
-                          <button
-                            className="text-gray-500 dark:text-gray-300 hover:text-green-500 dark:hover:text-green-400"
-                            onClick={() => handleEdit(category)}
-                          >
-                            <FaEdit className="w-4 h-4" />
-                          </button>
-                          <button
-                            className="text-gray-500 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400"
-                            onClick={() => handleDeleteConfirm(category.id)}
-                          >
-                            <FaTrash className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-
-            <div className="flex justify-between items-center mt-6 text-gray-500 dark:text-gray-300 text-sm">
-              <span>
-                Showing {indexOfFirstItem + 1}-
-                {Math.min(indexOfLastItem, categories.length)} of {categories.length}
-              </span>
-              <div className="flex space-x-1">
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+                {error}
                 <button
-                  className={`px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-l hover:bg-gray-100 dark:hover:bg-gray-600 ${currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""}`}
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
+                  onClick={handleRetry}
+                  className="ml-4 px-4 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                  aria-label="Coba lagi untuk mengambil data kategori"
                 >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M15 19l-7-7 7-7"
-                    />
-                  </svg>
-                </button>
-                {getPageNumbers().map((pageNumber) => (
-                  <button
-                    key={pageNumber}
-                    className={`px-3 py-1 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 ${currentPage === pageNumber ? "bg-teal-500 dark:bg-teal-600 text-white" : ""}`}
-                    onClick={() => handlePageChange(pageNumber)}
-                  >
-                    {pageNumber}
-                  </button>
-                ))}
-                {totalPages > 3 && currentPage < totalPages - 1 && (
-                  <button className="px-3 py-1 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600">...</button>
-                )}
-                {totalPages > 3 && currentPage < totalPages && (
-                  <button
-                    className="px-3 py-1 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
-                    onClick={() => handlePageChange(totalPages)}
-                  >
-                    {totalPages}
-                  </button>
-                )}
-                <button
-                  className={`px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-r hover:bg-gray-100 dark:hover:bg-gray-600 ${currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""}`}
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
+                  Retry
                 </button>
               </div>
-            </div>
+            ) : categories.length === 0 ? (
+              <div className="text-center text-gray-500 dark:text-gray-400">Tidak ada kategori yang tersedia.</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm bg-white dark:bg-gray-800 shadow-sm rounded-[10px]" role="grid">
+                  <thead>
+                    <tr className="text-left text-gray-500 dark:text-gray-300">
+                      <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">No</th>
+                      <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">Nama</th>
+                      <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">Deskripsi</th>
+                      <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium text-center">Gambar</th>
+                      <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium text-center">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentCategories.map((category, index) => (
+                      <tr key={category.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td className="py-3 px-4 text-gray-700 dark:text-gray-200">{indexOfFirstItem + index + 1}</td>
+                        <td className="py-3 px-4 text-gray-700 dark:text-gray-200">{category.title}</td>
+                        <td className="py-3 px-4 text-gray-700 dark:text-gray-200 italic">{category.description}</td>
+                        <td className="py-3 px-4 text-center">
+                          <img
+                            src={getImageUrl(category.image)}
+                            alt={category.title}
+                            className="w-6 object-contain inline-block"
+                            onError={(e) => (e.target.src = "/placeholder.png")}
+                          />
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <div className="flex justify-center gap-2">
+                            <button
+                              className="text-gray-500 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400"
+                              onClick={() => handleView(category)}
+                              aria-label={`Lihat detail kategori ${category.title}`}
+                            >
+                              <FaEye className="w-4 h-4" />
+                            </button>
+                            <button
+                              className="text-gray-500 dark:text-gray-300 hover:text-green-500 dark:hover:text-green-400"
+                              onClick={() => handleEdit(category)}
+                              aria-label={`Edit kategori ${category.title}`}
+                            >
+                              <FaEdit className="w-4 h-4" />
+                            </button>
+                            <button
+                              className="text-gray-500 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400"
+                              onClick={() => handleDeleteConfirm(category.id)}
+                              aria-label={`Hapus kategori ${category.title}`}
+                            >
+                              <FaTrash className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {categories.length > 0 && (
+              <div className="flex justify-between items-center mt-6 text-gray-500 dark:text-gray-300 text-sm">
+                <span>
+                  Showing {categories.length === 0 ? 0 : indexOfFirstItem + 1}-
+                  {Math.min(indexOfLastItem, categories.length)} of {categories.length}
+                </span>
+                <div className="flex space-x-1">
+                  <button
+                    className={`px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-l hover:bg-gray-100 dark:hover:bg-gray-600 ${currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""}`}
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    aria-label="Halaman sebelumnya"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M15 19l-7-7 7-7"
+                      />
+                    </svg>
+                  </button>
+                  {getPageNumbers().map((pageNumber) => (
+                    <button
+                      key={pageNumber}
+                      className={`px-3 py-1 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 ${currentPage === pageNumber ? "bg-teal-500 dark:bg-teal-600 text-white" : ""}`}
+                      onClick={() => handlePageChange(pageNumber)}
+                      aria-label={`Pindah ke halaman ${pageNumber}`}
+                    >
+                      {pageNumber}
+                    </button>
+                  ))}
+                  {totalPages > 3 && currentPage < totalPages - 1 && (
+                    <button className="px-3 py-1 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600">...</button>
+                  )}
+                  {totalPages > 3 && currentPage < totalPages && (
+                    <button
+                      className="px-3 py-1 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
+                      onClick={() => handlePageChange(totalPages)}
+                      aria-label={`Pindah ke halaman ${totalPages}`}
+                    >
+                      {totalPages}
+                    </button>
+                  )}
+                  <button
+                    className={`px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-r hover:bg-gray-100 dark:hover:bg-gray-600 ${currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""}`}
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    aria-label="Halaman berikutnya"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </main>
 
+        {/* Add Category Modal */}
         {isAddModalOpen && (
-          <div className="fixed inset-0 bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-2xl relative">
+          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50" role="dialog" aria-modal="true">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-2xl relative animate-scale-in">
               <button
                 className="absolute top-4 right-4 text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100"
                 onClick={closeAddModal}
-                aria-label="Close modal"
+                aria-label="Tutup modal tambah kategori"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -489,6 +585,7 @@ const KategoriPage = () => {
                     className="input w-full rounded-lg bg-teal-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 placeholder-gray-500 dark:placeholder-gray-400"
                     required
                     aria-required="true"
+                    aria-label="Nama kategori"
                   />
                 </div>
                 <div className="form-control">
@@ -502,6 +599,7 @@ const KategoriPage = () => {
                     className="textarea w-full rounded-lg bg-teal-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 placeholder-gray-500 dark:placeholder-gray-400"
                     required
                     aria-required="true"
+                    aria-label="Deskripsi kategori"
                   />
                 </div>
                 <div className="form-control">
@@ -512,6 +610,7 @@ const KategoriPage = () => {
                     type="button"
                     className="flex items-center justify-center w-full rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 py-2 hover:bg-gray-300 dark:hover:bg-gray-600"
                     onClick={() => document.getElementById("file-input-add").click()}
+                    aria-label="Pilih gambar untuk kategori"
                   >
                     <svg
                       className="w-5 h-5 mr-2"
@@ -536,6 +635,7 @@ const KategoriPage = () => {
                     onChange={handleInputChange}
                     className="hidden"
                     accept="image/*"
+                    aria-hidden="true"
                   />
                 </div>
                 {error && <p className="text-red-500 dark:text-red-400 text-sm">{error}</p>}
@@ -544,10 +644,15 @@ const KategoriPage = () => {
                     type="button"
                     className="btn bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
                     onClick={closeAddModal}
+                    aria-label="Batal menambahkan kategori"
                   >
                     Batal
                   </button>
-                  <button type="submit" className="btn bg-teal-500 dark:bg-teal-600 text-white rounded-lg hover:bg-teal-600 dark:hover:bg-teal-700">
+                  <button
+                    type="submit"
+                    className="btn bg-teal-500 dark:bg-teal-600 text-white rounded-lg hover:bg-teal-600 dark:hover:bg-teal-700"
+                    aria-label="Tambahkan kategori"
+                  >
                     Tambah
                   </button>
                 </div>
@@ -556,13 +661,14 @@ const KategoriPage = () => {
           </div>
         )}
 
+        {/* Edit Category Modal */}
         {isEditModalOpen && (
-          <div className="fixed inset-0 bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-2xl relative">
+          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50" role="dialog" aria-modal="true">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-2xl relative animate-scale-in">
               <button
                 className="absolute top-4 right-4 text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100"
                 onClick={closeEditModal}
-                aria-label="Close modal"
+                aria-label="Tutup modal edit kategori"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -582,6 +688,7 @@ const KategoriPage = () => {
                     className="input w-full rounded-lg bg-teal-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 placeholder-gray-500 dark:placeholder-gray-400"
                     required
                     aria-required="true"
+                    aria-label="Nama kategori"
                   />
                 </div>
                 <div className="form-control">
@@ -595,6 +702,7 @@ const KategoriPage = () => {
                     className="textarea w-full rounded-lg bg-teal-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 placeholder-gray-500 dark:placeholder-gray-400"
                     required
                     aria-required="true"
+                    aria-label="Deskripsi kategori"
                   />
                 </div>
                 <div className="form-control">
@@ -605,6 +713,7 @@ const KategoriPage = () => {
                     type="button"
                     className="flex items-center justify-center w-full rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 py-2 hover:bg-gray-300 dark:hover:bg-gray-600"
                     onClick={() => document.getElementById("file-input-edit").click()}
+                    aria-label="Pilih gambar untuk kategori"
                   >
                     <svg
                       className="w-5 h-5 mr-2"
@@ -629,6 +738,7 @@ const KategoriPage = () => {
                     onChange={handleEditInputChange}
                     className="hidden"
                     accept="image/*"
+                    aria-hidden="true"
                   />
                 </div>
                 {error && <p className="text-red-500 dark:text-red-400 text-sm">{error}</p>}
@@ -637,10 +747,15 @@ const KategoriPage = () => {
                     type="button"
                     className="btn bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
                     onClick={closeEditModal}
+                    aria-label="Batal mengedit kategori"
                   >
                     Batal
                   </button>
-                  <button type="submit" className="btn bg-teal-500 dark:bg-teal-600 text-white rounded-lg hover:bg-teal-600 dark:hover:bg-teal-700">
+                  <button
+                    type="submit"
+                    className="btn bg-teal-500 dark:bg-teal-600 text-white rounded-lg hover:bg-teal-600 dark:hover:bg-teal-700"
+                    aria-label="Simpan perubahan kategori"
+                  >
                     Simpan
                   </button>
                 </div>
@@ -649,11 +764,22 @@ const KategoriPage = () => {
           </div>
         )}
 
+        {/* View Category Modal */}
         {isModalOpen && selectedCategory && (
-          <div className="fixed inset-0 bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md shadow-lg z-60 relative">
+          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50" role="dialog" aria-modal="true">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md shadow-lg relative animate-scale-in">
+              <button
+                className="absolute top-4 right-4 text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100"
+                onClick={closeModal}
+                aria-label="Tutup modal detail kategori"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4">Detail Kategori</h3>
               <div className="mb-4">
-                <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Jurusan</label>
+                <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Nama Kategori</label>
                 <div className="bg-green-100 dark:bg-green-900 p-3 rounded">{selectedCategory.title}</div>
               </div>
               <div className="mb-4">
@@ -673,6 +799,7 @@ const KategoriPage = () => {
                 <button
                   className="bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-2 rounded hover:bg-gray-400 dark:hover:bg-gray-600"
                   onClick={closeModal}
+                  aria-label="Kembali dari modal detail kategori"
                 >
                   Kembali
                 </button>
@@ -681,36 +808,50 @@ const KategoriPage = () => {
           </div>
         )}
 
+        {/* Delete Confirmation Modal */}
         {isConfirmModalOpen && (
-          <div className="fixed inset-0 bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-2xl relative animate-fade-in">
-              <div className="p-6 text-center">
-                <h3 className="text-xl font-bold text-red-600 dark:text-red-400 mb-2">Yakin ingin Menghapus Kategori?</h3>
-                <p className="text-gray-600 dark:text-gray-300 mb-4">
-                  Fitur ini digunakan untuk menghapus kategori dari sistem secara aman. Saat pengguna menekan tombol hapus, seluruh pengaturan dan data kategori yang belum tersimpan akan dihapus. Pastikan untuk menyimpan progres Anda sebelum menghapus kategori.
-                </p>
-                <div className="flex justify-center gap-4">
-                  <button
-                    className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition duration-200"
-                    onClick={() => setIsConfirmModalOpen(false)}
-                  >
-                    Batal
-                  </button>
-                  <button
-                    className="px-6 py-2 bg-red-500 dark:bg-red-600 text-white rounded-lg hover:bg-red-600 dark:hover:bg-red-700 transition duration-200"
-                    onClick={handleDelete}
-                  >
-                    Lanjut Hapus
-                  </button>
-                </div>
+          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50" role="dialog" aria-modal="true">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-2xl relative animate-scale-in">
+              <h3 className="text-xl font-bold text-red-600 dark:text-red-400 mb-2">Yakin ingin Menghapus Kategori?</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                Fitur ini digunakan untuk menghapus kategori dari sistem secara aman. Saat pengguna menekan tombol hapus, seluruh pengaturan dan data kategori yang belum tersimpan akan dihapus. Pastikan untuk menyimpan progres Anda sebelum menghapus kategori.
+              </p>
+              <div className="flex justify-center gap-4">
+                <button
+                  className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition duration-200"
+                  onClick={() => setIsConfirmModalOpen(false)}
+                  aria-label="Batal menghapus kategori"
+                >
+                  Batal
+                </button>
+                <button
+                  className="px-6 py-2 bg-red-500 dark:bg-red-600 text-white rounded-lg hover:bg-red-600 dark:hover:bg-red-700 transition duration-200"
+                  onClick={handleDelete}
+                  aria-label="Konfirmasi menghapus kategori"
+                >
+                  Lanjut Hapus
+                </button>
               </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* CSS for Toast Animation */}
+      {/* CSS for Animations and Spinner */}
       <style jsx>{`
+        .animate-scale-in {
+          animation: scaleIn 0.2s ease-out;
+        }
+        @keyframes scaleIn {
+          from {
+            transform: scale(0.8);
+            opacity: 0;
+          }
+          to {
+            transform: scale(1);
+            opacity: 1;
+          }
+        }
         .animate-fade-in-out {
           animation: fadeInOut 3s ease-in-out;
         }
@@ -720,12 +861,37 @@ const KategoriPage = () => {
           90% { opacity: 1; }
           100% { opacity: 0; }
         }
-        .animate-fade-in {
-          animation: fadeIn 0.3s ease-in;
+        .double-spinner {
+          position: relative;
+          width: 60px;
+          height: 60px;
+          margin: 0 auto;
         }
-        @keyframes fadeIn {
-          0% { opacity: 0; }
-          100% { opacity: 1; }
+        .spinner-ring {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          border: 4px solid transparent;
+          border-radius: 50%;
+          animation: spin 1.5s linear infinite;
+        }
+        .spinner-ring.outer {
+          border-top-color: #4FB7BD;
+          border-bottom-color: #4FB7BD;
+          animation-direction: normal;
+        }
+        .spinner-ring.inner {
+          border-top-color: #93D3CC;
+          border-bottom-color: #93D3CC;
+          animation-direction: reverse;
+          width: 40px;
+          height: 40px;
+          top: 10px;
+          left: 10px;
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
       `}</style>
     </div>

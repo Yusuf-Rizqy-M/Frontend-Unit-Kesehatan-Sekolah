@@ -40,6 +40,11 @@ import Staff from "./pages/admin/staff_admin";
 import RekamAntri from "./pages/admin/rekam_antri_siswa";
 import DetailRekamAntri from "./pages/admin/detail_rekam_antri";
 import Artikel from "./pages/admin/artikel";
+import KelasPage from "./pages/admin/kelas";
+import Jurusanpage from "./pages/admin/jurusan";
+
+
+
 
 // Routes
 import ProtectedRoute from "./routes/protectedRoute";
@@ -226,6 +231,22 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <Staff />
+            </ProtectedRoute>
+          }
+        />
+         <Route
+          path="/kelas"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <KelasPage />
+            </ProtectedRoute>
+          }
+        />
+          <Route
+          path="/department"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <Jurusanpage />
             </ProtectedRoute>
           }
         />

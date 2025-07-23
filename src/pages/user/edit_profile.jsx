@@ -4,8 +4,20 @@ import ProfileImg from "../../assets/img/doctor_img_rounded.png";
 import MaleIcon from "../../assets/img/male.png";
 import FemaleIcon from "../../assets/img/femenine.png";
 import NeutralIcon from "../../assets/img/genderno.png";
+import UKS2Img from '../../images/uks2.png'; // Impor gambar UKS2Img, sesuaikan path
 
 const EditProfile = () => {
+  useEffect(() => {
+    // Mengatur judul tab
+    document.title = 'Edit Profile';
+    
+    // Mengatur favicon
+    const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
+    favicon.rel = 'icon';
+    favicon.href = UKS2Img; // Menggunakan UKS2Img sebagai favicon
+    document.head.appendChild(favicon);
+  }, []); // Efek hanya dijalankan sekali saat komponen dimuat
+
   const gradeOptions = {
     RPL: ["RPL 1", "RPL 2"],
     "Animasi 3D": ["Animasi 3D 1", "Animasi 3D 2", "Animasi 3D 3"],
@@ -87,9 +99,9 @@ const EditProfile = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // Validation for phone number fields (only numbers)
+    // Validation for phone number fields (only numbers, max 15 characters)
     if (name === "phone_number" || name === "no_hp_parent") {
-      if (/^\d*$/.test(value)) {
+      if (/^\d*$/.test(value) && value.length <= 15) {
         setFormData((prev) => ({ ...prev, [name]: value }));
       }
       return;
@@ -229,7 +241,7 @@ const EditProfile = () => {
                 {success ? (
                   <path
                     fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707 1 z"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                     clipRule="evenodd"
                   />
                 ) : (
@@ -272,6 +284,7 @@ const EditProfile = () => {
               value={formData.phone_number}
               onChange={handleChange}
               type="tel"
+              maxLength="15"
             />
 
             <div>
@@ -345,6 +358,7 @@ const EditProfile = () => {
               value={formData.no_hp_parent}
               onChange={handleChange}
               type="tel"
+              maxLength="15"
             />
             <InputField
               label="Nama Walikelas"
@@ -380,7 +394,7 @@ const EditProfile = () => {
   );
 };
 
-const InputField = ({ label, name, value, onChange, readOnly, type = "text", min, max }) => (
+const InputField = ({ label, name, value, onChange, readOnly, type = "text", min, max, maxLength }) => (
   <div>
     <label className="block text-sm font-medium text-gray-800 mb-1">{label}</label>
     <input
@@ -391,6 +405,7 @@ const InputField = ({ label, name, value, onChange, readOnly, type = "text", min
       readOnly={readOnly}
       min={min}
       max={max}
+      maxLength={maxLength}
       className={`w-full max-w-lg px-3 py-2 rounded-lg border border-gray-300 text-sm ${
         readOnly ? "bg-gray-200 cursor-not-allowed" : ""
       }`}

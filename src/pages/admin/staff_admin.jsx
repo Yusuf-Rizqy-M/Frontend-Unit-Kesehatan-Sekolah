@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from '../../partials/Sidebar';
 import Header from '../../partials/Header';
+import UKS2Img from "../../assets/img/uks2.png"; // Favicon import
 import { FaTrash, FaEye, FaEdit, FaPlus } from "react-icons/fa";
 import axios from "axios";
 
@@ -51,6 +52,17 @@ const StaffPage = () => {
       document.documentElement.classList.remove('dark');
     }
   }, []);
+
+     useEffect(() => {
+          // Mengatur judul tab
+          document.title = 'Staff UKS';
+          
+          // Mengatur favicon
+          const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
+          favicon.rel = 'icon';
+          favicon.href = UKS2Img; // Menggunakan UKS2Img sebagai favicon
+          document.head.appendChild(favicon);
+        }, []); // Efek hanya dijalankan sekali saat komponen dimuat
 
   // Fetch staff data
   useEffect(() => {

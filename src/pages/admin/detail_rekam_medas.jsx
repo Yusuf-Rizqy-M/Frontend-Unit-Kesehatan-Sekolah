@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '../../partials/Sidebar';
 import Header from '../../partials/Header';
 import { FaEdit, FaTrash } from 'react-icons/fa';
+import UKS2Img from '../../assets/img/uks2.png'; // Favicon import
 
 const DetailRekamMedisSiswa = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -20,6 +21,15 @@ const DetailRekamMedisSiswa = () => {
   const [showEditForm, setShowEditForm] = useState(false);
   const [showViewForm, setShowViewForm] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
+
+  // Set document title and favicon
+  useEffect(() => {
+    document.title = 'Detail Rekam Medis Siswa';
+    const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
+    favicon.rel = 'icon';
+    favicon.href = UKS2Img;
+    document.head.appendChild(favicon);
+  }, []);
 
   // Retrieve token from storage
   const getToken = () => {
@@ -40,7 +50,7 @@ const DetailRekamMedisSiswa = () => {
           throw new Error('No authentication token found');
         }
 
-        const response = await fetch(`https://api-uks.rplrus.com/api/healthcondition/${student.id}`, {
+        const response = await fetch(`https://api-uks.rplrus.com/api/health-conditions/${student.id}`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -73,7 +83,7 @@ const DetailRekamMedisSiswa = () => {
   };
 
   const handleViewRecordDetail = (recordId) => {
-    const record = medicalRecords.find((r) => r.id === recordId);
+    const record = medicalRecords.find((r) => r.id_user_condition === recordId);
     setSelectedRecord(record);
     setShowViewForm(true);
   };
@@ -107,7 +117,7 @@ const DetailRekamMedisSiswa = () => {
         }
 
         // Remove the record from display (since it's now inactive)
-        setMedicalRecords(medicalRecords.filter((record) => record.id !== recordId));
+        setMedicalRecords(medicalRecords.filter((record) => record.id_user_condition !== recordId));
       } catch (error) {
         console.error('Error marking record as inactive:', error);
       }
@@ -115,11 +125,11 @@ const DetailRekamMedisSiswa = () => {
   };
 
   const filteredMedicalRecords = medicalRecords.filter((record) =>
-    (
-      record.anamnesis?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      record.created_at?.includes(searchQuery) ||
-      record.therapy?.toLowerCase().includes(searchQuery.toLowerCase())
-    ) ?? false
+    [
+      record.anamnesis?.toLowerCase(),
+      record.created_at,
+      record.therapy?.toLowerCase(),
+    ].some((field) => field?.includes(searchQuery.toLowerCase()))
   );
 
   const totalPages = Math.ceil(filteredMedicalRecords.length / recordsPerPage) || 1;
@@ -184,7 +194,7 @@ const DetailRekamMedisSiswa = () => {
           },
           body: JSON.stringify({
             user_id: student.id,
-            admin_id: JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user')).id,
+            admin_id: JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user') || '{}').id,
             tension: parseInt(formData.tension),
             temperature: parseInt(formData.temperature),
             height: parseFloat(formData.height),
@@ -375,7 +385,7 @@ const DetailRekamMedisSiswa = () => {
 
         const updatedRecord = await response.json();
         setMedicalRecords((prev) =>
-          prev.map((r) => (r.id === record.id ? updatedRecord.data : r))
+          prev.map((r) => (r.id_user_condition === record.id_user_condition ? updatedRecord.data : r))
         );
         setShowEditForm(false);
       } catch (error) {
@@ -481,147 +491,102 @@ const DetailRekamMedisSiswa = () => {
     );
   };
 
-// View Form Component
-const ViewForm = ({ record }) => {
-  const [recordData, setRecordData] = useState(record);
-  const [error, setError] = useState(null);
+  // View Form Component
+  const ViewForm = ({ record }) => {
+    const popupRef = useRef(null);
 
-  const popupRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (popupRef.current && !popupRef.current.contains(event.target)) {
-        setShowViewForm(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
-    const fetchRecord = async () => {
-      try {
-        const token = getToken();
-        if (!token) {
-          throw new Error('No authentication token found');
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (popupRef.current && !popupRef.current.contains(event.target)) {
+          setShowViewForm(false);
         }
+      };
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }, []);
 
-        const response = await fetch(
-          `https://api-uks.rplrus.com/api/healthcondition/${student.id}`,
-          {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch health condition');
-        }
-
-        const data = await response.json();
-        // Find the specific record by id_user_condition
-        const specificRecord = data.data.find(
-          (item) => item.id_user_condition === record.id_user_condition
-        );
-        if (specificRecord) {
-          setRecordData(specificRecord);
-        } else {
-          throw new Error('Specific record not found');
-        }
-      } catch (error) {
-        setError(error.message);
-        console.error('Error fetching health condition:', error);
-      }
+    const handleCancel = () => {
+      setShowViewForm(false);
     };
 
-    fetchRecord();
-  }, [record.id_user_condition, student.id]);
-
-  const handleCancel = () => {
-    setShowViewForm(false);
-  };
-
-  return (
-    <div className="fixed inset-0 bg-transparent flex items-center justify-center z-50 font-sans">
-      <div ref={popupRef} className="bg-white rounded-lg p-6 w-full max-w-3xl shadow-lg">
-        <div className="flex items-center mb-4">
-          <button
-            onClick={handleCancel}
-            className="mr-2 text-teal-800 hover:text-teal-600 transition-colors"
-            aria-label="Kembali"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
-          <h2 className="text-lg font-semibold text-gray-800">Lihat Rekam Medis</h2>
-        </div>
-        {error && <p className="text-red-500 mb-4">{error}</p>}
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Dibuat</label>
-            <p className="w-full p-2 rounded-lg bg-[#E6F0FA] text-gray-800">
-              {recordData.created_at?.split('T')[0] || '-'}
-            </p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Anamnesis</label>
-            <p className="w-full h-24 p-4 rounded-lg bg-[#E6F0FA] text-gray-800">
-              {recordData.anamnesis || '-'}
-            </p>
-          </div>
-          <div className="grid grid-cols-6 gap-2">
-            {[
-              { label: 'Tensi', name: 'tension' },
-              { label: 'Nadi', name: 'pulse' },
-              { label: 'Suhu', name: 'temperature' },
-              { label: 'SpO2', name: 'spo2' },
-              { label: 'Tinggi Badan', name: 'height' },
-              { label: 'Berat Badan', name: 'weight' },
-            ].map(({ label, name }, idx) => (
-              <div key={idx}>
-                <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
-                <p className="w-full p-2 rounded-lg bg-[#E6F0FA] text-center text-gray-800">
-                  {recordData[name] || '-'}
-                </p>
-              </div>
-            ))}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Terapi</label>
-            <p className="w-full h-24 p-4 rounded-lg bg-[#E6F0FA] text-gray-800">
-              {recordData.therapy || '-'}
-            </p>
-          </div>
-          <div className="flex justify-end gap-2 mt-4">
+    return (
+      <div className="fixed inset-0 bg-transparent flex items-center justify-center z-50 font-sans">
+        <div ref={popupRef} className="bg-white rounded-lg p-6 w-full max-w-3xl shadow-lg">
+          <div className="flex items-center mb-4">
             <button
               onClick={handleCancel}
-              className="px-4 py-2 bg-[#B3E5FC] text-teal-800 rounded-lg hover:bg-[#81D4FA] transition-colors font-semibold"
+              className="mr-2 text-teal-800 hover:text-teal-600 transition-colors"
+              aria-label="Kembali"
             >
-              Kembali
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
             </button>
+            <h2 className="text-lg font-semibold text-gray-800">Lihat Rekam Medis</h2>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Dibuat</label>
+              <p className="w-full p-2 rounded-lg bg-[#E6F0FA] text-gray-800">
+                {record.created_at?.split('T')[0] || '-'}
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Anamnesis</label>
+              <p className="w-full h-24 p-4 rounded-lg bg-[#E6F0FA] text-gray-800">
+                {record.anamnesis || '-'}
+              </p>
+            </div>
+            <div className="grid grid-cols-6 gap-2">
+              {[
+                { label: 'Tensi', name: 'tension' },
+                { label: 'Nadi', name: 'pulse' },
+                { label: 'Suhu', name: 'temperature' },
+                { label: 'SpO2', name: 'spo2' },
+                { label: 'Tinggi Badan', name: 'height' },
+                { label: 'Berat Badan', name: 'weight' },
+              ].map(({ label, name }, idx) => (
+                <div key={idx}>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
+                  <p className="w-full p-2 rounded-lg bg-[#E6F0FA] text-center text-gray-800">
+                    {record[name] || '-'}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Terapi</label>
+              <p className="w-full h-24 p-4 rounded-lg bg-[#E6F0FA] text-gray-800">
+                {record.therapy || '-'}
+              </p>
+            </div>
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                onClick={handleCancel}
+                className="px-4 py-2 bg-[#B3E5FC] text-teal-800 rounded-lg hover:bg-[#81D4FA] transition-colors font-semibold"
+              >
+                Kembali
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
+
   return (
     <div className="flex h-screen overflow-hidden font-sans">
       <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
@@ -794,7 +759,7 @@ const ViewForm = ({ record }) => {
                                 />
                               </div>
                               <svg
-                                onClick={() => handleViewRecordDetail(record.id)}
+                                onClick={() => handleViewRecordDetail(record.id_user_condition)}
                                 className="w-8 h-8 text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200"
                                 fill="none"
                                 stroke="currentColor"

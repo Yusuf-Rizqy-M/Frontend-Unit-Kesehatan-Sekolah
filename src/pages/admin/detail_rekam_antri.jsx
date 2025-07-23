@@ -5,6 +5,7 @@ import axios from "axios";
 import moment from "moment";
 import "moment/locale/id";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
+import UKS2Img from '../../assets/img/uks2.png'; // Favicon import
 
 export default function DetailRekamAntri() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -20,6 +21,15 @@ export default function DetailRekamAntri() {
   const student = state?.student || {};
 
   moment.locale("id");
+
+  // Set document title and favicon
+  useEffect(() => {
+    document.title = 'Detail Rekam Antri';
+    const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
+    favicon.rel = 'icon';
+    favicon.href = UKS2Img;
+    document.head.appendChild(favicon);
+  }, []);
 
   const getToken = () => {
     return localStorage.getItem("token") || sessionStorage.getItem("token");
@@ -189,18 +199,33 @@ export default function DetailRekamAntri() {
                       : "bg-red-600"
                   }`}
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4 text-white"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414L9 13.414l4.707-4.707z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                  {toastType === "error" ? (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 text-white"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 text-white"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414L9 13.414l4.707-4.707z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  )}
                 </div>
                 <span className="font-medium text-sm">{toastMessage}</span>
               </div>
@@ -210,7 +235,7 @@ export default function DetailRekamAntri() {
               <button
                 onClick={handleBack}
                 className="mr-2 text-teal-800 hover:text-teal-600 transition-colors"
-                aria-label="Kembali"
+                aria-label="Kembali ke halaman rekam antri"
               >
                 <svg
                   className="w-6 h-6"
@@ -227,8 +252,8 @@ export default function DetailRekamAntri() {
                   />
                 </svg>
               </button>
-              <h2 className="text-lg font-semibold text-gray-800">
-                Edit detail rekam antri
+              <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                Detail Rekam Antri
               </h2>
             </div>
 
@@ -276,6 +301,7 @@ export default function DetailRekamAntri() {
                 <button
                   onClick={handleRetry}
                   className="ml-4 px-4 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                  aria-label="Coba lagi untuk mengambil riwayat antrian"
                 >
                   Retry
                 </button>
@@ -294,7 +320,7 @@ export default function DetailRekamAntri() {
             ) : (
               <div className="bg-white dark:bg-[#051D4E] rounded-[20px] shadow overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
+                  <table className="w-full border-collapse" role="grid">
                     <thead>
                       <tr className="bg-gray-100 dark:bg-[#0A2F6A] text-[#1B4A4F] dark:text-white">
                         <th className="p-3 text-left">Id</th>

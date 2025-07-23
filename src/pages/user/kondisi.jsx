@@ -1,11 +1,24 @@
 import { useState, useEffect } from 'react';
 import LayoutProfile from "../../components/user/layout_profile";
 import { FaUserMd } from 'react-icons/fa';
+import UKS2Img from "../../assets/img/uks2.png"; // Favicon import
+
 
 function Kondisi() {
   const [historyData, setHistoryData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+   useEffect(() => {
+        // Mengatur judul tab
+        document.title = 'History Kondisi';
+        
+        // Mengatur favicon
+        const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
+        favicon.rel = 'icon';
+        favicon.href = UKS2Img; // Menggunakan UKS2Img sebagai favicon
+        document.head.appendChild(favicon);
+      }, []); // Efek hanya dijalankan sekali saat komponen dimuat
 
   useEffect(() => {
     const fetchHealthConditions = async () => {

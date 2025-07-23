@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/user/layout';
+import UKS2Img from '../../assets/img/uks2.png'; // Impor gambar UKS2Img untuk favicon, sesuaikan path
+
 
 function AntreUser() {
   const [reason, setReason] = useState('');
@@ -25,6 +27,17 @@ function AntreUser() {
       navigate('/login');
     }
   }, [token, navigate]);
+
+    useEffect(() => {
+      // Mengatur judul tab
+      document.title = 'Antrian Pasien';
+      
+      // Mengatur favicon
+      const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
+      favicon.rel = 'icon';
+      favicon.href = UKS2Img; // Menggunakan UKS2Img sebagai favicon
+      document.head.appendChild(favicon);
+    }, []); // Efek hanya dijalankan sekali saat komponen dimuat
 
   // Check queue status
   const checkQueueStatus = async () => {

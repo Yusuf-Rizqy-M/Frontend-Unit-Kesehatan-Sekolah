@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import LayoutProfile from "../../components/user/layout_profile";
 import useLogin from "../../hooks/useLogin";
+import UKS2Img from "../../assets/img/uks2.png"; // Favicon import
 
 function Antrian() {
   const [queueData, setQueueData] = useState([]);
@@ -9,6 +10,37 @@ function Antrian() {
   const [error, setError] = useState(null);
   const { error: loginError } = useLogin();
   const navigate = useNavigate();
+
+  // Set favicon and debug
+  useEffect(() => {
+    console.log("Antrian component mounted");
+    console.log("Initial document title:", document.title);
+    console.log("UKS2Img import path:", UKS2Img); // Log the resolved import path
+    let favicon = document.querySelector("link[rel='icon']");
+    console.log("Initial favicon href:", favicon ? favicon.href : "No favicon found");
+
+    // Set favicon using DOM manipulation
+    favicon = favicon || document.createElement("link");
+    favicon.rel = "icon";
+    favicon.href = `${UKS2Img}?v=${Date.now()}`; // Add cache-busting
+    document.head.appendChild(favicon);
+    console.log("Set favicon href to:", favicon.href);
+
+    // Set document title
+    document.title = "History Antrian";
+
+    // Check title and favicon after rendering
+    const timeout = setTimeout(() => {
+      console.log("Document title after render:", document.title);
+      const updatedFavicon = document.querySelector("link[rel='icon']");
+      console.log("Favicon after render:", updatedFavicon ? updatedFavicon.href : "No favicon found");
+    }, 1000);
+
+    return () => {
+      clearTimeout(timeout);
+      console.log("Antrian component unmounted");
+    };
+  }, []);
 
   const fetchQueueHistory = async () => {
     try {

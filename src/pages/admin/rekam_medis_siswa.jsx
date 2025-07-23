@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../partials/Sidebar';
 import Header from '../../partials/Header';
 import axios from 'axios';
+import UKS2Img from '../../assets/img/uks2.png'; // Favicon import
+
 
 const RekamMedisSiswa = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -50,6 +52,17 @@ const RekamMedisSiswa = () => {
     });
   };
 
+  // Set tab title and favicon
+  useEffect(() => {
+    // Set document title
+    document.title = 'Rekam Medis Siswa';
+
+    // Set favicon
+    const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
+    favicon.rel = 'icon';
+    favicon.href = UKS2Img; // Use UKS2Img as favicon
+    document.head.appendChild(favicon);
+  }, []);
   // Initialize theme based on localStorage or system preference
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');

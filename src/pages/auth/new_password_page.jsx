@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import PasswordImg from "../../assets/img/email.png"; // Ganti sesuai path gambarmu
-import LogoImg from "../../assets/img/UKS2.png"; // Ganti sesuai path logo UKS
+import LogoImg from "../../images/uks2.png"; // Updated to match Edit Profile path
+import UKS2Img from "../../images/uks2.png"; // Impor gambar UKS2Img, sesuaikan path
 
 const GantiPasswordPage = () => {
   const navigate = useNavigate();
@@ -14,7 +15,9 @@ const GantiPasswordPage = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState({
     password: false,
     confirmation: false,
@@ -22,6 +25,37 @@ const GantiPasswordPage = () => {
 
   const email = location.state?.email || "";
   const token = location.state?.token || localStorage.getItem("resetToken") || "";
+
+  // Set favicon and title (matching Edit Profile)
+  useEffect(() => {
+    // Mengatur judul tab
+    document.title = 'Reset Password';
+    
+    // Mengatur favicon
+    const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
+    favicon.rel = 'icon';
+    favicon.href = UKS2Img; // Menggunakan UKS2Img sebagai favicon
+    document.head.appendChild(favicon);
+
+    // Debugging logs
+    console.log("GantiPasswordPage component mounted");
+    console.log("Initial document title:", document.title);
+    console.log("UKS2Img import path:", UKS2Img);
+    console.log("Initial favicon href:", favicon ? favicon.href : "No favicon found");
+    console.log("Set favicon href to:", favicon.href);
+
+    // Check title and favicon after rendering
+    const timeout = setTimeout(() => {
+      console.log("Document title after render:", document.title);
+      const updatedFavicon = document.querySelector("link[rel='icon']");
+      console.log("Favicon after render:", updatedFavicon ? updatedFavicon.href : "No favicon found");
+    }, 1000);
+
+    return () => {
+      clearTimeout(timeout);
+      console.log("GantiPasswordPage component unmounted");
+    };
+  }, []);
 
   useEffect(() => {
     if (!email || !token) {
@@ -47,16 +81,25 @@ const GantiPasswordPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setSuccess("");
+    setShowToast(false);
+    setToastMessage("");
 
     // Validation
-    if (formData.password.length < 6) {
-      setError("Password harus minimal 6 karakter.");
+    if (formData.password.length < 8) {
+      setError("Password harus minimal 8 karakter.");
+      setToastMessage("Password harus minimal 8 karakter.");
+      setIsSuccess(false);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
       return;
     }
 
     if (formData.password !== formData.password_confirmation) {
       setError("Konfirmasi password tidak cocok.");
+      setToastMessage("Konfirmasi password tidak cocok.");
+      setIsSuccess(false);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
       return;
     }
 
@@ -64,37 +107,50 @@ const GantiPasswordPage = () => {
 
     try {
       const response = await axios.post(
-        `https://api-uks.rplrus.com/api/reset-password`, 
-        null,
-        { 
-          params: {
-            email: email,
-            token: token,
-            password: formData.password,
-            password_confirmation: formData.password_confirmation
-          }
+        "https://api-uks.rplrus.com/api/reset-password",
+        {
+          email,
+          token,
+          password: formData.password,
+          password_confirmation: formData.password_confirmation,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
         }
       );
 
       console.log("Reset password response:", response.data);
 
-      if (response.data.status === true || response.data.success === true) {
-        setSuccess("Password berhasil diubah!");
+      if (response.data.status === true || response.data.success === true || response.status === 200) {
+        setToastMessage("Password berhasil diubah!");
+        setIsSuccess(true);
+        setShowToast(true);
         localStorage.removeItem("resetToken");
         setTimeout(() => {
-          navigate("/login", { 
+          setShowToast(false);
+          navigate("/login", {
             replace: true,
-            state: { notification: "Password berhasil diubah. Silakan login dengan password baru Anda." }
+            state: { notification: "Password berhasil diubah. Silakan login dengan password baru Anda." },
           });
-        }, 1500);
+        }, 2000);
       } else {
         setError(response.data.message || "Gagal mengubah password.");
+        setToastMessage(response.data.message || "Gagal mengubah password.");
+        setIsSuccess(false);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
       }
     } catch (err) {
       console.error("Reset password error:", err);
-      setError(
-        err.response?.data?.message || "Terjadi kesalahan saat mengubah password."
-      );
+      const errorMessage = err.response?.data?.message || "Terjadi kesalahan saat mengubah password.";
+      setError(errorMessage);
+      setToastMessage(errorMessage);
+      setIsSuccess(false);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
     } finally {
       setLoading(false);
     }
@@ -102,6 +158,41 @@ const GantiPasswordPage = () => {
 
   return (
     <div className="flex min-h-screen font-poppins">
+      {/* Toast Notification */}
+      {showToast && (
+        <div
+          className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg shadow-md flex items-center gap-2 animate-fade-in-out z-50 ${
+            isSuccess ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
+          }`}
+        >
+          <div
+            className={`rounded-full p-1 ${isSuccess ? "bg-green-600" : "bg-red-600"}`}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4 text-white"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              {isSuccess ? (
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414L9 13.414l4.707-4.707z"
+                  clipRule="evenodd"
+                />
+              ) : (
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  clipRule="evenodd"
+                />
+              )}
+            </svg>
+          </div>
+          <span className="font-medium text-sm">{toastMessage}</span>
+        </div>
+      )}
+
       {/* Left Panel */}
       <div className="w-1/2 bg-[#DDF6FF] relative flex flex-col items-center justify-center p-10">
         {/* Background Shapes */}
@@ -149,7 +240,7 @@ const GantiPasswordPage = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-400 text-sm text-black"
                 placeholder="Masukkan password baru"
                 required
               />
@@ -157,6 +248,7 @@ const GantiPasswordPage = () => {
                 type="button"
                 onClick={() => togglePasswordVisibility("password")}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                aria-label={passwordVisible.password ? "Sembunyikan password" : "Tampilkan password"}
               >
                 {passwordVisible.password ? (
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -183,7 +275,7 @@ const GantiPasswordPage = () => {
                 name="password_confirmation"
                 value={formData.password_confirmation}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-400 text-sm text-black"
                 placeholder="Konfirmasi password baru"
                 required
               />
@@ -191,6 +283,7 @@ const GantiPasswordPage = () => {
                 type="button"
                 onClick={() => togglePasswordVisibility("confirmation")}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                aria-label={passwordVisible.confirmation ? "Sembunyikan konfirmasi password" : "Tampilkan konfirmasi password"}
               >
                 {passwordVisible.confirmation ? (
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -205,19 +298,6 @@ const GantiPasswordPage = () => {
               </button>
             </div>
           </div>
-
-          {error && (
-            <p className="text-red-500 text-xs mb-4 text-center">{error}</p>
-          )}
-          
-          {success && (
-            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-4 flex items-center justify-center">
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <p className="text-sm font-medium">{success}</p>
-            </div>
-          )}
 
           <button
             type="submit"

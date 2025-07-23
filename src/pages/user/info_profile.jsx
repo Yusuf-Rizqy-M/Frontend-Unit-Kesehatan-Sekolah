@@ -5,8 +5,22 @@ import ProfileImg from "../../assets/img/doctor_img_rounded.png";
 import MaleIcon from "../../assets/img/gendermale.png";
 import FemaleIcon from "../../assets/img/genderfemale.png";
 import NeutralIcon from "../../assets/img/genderno.png";
+import UKS2Img from '../../images/uks2.png'; // Impor gambar UKS2Img, sesuaikan path
+
 
 const InfoProfile = () => {
+
+ useEffect(() => {
+      // Mengatur judul tab
+      document.title = 'Info Profile';
+      
+      // Mengatur favicon
+      const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
+      favicon.rel = 'icon';
+      favicon.href = UKS2Img; // Menggunakan UKS2Img sebagai favicon
+      document.head.appendChild(favicon);
+    }, []); // Efek hanya dijalankan sekali saat komponen dimuat
+
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

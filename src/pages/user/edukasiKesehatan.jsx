@@ -1,6 +1,7 @@
 import Layout from '../../components/user/layout';
 import { Link } from 'react-router-dom';
 import EducationCard from '../../widget/educationcard';
+import UKS2Img from '../../assets/img/uks2.png'; // Impor gambar UKS2Img untuk favicon, sesuaikan path
 import { useState, useEffect } from 'react';
 
 function EdukasiKesehatan() {
@@ -18,6 +19,17 @@ function EdukasiKesehatan() {
       .catch(error => console.error('Error fetching categories:', error))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+        // Mengatur judul tab
+        document.title = 'Edukasi Kesehatan';
+        
+        // Mengatur favicon
+        const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
+        favicon.rel = 'icon';
+        favicon.href = UKS2Img; // Menggunakan UKS2Img sebagai favicon
+        document.head.appendChild(favicon);
+      }, []); // Efek hanya dijalankan sekali saat komponen dimuat
 
   return (
     <Layout>

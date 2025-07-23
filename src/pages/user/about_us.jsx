@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet'; // Import react-helmet
 import Layout from '../../components/user/layout';
 import UksImg1 from '../../assets/img/hospital-room-interior.jpg';
 import UksImg2 from '../../assets/img/person_bg.png';
+import UKS2Img from '../../assets/img/uks2.png'; // Favicon import
 
 // Fetch staff data from the API
 const fetchPengurusData = async () => {
@@ -33,8 +35,34 @@ export default function AboutUs() {
   const [pengurusData, setPengurusData] = useState([]);
   const [error, setError] = useState(null);
 
+  // Debug title and favicon
   useEffect(() => {
-    // Fetch data when component mounts
+    console.log('AboutUs component mounted');
+    console.log('Initial document title:', document.title);
+    const favicon = document.querySelector('link[rel="icon"]');
+    console.log('Initial favicon href:', favicon ? favicon.href : 'No favicon found');
+    console.log('UKS2Img import path:', UKS2Img); // Log the resolved import path
+
+    // Check title and favicon after rendering
+    const timeout = setTimeout(() => {
+      console.log('Document title after render:', document.title);
+      const updatedFavicon = document.querySelector('link[rel="icon"]');
+      console.log('Favicon after render:', updatedFavicon ? updatedFavicon.href : 'No favicon found');
+      // Attempt to force favicon update
+      if (updatedFavicon) {
+        updatedFavicon.href = `${UKS2Img}?v=${Date.now()}`;
+        console.log('Forced favicon update to:', updatedFavicon.href);
+      }
+    }, 1000);
+
+    return () => {
+      clearTimeout(timeout);
+      console.log('AboutUs component unmounted');
+    };
+  }, []);
+
+  // Fetch data when component mounts
+  useEffect(() => {
     const loadData = async () => {
       const cachedData = localStorage.getItem('pengurusData');
       if (cachedData) {
@@ -54,6 +82,10 @@ export default function AboutUs() {
 
   return (
     <Layout>
+      <Helmet>
+        <title>About Us</title>
+        <link rel="icon" href={`${UKS2Img}?v=${Date.now()}`} /> {/* Use imported UKS2Img with cache-busting */}
+      </Helmet>
       <div className="bg-white text-black">
         {/* Section: Apa Itu UKS */}
         <section className="min-h-[80vh] flex items-center px-6 md:px-20 py-20">

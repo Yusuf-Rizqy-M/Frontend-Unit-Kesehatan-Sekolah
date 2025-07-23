@@ -1,13 +1,25 @@
+import { useEffect, useState } from 'react'; // Impor useEffect untuk mengatur title dan favicon
 import Layout from '../../components/user/layout';
-import { useState } from 'react';
-import laki from "../../assets/img/laki.png"; // <--- Tambahin ini
-import Perempuan from "../../assets/img/Perempuan.png"; // <--- Tambahin ini
+import laki from '../../assets/img/laki.png'; // Gambar untuk laki-laki
+import Perempuan from '../../assets/img/Perempuan.png'; // Gambar untuk perempuan
+import UKS2Img from '../../assets/img/uks2.png'; // Impor gambar UKS2Img untuk favicon, sesuaikan path
 
 function KalkulatorBmi() {
   const [gender, setGender] = useState('man');
   const [height, setHeight] = useState('');
   const [weight, setWeight] = useState('');
   const [result, setResult] = useState(null);
+
+   useEffect(() => {
+     // Mengatur judul tab
+     document.title = 'Home';
+     
+     // Mengatur favicon
+     const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
+     favicon.rel = 'icon';
+     favicon.href = UKS2Img; // Menggunakan UKS2Img sebagai favicon
+     document.head.appendChild(favicon);
+   }, []); // Efek hanya dijalankan sekali saat komponen dimuat
 
   const calculateBMI = () => {
     if (height && weight) {
@@ -20,7 +32,7 @@ function KalkulatorBmi() {
         else if (bmi < 30) status = 'Berat Berlebih';
         else status = 'Obesitas';
       } else if (gender === 'woman') {
-        if (bmi < 18) status = 'Kurus'; // <- contoh lebih rendah sedikit
+        if (bmi < 18) status = 'Kurus';
         else if (bmi < 24) status = 'Berat Ideal';
         else if (bmi < 29) status = 'Berat Berlebih';
         else status = 'Obesitas';
@@ -33,7 +45,6 @@ function KalkulatorBmi() {
     }
   };
 
-
   const getIndicatorPosition = () => {
     if (!result) return 'left-[37%]'; // posisi default tengah-tengah
     if (result.status === 'Kurus') return 'left-[10%]';
@@ -42,10 +53,9 @@ function KalkulatorBmi() {
     if (result.status === 'Obesitas') return 'left-[85%]';
   };
 
-
   return (
     <Layout>
-    <main className="max-w-7xl mx-auto px-4 pb-16 grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
+      <main className="max-w-7xl mx-auto px-4 pb-16 grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
         {/* Kiri - Ilustrasi & Hasil */}
         <div className="bg-white p-8 rounded-2xl shadow-md text-center w-full h-full">
           <img
@@ -54,24 +64,22 @@ function KalkulatorBmi() {
             className="mx-auto mb-6 w-48 h-48 object-contain"
           />
 
-
-
           <h2 className="text-xl font-bold text-gray-700 mb-2">
             BMI untuk {gender === 'man' ? 'Laki-laki' : 'Perempuan'}
           </h2>
           <p
-            className={`text-3xl font-bold mb-2 ${result
-              ? result.status === 'Kurus' || result.status === 'Obesitas'
-                ? 'text-red-500'
-                : result.status === 'Berat Ideal'
-                  ? 'text-green-500'
-                  : 'text-yellow-400'
-              : 'text-emerald-500'
-              }`}
+            className={`text-3xl font-bold mb-2 ${
+              result
+                ? result.status === 'Kurus' || result.status === 'Obesitas'
+                  ? 'text-red-500'
+                  : result.status === 'Berat Ideal'
+                    ? 'text-green-500'
+                    : 'text-yellow-400'
+                : 'text-emerald-500'
+            }`}
           >
             {result ? result.status : 'Berat Ideal'}
           </p>
-
 
           {/* Bar */}
           <div className="flex items-center justify-center my-6">
@@ -80,10 +88,11 @@ function KalkulatorBmi() {
               <div className="absolute left-2/4 w-1/4 h-full bg-yellow-300"></div>
 
               {/* Bulatan indikator bergerak */}
-              <div className={`absolute top-1/2 ${getIndicatorPosition()} -translate-y-1/2 w-5 h-5 bg-white border-2 border-gray-300 rounded-full z-10 transition-all duration-500`}></div>
+              <div
+                className={`absolute top-1/2 ${getIndicatorPosition()} -translate-y-1/2 w-5 h-5 bg-white border-2 border-gray-300 rounded-full z-10 transition-all duration-500`}
+              ></div>
             </div>
           </div>
-
 
           <p className="text-sm text-gray-500 leading-relaxed">
             Pastikan asupan kalori sesuai kebutuhan harian & konsumsi makanan sehat
@@ -96,20 +105,22 @@ function KalkulatorBmi() {
 
           <div className="flex mb-6 w-full h-12 rounded-lg overflow-hidden border border-gray-300">
             <button
-              className={`flex-1 font-semibold transition ${gender === 'man' ? 'bg-cyan-600 text-white' : 'bg-white text-gray-700'}`}
+              className={`flex-1 font-semibold transition ${
+                gender === 'man' ? 'bg-cyan-600 text-white' : 'bg-white text-gray-700'
+              }`}
               onClick={() => setGender('man')}
             >
               Man
             </button>
             <button
-              className={`flex-1 font-semibold transition ${gender === 'woman' ? 'bg-cyan-600 text-white' : 'bg-white text-gray-700'}`}
+              className={`flex-1 font-semibold transition ${
+                gender === 'woman' ? 'bg-cyan-600 text-white' : 'bg-white text-gray-700'
+              }`}
               onClick={() => setGender('woman')}
             >
               Woman
             </button>
           </div>
-
-
 
           <div className="mb-4">
             <label className="block text-sm font-semibold text-gray-600 mb-1">Tinggi (cm)</label>

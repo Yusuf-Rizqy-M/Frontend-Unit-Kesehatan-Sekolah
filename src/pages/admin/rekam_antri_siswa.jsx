@@ -6,6 +6,8 @@ import { User, Users } from "lucide-react";
 import axios from "axios";
 import moment from "moment";
 import "moment/locale/id";
+import UKS2Img from '../../assets/img/uks2.png'; // Favicon import
+
 
 export default function RekamAntrian() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -39,6 +41,18 @@ export default function RekamAntrian() {
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
   };
+
+    // Set tab title and favicon
+    useEffect(() => {
+      // Set document title
+      document.title = 'Rekam Antrian Siswa';
+  
+      // Set favicon
+      const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
+      favicon.rel = 'icon';
+      favicon.href = UKS2Img; // Use UKS2Img as favicon
+      document.head.appendChild(favicon);
+    }, []);
 
   useEffect(() => {
     const fetchQueueData = async () => {
@@ -90,7 +104,7 @@ export default function RekamAntrian() {
           const yesterdayQueueRes = await axios.get("https://api-uks.rplrus.com/api/admin/queues/yesterday", config);
           queueDataArray = Array.isArray(yesterdayQueueRes.data.data) ? yesterdayQueueRes.data.data : [];
         } else if (filterMode === "all") {
-          const allQueueRes = await axios.get("https://api-uks.rplrus.com/api/admin/queues/all", config);
+          const allQueueRes = await axios.get("https://api-uks.rplrus.com/api/admin/queues/history", config);
           queueDataArray = Array.isArray(allQueueRes.data.data) ? allQueueRes.data.data : [];
         }
 

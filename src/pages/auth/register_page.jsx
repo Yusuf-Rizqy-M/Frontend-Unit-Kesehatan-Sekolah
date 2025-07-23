@@ -2,8 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthService from "../../services/authService";
 import UksImg from "../../assets/img/doctor_img_rounded.png";
-import LogoImg from "../../assets/img/UKS2.png";
+import LogoImg from "../../images/uks2.png"; // Updated to match Edit Profile path
 import axios from "axios";
+import UKS2Img from "../../images/uks2.png"; // Updated to match Edit Profile path
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -36,8 +37,9 @@ const RegisterPage = () => {
     setLoading(true);
     setFetchError(null);
     const token = getToken();
+    // Skip fetching if no token (public registration page)
     if (!token) {
-      setFetchError("No token found. Please log in.");
+      setDepartments([]); // Set empty array to avoid breaking the UI
       setLoading(false);
       return;
     }
@@ -53,10 +55,11 @@ const RegisterPage = () => {
       setDepartments(uniqueDepartments);
     } catch (err) {
       if (err.response && err.response.status === 401) {
-        setFetchError("Unauthorized: Invalid or expired token. Please log in again.");
+        setFetchError("Unauthorized: Invalid or expired token. Using default options.");
       } else {
         setFetchError("Error fetching departments: " + err.message);
       }
+      setDepartments([]); // Fallback to empty array
     } finally {
       setLoading(false);
     }
@@ -66,8 +69,9 @@ const RegisterPage = () => {
     setLoading(true);
     setFetchError(null);
     const token = getToken();
+    // Skip fetching if no token (public registration page)
     if (!token) {
-      setFetchError("No token found. Please log in.");
+      setGrades([]); // Set empty array to avoid breaking the UI
       setLoading(false);
       return;
     }
@@ -83,14 +87,46 @@ const RegisterPage = () => {
       setGrades(uniqueGrades);
     } catch (err) {
       if (err.response && err.response.status === 401) {
-        setFetchError("Unauthorized: Invalid or expired token. Please log in again.");
+        setFetchError("Unauthorized: Invalid or expired token. Using default options.");
       } else {
         setFetchError("Error fetching grades: " + err.message);
       }
+      setGrades([]); // Fallback to empty array
     } finally {
       setLoading(false);
     }
   };
+
+  // Set favicon and title (matching Edit Profile)
+  useEffect(() => {
+    // Mengatur judul tab
+    document.title = 'Register';
+    
+    // Mengatur favicon
+    const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
+    favicon.rel = 'icon';
+    favicon.href = UKS2Img; // Menggunakan UKS2Img sebagai favicon
+    document.head.appendChild(favicon);
+
+    // Debugging logs
+    console.log("RegisterPage component mounted");
+    console.log("Initial document title:", document.title);
+    console.log("UKS2Img import path:", UKS2Img);
+    console.log("Initial favicon href:", favicon ? favicon.href : "No favicon found");
+    console.log("Set favicon href to:", favicon.href);
+
+    // Check title and favicon after rendering
+    const timeout = setTimeout(() => {
+      console.log("Document title after render:", document.title);
+      const updatedFavicon = document.querySelector("link[rel='icon']");
+      console.log("Favicon after render:", updatedFavicon ? updatedFavicon.href : "No favicon found");
+    }, 1000);
+
+    return () => {
+      clearTimeout(timeout);
+      console.log("RegisterPage component unmounted");
+    };
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -202,7 +238,7 @@ const RegisterPage = () => {
         <div className="absolute bottom-10 left-10 w-8 h-8 bg-cyan-500 rotate-45" />
         <div className="absolute top-20 right-10 w-6 h-6 bg-cyan-500 rotate-45" />
         <h1 className="text-4xl font-bold text-gray-800 text-center mb-8 leading-tight">
-          Hallo, Teman<br />Selamat Datang!
+          Hallo, Teman<br />Selamat++++++++ Datang!
         </h1>
         <img src={UksImg} alt="Doctor" className="w-60 h-60 mb-8" />
         <hr className="w-24 border-[1.5px] border-gray-400 mb-6" />
@@ -232,6 +268,7 @@ const RegisterPage = () => {
               type="email"
               value={formData.email}
               onChange={handleChange}
+              required
               className="w-full px-4 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm text-black focus:outline-none focus:ring-2 focus:ring-cyan-400"
             />
           </div>
@@ -243,6 +280,7 @@ const RegisterPage = () => {
               type="text"
               value={formData.name}
               onChange={handleChange}
+              required
               className="w-full px-4 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm text-black focus:outline-none focus:ring-2 focus:ring-cyan-400"
             />
           </div>
@@ -254,6 +292,7 @@ const RegisterPage = () => {
               type={showPassword ? "text" : "password"}
               value={formData.password}
               onChange={handleChange}
+              required
               className="w-full px-4 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm text-black focus:outline-none focus:ring-2 focus:ring-cyan-400 pr-10"
             />
             <button
@@ -309,6 +348,7 @@ const RegisterPage = () => {
               type={showConfirmPassword ? "text" : "password"}
               value={formData.confirm_password}
               onChange={handleChange}
+              required
               className="w-full px-4 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm text-black focus:outline-none focus:ring-2 focus:ring-cyan-400 pr-10"
             />
             <button
@@ -424,8 +464,9 @@ const RegisterPage = () => {
           <button
             type="submit"
             className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 rounded-md text-sm transition-colors duration-200"
+            disabled={loading}
           >
-            Sign Up
+            {loading ? "Loading..." : "Sign Up"}
           </button>
 
           <button

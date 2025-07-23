@@ -1,15 +1,46 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react"; // Added useEffect import
 import PasswordImg from "../../assets/img/email.png";
-import LogoImg from "../../assets/img/UKS2.png";
+import LogoImg from "../../images/uks2.png"; // Updated to match Edit Profile path
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-
+import UKS2Img from "../../images/uks2.png"; // Impor gambar UKS2Img, sesuaikan path
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+
+  // Set favicon and title (matching Edit Profile)
+  useEffect(() => {
+    // Mengatur judul tab
+    document.title = 'Forgot Password';
+    
+    // Mengatur favicon
+    const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
+    favicon.rel = 'icon';
+    favicon.href = UKS2Img; // Menggunakan UKS2Img sebagai favicon
+    document.head.appendChild(favicon);
+
+    // Debugging logs
+    console.log("ForgotPassword component mounted");
+    console.log("Initial document title:", document.title);
+    console.log("UKS2Img import path:", UKS2Img);
+    console.log("Initial favicon href:", favicon ? favicon.href : "No favicon found");
+    console.log("Set favicon href to:", favicon.href);
+
+    // Check title and favicon after rendering
+    const timeout = setTimeout(() => {
+      console.log("Document title after render:", document.title);
+      const updatedFavicon = document.querySelector("link[rel='icon']");
+      console.log("Favicon after render:", updatedFavicon ? updatedFavicon.href : "No favicon found");
+    }, 1000);
+
+    return () => {
+      clearTimeout(timeout);
+      console.log("ForgotPassword component unmounted");
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,8 +57,7 @@ const ForgotPassword = () => {
     };
 
     try {
-
-       console.log("Sending request to:", "https://api-uks.rplrus.com/api/forgot-password");
+      console.log("Sending request to:", "https://api-uks.rplrus.com/api/forgot-password");
       const response = await axios.post(
         "https://api-uks.rplrus.com/api/forgot-password", 
         { email }, 
@@ -69,7 +99,6 @@ const ForgotPassword = () => {
     }
   };
 
-
   return (
     <div className="flex min-h-screen font-poppins">
       {/* Left side */}
@@ -97,6 +126,7 @@ const ForgotPassword = () => {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            placeholder="Masukkan email anda"
             className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-cyan-400 focus:outline-none text-sm text-black"
           />
           {error && <p className="text-red-500 text-xs mt-1">{error}</p>}

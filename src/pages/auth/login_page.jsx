@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react'; // Added useEffect import
+import { useNavigate, Link } from 'react-router-dom';
 import useLogin from '../../hooks/useLogin';
 import UksImg2 from '../../assets/img/doctor_img_rounded.png';
 import LogoImg from '../../assets/img/UKS2.png';
-import { Link } from 'react-router-dom';
+import UKS2Img from '../../assets/img/uks2.png'; // Favicon import
 
 const LoginPage = () => {
   const { login, loading, error } = useLogin();
@@ -11,8 +11,38 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
   const navigate = useNavigate();
+
+  // Set favicon and debug
+  useEffect(() => {
+    console.log('LoginPage component mounted');
+    console.log('Initial document title:', document.title);
+    console.log('UKS2Img import path:', UKS2Img); // Log the resolved favicon path
+    let favicon = document.querySelector("link[rel='icon']");
+    console.log('Initial favicon href:', favicon ? favicon.href : 'No favicon found');
+
+    // Set favicon using DOM manipulation
+    favicon = favicon || document.createElement('link');
+    favicon.rel = 'icon';
+    favicon.href = `${UKS2Img}?v=${Date.now()}`; // Add cache-busting
+    document.head.appendChild(favicon);
+    console.log('Set favicon href to:', favicon.href);
+
+    // Set document title
+    document.title = 'Login';
+
+    // Check title and favicon after rendering
+    const timeout = setTimeout(() => {
+      console.log('Document title after render:', document.title);
+      const updatedFavicon = document.querySelector('link[rel="icon"]');
+      console.log('Favicon after render:', updatedFavicon ? updatedFavicon.href : 'No favicon found');
+    }, 1000);
+
+    return () => {
+      clearTimeout(timeout);
+      console.log('LoginPage component unmounted');
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -162,9 +192,9 @@ const LoginPage = () => {
 
         <p className="mt-8 text-sm text-gray-700 text-center">
           Belum punya akun?{' '}
-          <a href="/RegisterPage" className="text-blue-600 hover:underline">
+          <Link to="/RegisterPage" className="text-blue-600 hover:underline">
             Daftar di sini
-          </a>
+          </Link>
         </p>
       </div>
     </div>

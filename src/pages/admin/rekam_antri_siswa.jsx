@@ -8,7 +8,6 @@ import moment from "moment";
 import "moment/locale/id";
 import UKS2Img from '../../assets/img/uks2.png'; // Favicon import
 
-
 export default function RekamAntrian() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [totalCompleted, setTotalCompleted] = useState(0);
@@ -42,17 +41,30 @@ export default function RekamAntrian() {
     setTimeout(() => setShowToast(false), 3000);
   };
 
-    // Set tab title and favicon
-    useEffect(() => {
-      // Set document title
-      document.title = 'Rekam Antrian Siswa';
-  
-      // Set favicon
-      const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
-      favicon.rel = 'icon';
-      favicon.href = UKS2Img; // Use UKS2Img as favicon
-      document.head.appendChild(favicon);
-    }, []);
+  // Fungsi untuk memetakan status API ke status UI
+  const mapStatusToUI = (apiStatus) => {
+    switch (apiStatus.toLowerCase()) {
+      case "done":
+        return "Selesai";
+      case "waiting":
+        return "Waiting";
+      case "processing":
+        return "Processing";
+      case "skipped":
+        return "Skipped";
+      default:
+        return "Unknown";
+    }
+  };
+
+  // Set tab title and favicon
+  useEffect(() => {
+    document.title = 'Rekam Antrian Siswa';
+    const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
+    favicon.rel = 'icon';
+    favicon.href = UKS2Img;
+    document.head.appendChild(favicon);
+  }, []);
 
   useEffect(() => {
     const fetchQueueData = async () => {
@@ -111,18 +123,31 @@ export default function RekamAntrian() {
         const formattedQueueData = queueDataArray.map((item) => ({
           id: item.queue_number != null ? item.queue_number.toString().padStart(3, "0") : "N/A",
           reason: item.reason || "Unknown",
-          status: item.status ? item.status.charAt(0).toUpperCase() + item.status.slice(1) : "Unknown",
+          status: mapStatusToUI(item.status || "Unknown"),
           name: item.user?.name || "Unknown",
           submit: item.created_at ? moment(item.created_at).fromNow(true) : "Unknown",
           rawId: item.id,
           userId: item.user?.id || null,
-          student: item.user || { id: item.user?.id || null },
+          student: {
+            id: item.user?.id || null,
+            name: item.user?.name || "Unknown",
+            gender: item.user?.gender || "N/A",
+            class: item.user?.class || "N/A",
+            name_grades: item.user?.name_grades || "N/A",
+            name_department: item.user?.name_department || "N/A",
+            phone_number: item.user?.phone_number || null,
+            name_parent: item.user?.name_parent || null,
+            no_hp_parent: item.user?.no_hp_parent || null,
+            name_walikelas: item.user?.name_walikelas || null,
+          },
         }));
         setQueueData(formattedQueueData);
       } catch (err) {
         const errorMessage =
           err.response?.status === 401
             ? "Unauthorized access. Please log in again."
+            : err.response?.status === 404 && filterMode === "yesterday"
+            ? "Data antrian kemarin tidak ditemukan."
             : "Failed to fetch queue data. Please try again later.";
         setError(errorMessage);
         showToastMessage(errorMessage, "error");

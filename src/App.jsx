@@ -43,6 +43,7 @@ import DetailRekamAntri from "./pages/admin/detail_rekam_antri";
 import Article from "./pages/admin/article";
 import KelasPage from "./pages/admin/kelas";
 import Jurusanpage from "./pages/admin/jurusan";
+import Settingpage from "./pages/admin/settings";
 
 // Routes
 import ProtectedRoute from "./routes/protectedRoute";
@@ -237,6 +238,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <KelasPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <Settingpage />
             </ProtectedRoute>
           }
         />

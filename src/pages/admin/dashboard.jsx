@@ -21,6 +21,7 @@ function Dashboard() {
     hourly: [],
     totalUsers: 0,
   });
+  const [todayQueue, setTodayQueue] = useState([]); // New state for today's queue
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token') || null);
@@ -143,6 +144,25 @@ function Dashboard() {
     }
   };
 
+  // Fetch today's queue from new API
+  const fetchTodayQueue = async (currentToken) => {
+    try {
+      const response = await fetch('https://api-uks.rplrus.com/api/admin/queues/today', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${currentToken}`,
+        },
+      });
+      if (!response.ok) throw new Error(`Failed to fetch today's queue: ${response.status} ${response.statusText}`);
+      const data = await response.json();
+      return data.data || [];
+    } catch (err) {
+      console.error('Today Queue Fetch Error:', err);
+      throw err;
+    }
+  };
+
   // Combined fetch function
   const fetchAllStats = async () => {
     try {
@@ -154,12 +174,51 @@ function Dashboard() {
         if (!currentToken) throw new Error('No valid token available');
       }
 
+      // Fetch all APIs concurrently
+      const [queueData, monthlyData, totalUsers, todayQueueData] = await Promise.all([
+
       // Fetch APIs concurrently
       const [queueData, monthlyData, totalUsers] = await Promise.all([
+
         fetchQueueStats(currentToken),
         fetchMonthlyStats(currentToken),
         fetchTotalUsers(currentToken),
+        fetchTodayQueue(currentToken),
       ]);
+
+      // Process today's queue to select 5 relevant entries
+      const sortedQueue = todayQueueData
+        .sort((a, b) => a.queue_number - b.queue_number) // Sort by queue_number
+        .map(entry => ({
+          queueNumber: `Q${entry.queue_number.toString().padStart(3, '0')}`,
+          status: entry.status === 'waiting' ? 'Mengantri' : 'Done',
+          studentName: entry.user.name || 'Unknown',
+          submittedSince: new Date(entry.created_at).toLocaleString('en-GB', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+          }).replace(',', ''),
+        }));
+
+      // Determine current queue position (first 'waiting' entry)
+      const currentQueueEntry = sortedQueue.find(entry => entry.status === 'Mengantri');
+      const currentQueueNumber = currentQueueEntry
+        ? parseInt(currentQueueEntry.queueNumber.slice(1))
+        : sortedQueue.length > 0
+        ? parseInt(sortedQueue[0].queueNumber.slice(1))
+        : 1;
+
+      // Select 5 entries based on current queue position
+      let startIndex;
+      if (currentQueueNumber <= 5) {
+        startIndex = 0; // Show 1-5 if current queue is 1-5
+      } else {
+        startIndex = sortedQueue.findIndex(entry => parseInt(entry.queueNumber.slice(1)) >= currentQueueNumber);
+        if (startIndex === -1) startIndex = sortedQueue.length - 5; // Fallback to last 5 if not found
+      }
+      const selectedQueue = sortedQueue.slice(startIndex, startIndex + 5);
 
       setQueueStats({
         today: queueData.today,
@@ -171,6 +230,7 @@ function Dashboard() {
         hourly: queueData.hourly,
         totalUsers,
       });
+      setTodayQueue(selectedQueue);
       setLoading(false);
     } catch (err) {
       console.error('Fetch Error:', err);
@@ -184,7 +244,18 @@ function Dashboard() {
         daily: [10, 12, 15, 18, 20, 10, 15],
         hourly: [2, 5, 8, 10, 7, 6],
         totalUsers: 5,
+      };
+      setQueueStats(mockData);
+      setTodayQueue([
+        { queueNumber: 'Q001', status: 'Mengantri', studentName: 'John Doe', submittedSince: '2025-07-22 08:00' },
+        { queueNumber: 'Q002', status: 'Done', studentName: 'Jane Smith', submittedSince: '2025-07-22 07:30' },
+        { queueNumber: 'Q003', status: 'Mengantri', studentName: 'Ahmad Yani', submittedSince: '2025-07-22 08:15' },
+        { queueNumber: 'Q004', status: 'Done', studentName: 'Siti Nurhaliza', submittedSince: '2025-07-21 16:45' },
+        { queueNumber: 'Q005', status: 'Mengantri', studentName: 'Budi Santoso', submittedSince: '2025-07-22 08:30' },
+      ]);
+
       });
+
       setLoading(false);
     }
   };
@@ -290,6 +361,60 @@ function Dashboard() {
               </div>
               <div className="h-64">
                 <Line data={getChartData()} options={chartOptions} ref={chartRef} />
+              </div>
+            </div>
+
+            {/* Student Queue Table */}
+            <div className="bg-white dark:bg-[#051D4E] rounded-[20px] shadow p-6">
+              <h2 className="text-xl text-gray-800 dark:text-gray-100 font-bold mb-4">Student Queue</h2>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="text-[#1B4A4F] dark:text-white">
+                      <th className="px-4 py-2 font-medium">Student Queue Number</th>
+                      <th className="px-4 py-2 font-medium">Status</th>
+                      <th className="px-4 py-2 font-medium">Student Name</th>
+                      <th className="px-4 py-2 font-medium">Submitted Since</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading ? (
+                      <tr>
+                        <td colSpan="4" className="px-4 py-2 text-center text-[#1B4A4F] dark:text-white">
+                          Loading...
+                        </td>
+                      </tr>
+                    ) : todayQueue.length === 0 ? (
+                      <tr>
+                        <td colSpan="4" className="px-4 py-2 text-center text-[#1B4A4F] dark:text-white">
+                          No queue data available
+                        </td>
+                      </tr>
+                    ) : (
+                      todayQueue.map((entry, index) => (
+                        <tr
+                          key={entry.queueNumber}
+                          className={`border-t border-gray-200 dark:border-gray-700 ${index % 2 === 0 ? 'bg-gray-50 dark:bg-[#0A2A5E]' : 'bg-white dark:bg-[#051D4E]'}`}
+                        >
+                          <td className="px-4 py-2 text-[#1B4A4F] dark:text-white">{entry.queueNumber}</td>
+                          <td className="px-4 py-2">
+                            <span
+                              className={`px-2 py-1 rounded-full text-sm ${
+                                entry.status === 'Done'
+                                  ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300'
+                                  : 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-300'
+                              }`}
+                            >
+                              {entry.status}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2 text-[#1B4A4F] dark:text-white">{entry.studentName}</td>
+                          <td className="px-4 py-2 text-[#1B4A4F] dark:text-white">{entry.submittedSince}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

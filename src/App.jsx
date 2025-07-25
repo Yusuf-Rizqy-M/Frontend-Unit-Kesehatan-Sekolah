@@ -30,7 +30,7 @@ import KebersihanDiri from "./section/kebersihandiri-edu";
 import PolaHidupSehat from "./section/hidupsehat-edu";
 
 // Admin
-import Dashboard from "./pages/admin/Dashboard";
+import Dashboard from "./pages/admin/dashboard";
 import ManajemenUser from "./pages/admin/ManajemenUser";
 import UploadBlog from "./pages/admin/upload_blog";
 import KategoriPage from "./pages/admin/Kategori";
@@ -39,12 +39,10 @@ import DetailRekamMedisSiswa from "./pages/admin/detail_rekam_medas";
 import Staff from "./pages/admin/staff_admin";
 import RekamAntri from "./pages/admin/rekam_antri_siswa";
 import DetailRekamAntri from "./pages/admin/detail_rekam_antri";
-import Artikel from "./pages/admin/artikel";
+// FIXED: Rename to Article to match usage below
+import Article from "./pages/admin/article";
 import KelasPage from "./pages/admin/kelas";
 import Jurusanpage from "./pages/admin/jurusan";
-
-
-
 
 // Routes
 import ProtectedRoute from "./routes/protectedRoute";
@@ -176,11 +174,11 @@ function App() {
             </UserRoute>
           }
         />
-         <Route
+        <Route
           path="/artikel"
           element={
             <UserRoute>
-              <Artikel />
+              <Article />
             </UserRoute>
           }
         />
@@ -234,7 +232,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-         <Route
+        <Route
           path="/kelas"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
@@ -242,7 +240,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-          <Route
+        <Route
           path="/department"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
@@ -271,6 +269,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <UploadBlog />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/article"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <Article />
             </ProtectedRoute>
           }
         />

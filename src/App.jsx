@@ -49,6 +49,7 @@ import Settingpage from "./pages/admin/settings";
 import ProtectedRoute from "./routes/protectedRoute";
 import UserRoute from "./routes/userRoute";
 import NotFound from "./pages/notfound";
+import HidupSehat from "./section/hidupsehat-edu";
 
 function App() {
   const location = useLocation();
@@ -144,7 +145,7 @@ function App() {
           }
         />
         <Route
-          path="/fisikedu"
+          path="/kesehatanfisik"
           element={
             <UserRoute>
               <FisikEdu />
@@ -152,7 +153,7 @@ function App() {
           }
         />
         <Route
-          path="/cegahsakit"
+          path="/PencegahanPenyakit"
           element={
             <UserRoute>
               <CegahSakit />

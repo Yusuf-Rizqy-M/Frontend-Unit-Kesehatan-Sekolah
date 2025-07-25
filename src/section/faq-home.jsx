@@ -1,10 +1,10 @@
 import DoctorIllustration from "../assets/img/online-doctor-concept.png";
 
 const faqs = [
-  { question: "Apa itu UKS?", answer: "UKS adalah Unit Kesehatan Sekolah." },
-  { question: "Kapan saya bisa mengunjungi UKS?", answer: "UKS buka setiap hari kerja selama jam sekolah." },
-  { question: "Apakah UKS bisa memberikan obat?", answer: "UKS dapat memberikan obat ringan sesuai kebijakan sekolah." },
-  { question: "Apa saja fasilitas yang tersedia di UKS?", answer: "UKS menyediakan tempat tidur istirahat, peralatan P3K, dan konsultasi kesehatan." }
+  { question: "Apa itu UKS?", answer: "UKS adalah singkatan dari Usaha Kesehatan Sekolah. Ini adalah program terpadu yang bertujuan untuk meningkatkan kesehatan siswa dan lingkungan sekolah melalui pendidikan kesehatan, pelayanan kesehatan, dan pembinaan lingkungan sekolah sehat." },
+  { question: "Kapan saya bisa mengunjungi UKS?", answer: "UKS SMK Raden Umar Said Kudus buka setiap hari sekolah mulai pukul 08.00 hingga 15.00. Kami siap membantu kebutuhan kesehatanmu selama berada di sekolah. Jangan ragu untuk datang ya! 😊" },
+  { question: "Apakah UKS bisa memberikan obat?", answer: "UKS dapat memberikan obat-obatan ringan sesuai dengan kebijakan sekolah. Jangan khawatir, kami akan memastikan obat yang diberikan aman dan sesuai dengan kebutuhanmu 😊" },
+  { question: "Apa saja fasilitas yang tersedia di UKS?", answer: "UKS menyediakan berbagai fasilitas seperti tempat tidur untuk istirahat, peralatan P3K, dan layanan konsultasi kesehatan ringan. Kami hadir untuk membantumu merasa lebih nyaman dan sehat selama di sekolah 😊" }
 ];
 
 function FAQ() {

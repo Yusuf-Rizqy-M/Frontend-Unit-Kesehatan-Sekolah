@@ -1,11 +1,23 @@
 import UksImg1 from "../assets/img/hospital-room-interior.jpg";
-import UksImg2 from "../assets/img/hospital-room-interior.jpg";
-import UksImg3 from "../assets/img/hospital-room-interior.jpg";
+import HealthCheckup from "../assets/img/health-checkup.jpg";
+import Emergency from "../assets/img/emergency.jpg";
 
 const facilities = [
-  { title: "Hospitality", description: "Selamat datang di UKS SMK RUS, tempat di mana kepedulian dan kenyamanan menjadi prioritas utama. Kami hadir sebagai ruang yang aman, bersih, dan ramah untuk mendukung kesehatan fisik maupun mental seluruh warga sekolah. Mulai dari pertolongan pertama, istirahat sementara, hingga konsultasi ringan, UKS siap menjadi tempat andalan ketika kamu merasa kurang fit atau sekadar butuh jeda sejenak. Kami percaya bahwa lingkungan yang sehat adalah kunci untuk belajar dan tumbuh dengan optimal", image: UksImg1 },
-  { title: "Emergency Treatment", description: "UKS SMK RUS siap memberikan penanganan pertama untuk kondisi darurat yang terjadi di lingkungan sekolah. Mulai dari luka ringan, pingsan, mimisan, hingga keluhan mendadak lainnya, tim UKS akan sigap memberikan pertolongan sesuai prosedur yang berlaku. Dengan peralatan P3K yang lengkap dan pengurus yang terlatih, kami memastikan setiap situasi darurat ditangani dengan cepat, aman, dan penuh perhatian.", image: UksImg2 },
-  { title: "Health Check Up", description: "UKS SMK RUS menyediakan layanan pemeriksaan kesehatan rutin untuk seluruh siswa, sebagai upaya preventif dalam menjaga kondisi tubuh agar tetap fit selama proses belajar mengajar. Pemeriksaan ini mencakup pengecekan tekanan darah, suhu tubuh, berat badan, tinggi badan, hingga observasi gejala umum yang dapat mengganggu aktivitas belajar. Dengan layanan ini, kami berharap siswa dapat menyadari pentingnya menjaga kesehatan sejak dini dan terhindar dari risiko penyakit ringan maupun serius.", image: UksImg3 },
+  { 
+    title: "Hospitality", 
+    description: "Selamat datang di UKS SMK RUS, tempat di mana kepedulian dan kenyamanan menjadi prioritas utama. Kami hadir sebagai ruang yang aman, bersih, dan ramah untuk mendukung kesehatan fisik maupun mental seluruh warga sekolah. Mulai dari pertolongan pertama, istirahat sementara, hingga konsultasi ringan, UKS siap menjadi tempat andalan ketika kamu merasa kurang fit atau sekadar butuh jeda sejenak. Kami percaya bahwa lingkungan yang sehat adalah kunci untuk belajar dan tumbuh dengan optimal", 
+    image: UksImg1 
+  },
+  { 
+    title: "Emergency Treatment", 
+    description: "UKS SMK RUS siap memberikan penanganan pertama untuk kondisi darurat yang terjadi di lingkungan sekolah. Mulai dari luka ringan, pingsan, mimisan, hingga keluhan mendadak lainnya, tim UKS akan sigap memberikan pertolongan sesuai prosedur yang berlaku. Dengan peralatan P3K yang lengkap dan pengurus yang terlatih, kami memastikan setiap situasi darurat ditangani dengan cepat, aman, dan penuh perhatian.", 
+    image: Emergency 
+  },
+  { 
+    title: "Health Check Up", 
+    description: "UKS SMK RUS menyediakan layanan pemeriksaan kesehatan rutin untuk seluruh siswa, sebagai upaya preventif dalam menjaga kondisi tubuh agar tetap fit selama proses belajar mengajar. Pemeriksaan ini mencakup pengecekan tekanan darah, suhu tubuh, berat badan, tinggi badan, hingga observasi gejala umum yang dapat mengganggu aktivitas belajar. Dengan layanan ini, kami berharap siswa dapat menyadari pentingnya menjaga kesehatan sejak dini dan terhindar dari risiko penyakit ringan maupun serius.", 
+    image: HealthCheckup 
+  },
 ];
 
 function Facilities() {

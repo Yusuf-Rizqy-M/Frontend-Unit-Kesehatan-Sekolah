@@ -4,8 +4,9 @@ import Header from '../../partials/Header';
 import { User, Users } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, LinearScale, CategoryScale, PointElement, LineElement, Title, Tooltip, Legend, Filler } from 'chart.js';
+import UKS2Img from '../../assets/img/UKS2.png';
 
-// Register Chart.js components, including Filler
+// Register Chart.js components
 ChartJS.register(LinearScale, CategoryScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
 function Dashboard() {
@@ -18,23 +19,28 @@ function Dashboard() {
     monthly: Array(12).fill(0),
     daily: [],
     hourly: [],
-    totalUsers: 0, // New field for /api/users/count
+    totalUsers: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token') || null);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [filter, setFilter] = useState('year');
   const chartRef = useRef(null);
 
-  // Mock data for student queue table
-  const studentQueue = [
-    { queueNumber: 'Q001', status: 'Mengantri', studentName: 'John Doe', submittedSince: '2025-07-22 08:00' },
-    { queueNumber: 'Q002', status: 'Done', studentName: 'Jane Smith', submittedSince: '2025-07-22 07:30' },
-    { queueNumber: 'Q003', status: 'Mengantri', studentName: 'Ahmad Yani', submittedSince: '2025-07-22 08:15' },
-    { queueNumber: 'Q004', status: 'Done', studentName: 'Siti Nurhaliza', submittedSince: '2025-07-21 16:45' },
-    { queueNumber: 'Q005', status: 'Mengantri', studentName: 'Budi Santoso', submittedSince: '2025-07-22 08:30' },
-  ];
+  // Set favicon, title, and sync dark mode
+  useEffect(() => {
+    document.title = 'Dashboard';
+    let favicon = document.querySelector("link[rel='icon']");
+    if (!favicon) {
+      favicon = document.createElement('link');
+      favicon.rel = 'icon';
+      document.head.appendChild(favicon);
+    }
+    favicon.href = UKS2Img;
+
+    // Sync dark mode with Tailwind
+    document.documentElement.classList.toggle('dark', isDarkMode);
+  }, [isDarkMode]);
 
   // Function to handle login and get token
   const loginAndGetToken = async () => {
@@ -63,7 +69,7 @@ function Dashboard() {
     }
   };
 
-  // Fetch queue stats from original API
+  // Fetch queue stats
   const fetchQueueStats = async (currentToken) => {
     try {
       const response = await fetch('https://api-uks.rplrus.com/api/admin/queues/stats', {
@@ -73,7 +79,7 @@ function Dashboard() {
           'Authorization': `Bearer ${currentToken}`,
         },
       });
-      if (!response.ok) throw new Error(`Failed to fetch queue stats: ${response.status} ${response.statusText}`);
+      if (!response.ok) throw new Error(`Failed to fetch queue stats: ${response.status}`);
       const data = await response.json();
       return {
         today: data.today || 0,
@@ -89,7 +95,7 @@ function Dashboard() {
     }
   };
 
-  // Fetch monthly data from pengunjung API
+  // Fetch monthly stats
   const fetchMonthlyStats = async (currentToken) => {
     try {
       const response = await fetch('https://api-uks.rplrus.com/api/dashboard/pengunjung', {
@@ -99,12 +105,12 @@ function Dashboard() {
           'Authorization': `Bearer ${currentToken}`,
         },
       });
-      if (!response.ok) throw new Error(`Failed to fetch monthly stats: ${response.status} ${response.statusText}`);
+      if (!response.ok) throw new Error(`Failed to fetch monthly stats: ${response.status}`);
       const data = await response.json();
       const monthly = Array(12).fill(0);
       data.forEach(item => {
         if (item.bulan >= 1 && item.bulan <= 12) {
-          monthly[item.bulan - 1] = item.total; // bulan is 1-based, array is 0-based
+          monthly[item.bulan - 1] = item.total;
         }
       });
       return monthly;
@@ -114,7 +120,7 @@ function Dashboard() {
     }
   };
 
-  // Fetch total users from new API
+  // Fetch total users
   const fetchTotalUsers = async (currentToken) => {
     try {
       const response = await fetch('https://api-uks.rplrus.com/api/users/count', {
@@ -124,7 +130,7 @@ function Dashboard() {
           'Authorization': `Bearer ${currentToken}`,
         },
       });
-      if (!response.ok) throw new Error(`Failed to fetch total users: ${response.status} ${response.statusText}`);
+      if (!response.ok) throw new Error(`Failed to fetch total users: ${response.status}`);
       const data = await response.json();
       if (data.status) {
         return data.total || 0;
@@ -148,7 +154,7 @@ function Dashboard() {
         if (!currentToken) throw new Error('No valid token available');
       }
 
-      // Fetch all APIs concurrently
+      // Fetch APIs concurrently
       const [queueData, monthlyData, totalUsers] = await Promise.all([
         fetchQueueStats(currentToken),
         fetchMonthlyStats(currentToken),
@@ -163,13 +169,13 @@ function Dashboard() {
         monthly: monthlyData,
         daily: queueData.daily,
         hourly: queueData.hourly,
-        totalUsers, // Store total users from new API
+        totalUsers,
       });
       setLoading(false);
     } catch (err) {
       console.error('Fetch Error:', err);
       setError(err.message);
-      const mockData = {
+      setQueueStats({
         today: 10,
         yesterday: 15,
         week: 50,
@@ -177,52 +183,29 @@ function Dashboard() {
         monthly: [0, 0, 0, 0, 2, 1, 1, 0, 0, 0, 0, 0],
         daily: [10, 12, 15, 18, 20, 10, 15],
         hourly: [2, 5, 8, 10, 7, 6],
-        totalUsers: 5, 
-      };
-      setQueueStats(mockData);
+        totalUsers: 5,
+      });
       setLoading(false);
     }
   };
 
+  // Fetch data on mount
   useEffect(() => {
     fetchAllStats();
   }, []);
 
-  // Chart data based on filter
-  const getChartData = () => {
-    let labels = [];
-    let data = [];
-
-    switch (filter) {
-      case 'year':
-        labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        data = queueStats.monthly;
-        break;
-      case 'week':
-        labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-        data = queueStats.daily.length ? queueStats.daily : Array(7).fill(queueStats.week / 7);
-        break;
-      case 'today':
-        labels = ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'];
-        data = queueStats.hourly.length ? queueStats.hourly : Array(6).fill(queueStats.today / 6);
-        break;
-      default:
-        labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        data = queueStats.monthly;
-    }
-
-    return {
-      labels,
-      datasets: [{
-        label: 'Queue Stats',
-        data,
-        borderColor: isDarkMode ? '#00C4B4' : '#1B4A4F',
-        backgroundColor: isDarkMode ? 'rgba(0, 196, 180, 0.2)' : 'rgba(27, 74, 79, 0.2)',
-        fill: true,
-        tension: 0.4,
-      }],
-    };
-  };
+  // Chart data for yearly stats only
+  const getChartData = () => ({
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    datasets: [{
+      label: 'Queue Stats',
+      data: queueStats.monthly,
+      borderColor: isDarkMode ? '#00C4B4' : '#1B4A4F',
+      backgroundColor: isDarkMode ? 'rgba(0, 196, 180, 0.2)' : 'rgba(27, 74, 79, 0.2)',
+      fill: true,
+      tension: 0.4,
+    }],
+  });
 
   // Chart options
   const chartOptions = {
@@ -233,7 +216,7 @@ function Dashboard() {
       tooltip: { mode: 'index', intersect: false },
       title: {
         display: true,
-        text: `Queue Statistics (${filter.charAt(0).toUpperCase() + filter.slice(1)})`,
+        text: 'Yearly Queue Statistics',
         font: { size: 18 },
       },
     },
@@ -266,7 +249,7 @@ function Dashboard() {
                 <div>
                   <p className="text-sm text-[#1B4A4F] dark:text-white font-medium">Total Antri</p>
                   <p className="text-[20px] font-bold text-[#1B4A4F] dark:text-white leading-tight">
-                    {loading ? '...' : error ? '-' : queueStats.all}
+                    {loading ? <span className="inline-block animate-pulse bg-gray-200 h-6 w-20 rounded" /> : error ? '-' : queueStats.all}
                   </p>
                 </div>
               </div>
@@ -277,7 +260,7 @@ function Dashboard() {
                 <div>
                   <p className="text-sm text-[#1B4A4F] dark:text-white font-medium">Total Users</p>
                   <p className="text-[20px] font-bold text-[#1B4A4F] dark:text-white leading-tight">
-                    {loading ? '...' : error ? '-' : queueStats.totalUsers}
+                    {loading ? <span className="inline-block animate-pulse bg-gray-200 h-6 w-20 rounded" /> : error ? '-' : queueStats.totalUsers}
                   </p>
                 </div>
               </div>
@@ -288,7 +271,7 @@ function Dashboard() {
                 <div>
                   <p className="text-sm text-[#1B4A4F] dark:text-white font-medium">Total Antrian Minggu Ini</p>
                   <p className="text-[20px] font-bold text-[#1B4A4F] dark:text-white leading-tight">
-                    {loading ? '...' : error ? '-' : queueStats.week}
+                    {loading ? <span className="inline-block animate-pulse bg-gray-200 h-6 w-20 rounded" /> : error ? '-' : queueStats.week}
                   </p>
                 </div>
               </div>
@@ -298,57 +281,15 @@ function Dashboard() {
             <div className="bg-white dark:bg-[#051D4E] rounded-[20px] shadow p-6 mb-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl text-gray-800 dark:text-gray-100 font-bold">Statistik Siswa</h2>
-                <div className="flex gap-2">
-                  <button
-                    className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
-                    onClick={() => setIsDarkMode(!isDarkMode)}
-                  >
-                    {isDarkMode ? 'Light Mode' : 'Dark Mode'}
-                  </button>
-                </div>
+                <button
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+                  onClick={() => setIsDarkMode(!isDarkMode)}
+                >
+                  {isDarkMode ? 'Light Mode' : 'Dark Mode'}
+                </button>
               </div>
               <div className="h-64">
                 <Line data={getChartData()} options={chartOptions} ref={chartRef} />
-              </div>
-            </div>
-
-            {/* Student Queue Table */}
-            <div className="bg-white dark:bg-[#051D4E] rounded-[20px] shadow p-6">
-              <h2 className="text-xl text-gray-800 dark:text-gray-100 font-bold mb-4">Student Queue</h2>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="text-[#1B4A4F] dark:text-white">
-                      <th className="px-4 py-2 font-medium">Student Queue Number</th>
-                      <th className="px-4 py-2 font-medium">Status</th>
-                      <th className="px-4 py-2 font-medium">Student Name</th>
-                      <th className="px-4 py-2 font-medium">Submitted Since</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {studentQueue.map((entry, index) => (
-                      <tr
-                        key={entry.queueNumber}
-                        className={`border-t border-gray-200 dark:border-gray-700 ${index % 2 === 0 ? 'bg-gray-50 dark:bg-[#0A2A5E]' : 'bg-white dark:bg-[#051D4E]'}`}
-                      >
-                        <td className="px-4 py-2 text-[#1B4A4F] dark:text-white">{entry.queueNumber}</td>
-                        <td className="px-4 py-2">
-                          <span
-                            className={`px-2 py-1 rounded-full text-sm ${
-                              entry.status === 'Done'
-                                ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300'
-                                : 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-300'
-                            }`}
-                          >
-                            {entry.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2 text-[#1B4A4F] dark:text-white">{entry.studentName}</td>
-                        <td className="px-4 py-2 text-[#1B4A4F] dark:text-white">{entry.submittedSince}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
               </div>
             </div>
           </div>

@@ -3,16 +3,17 @@ import { Link, useNavigate } from 'react-router-dom';
 import Transition from '../../utils/Transition';
 import UserAvatar from '../../images/user-avatar-32.png';
 import warning from '../../assets/img/warning.png';
+
 function DropdownProfile({ align }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [nickname, setNickname] = useState('Admin UKS');
-  const [email, setEmail] = useState('admin@uks.com');
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false); // State for logout confirmation popup
+  const [nickname, setNickname] = useState('');
+  const [email, setEmail] = useState('');
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const trigger = useRef(null);
   const dropdown = useRef(null);
   const navigate = useNavigate();
 
-  // Ambil data user dari localStorage/sessionStorage saat pertama render
+  // Load user data from localStorage/sessionStorage on first render
   useEffect(() => {
     const loadUser = () => {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -21,10 +22,10 @@ function DropdownProfile({ align }) {
       if (token && user && user !== "undefined") {
         try {
           const parsedUser = JSON.parse(user);
-          setNickname(parsedUser?.name || 'User');
-          setEmail(parsedUser?.email || 'user@email.com');
+          setNickname(parsedUser?.name || '');
+          setEmail(parsedUser?.email || '');
         } catch (e) {
-          console.error("Gagal parsing user:", e);
+          console.error("Failed to parse user:", e);
           setNickname('');
           setEmail('');
         }
@@ -40,13 +41,11 @@ function DropdownProfile({ align }) {
   }, []);
 
   const handleLogout = () => {
-    // Show confirmation popup instead of logging out immediately
     setShowLogoutConfirm(true);
-    setDropdownOpen(false); // Close dropdown when showing popup
+    setDropdownOpen(false);
   };
 
   const confirmLogout = () => {
-    // Proceed with logout
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     sessionStorage.removeItem('token');
@@ -57,7 +56,6 @@ function DropdownProfile({ align }) {
   };
 
   const cancelLogout = () => {
-    // Close popup without logging out
     setShowLogoutConfirm(false);
   };
 
@@ -69,7 +67,7 @@ function DropdownProfile({ align }) {
       setDropdownOpen(false);
     };
     document.addEventListener('click', clickHandler);
-    return () => document.removeEventListener('click', clickHandler);
+    return () => document.addEventListener('click', clickHandler);
   }, [dropdownOpen]);
 
   // Close dropdown on Escape
@@ -119,6 +117,15 @@ function DropdownProfile({ align }) {
             <li>
               <Link
                 className="font-medium text-sm text-violet-500 hover:text-violet-600 dark:hover:text-violet-400 flex items-center py-1 px-3"
+                to="/"
+                onClick={() => setDropdownOpen(false)}
+              >
+                Home
+              </Link>
+            </li>
+            <li>
+              <Link
+                className="font-medium text-sm text-violet-500 hover:text-violet-600 dark:hover:text-violet-400 flex items-center py-1 px-3"
                 to="/settings"
                 onClick={() => setDropdownOpen(false)}
               >
@@ -137,7 +144,6 @@ function DropdownProfile({ align }) {
         </div>
       </Transition>
 
-      {/* Logout Confirmation Popup */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md text-center shadow-lg relative">

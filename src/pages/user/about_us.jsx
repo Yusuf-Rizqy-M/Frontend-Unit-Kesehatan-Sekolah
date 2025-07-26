@@ -87,7 +87,6 @@ export default function AboutUs() {
         <link rel="icon" href={`${UKS2Img}?v=${Date.now()}`} /> {/* Use imported UKS2Img with cache-busting */}
       </Helmet>
       <div className="bg-white text-black">
-        {/* Section: Apa Itu UKS */}
         <section className="min-h-[80vh] flex items-center px-6 md:px-20 py-20">
           <div className="grid md:grid-cols-2 gap-10 items-center w-full">
             <div className="space-y-4 text-left">
@@ -98,7 +97,10 @@ export default function AboutUs() {
                 Melalui UKS, sekolah membiasakan siswa untuk hidup sehat, menjaga kebersihan, dan peduli pada kesehatan diri sendiri maupun lingkungan sekitar.
                 Program ini mendukung terciptanya lingkungan sekolah yang bersih, sehat, dan nyaman, sehingga siswa dapat belajar dan berkembang dengan lebih optimal.
               </p>
-              <button className="bg-cyan-600 hover:bg-teal-600 text-white px-6 py-2 rounded-lg mt-4 transition">
+              <button
+                className="bg-cyan-600 hover:bg-teal-600 text-white px-6 py-2 rounded-lg mt-4 transition"
+                onClick={() => window.location.href = '/'}
+              >
                 Jelajahi Sekarang
               </button>
             </div>

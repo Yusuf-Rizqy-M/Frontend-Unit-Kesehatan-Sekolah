@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Sidebar from '../../partials/Sidebar';
 import Header from '../../partials/Header';
 import { User, Users } from 'lucide-react';
@@ -21,7 +21,7 @@ function Dashboard() {
     hourly: [],
     totalUsers: 0,
   });
-  const [todayQueue, setTodayQueue] = useState([]); // New state for today's queue
+  const [todayQueue, setTodayQueue] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token') || null);
@@ -176,10 +176,6 @@ function Dashboard() {
 
       // Fetch all APIs concurrently
       const [queueData, monthlyData, totalUsers, todayQueueData] = await Promise.all([
-
-      // Fetch APIs concurrently
-      const [queueData, monthlyData, totalUsers] = await Promise.all([
-
         fetchQueueStats(currentToken),
         fetchMonthlyStats(currentToken),
         fetchTotalUsers(currentToken),
@@ -188,7 +184,7 @@ function Dashboard() {
 
       // Process today's queue to select 5 relevant entries
       const sortedQueue = todayQueueData
-        .sort((a, b) => a.queue_number - b.queue_number) // Sort by queue_number
+        .sort((a, b) => a.queue_number - b.queue_number)
         .map(entry => ({
           queueNumber: `Q${entry.queue_number.toString().padStart(3, '0')}`,
           status: entry.status === 'waiting' ? 'Mengantri' : 'Done',
@@ -213,10 +209,10 @@ function Dashboard() {
       // Select 5 entries based on current queue position
       let startIndex;
       if (currentQueueNumber <= 5) {
-        startIndex = 0; // Show 1-5 if current queue is 1-5
+        startIndex = 0;
       } else {
         startIndex = sortedQueue.findIndex(entry => parseInt(entry.queueNumber.slice(1)) >= currentQueueNumber);
-        if (startIndex === -1) startIndex = sortedQueue.length - 5; // Fallback to last 5 if not found
+        if (startIndex === -1) startIndex = Math.max(0, sortedQueue.length - 5);
       }
       const selectedQueue = sortedQueue.slice(startIndex, startIndex + 5);
 
@@ -231,10 +227,9 @@ function Dashboard() {
         totalUsers,
       });
       setTodayQueue(selectedQueue);
-      setLoading(false);
     } catch (err) {
       console.error('Fetch Error:', err);
-      setError(err.message);
+      setError(err.message || 'Failed to fetch data');
       setQueueStats({
         today: 10,
         yesterday: 15,
@@ -244,8 +239,7 @@ function Dashboard() {
         daily: [10, 12, 15, 18, 20, 10, 15],
         hourly: [2, 5, 8, 10, 7, 6],
         totalUsers: 5,
-      };
-      setQueueStats(mockData);
+      });
       setTodayQueue([
         { queueNumber: 'Q001', status: 'Mengantri', studentName: 'John Doe', submittedSince: '2025-07-22 08:00' },
         { queueNumber: 'Q002', status: 'Done', studentName: 'Jane Smith', submittedSince: '2025-07-22 07:30' },
@@ -253,9 +247,7 @@ function Dashboard() {
         { queueNumber: 'Q004', status: 'Done', studentName: 'Siti Nurhaliza', submittedSince: '2025-07-21 16:45' },
         { queueNumber: 'Q005', status: 'Mengantri', studentName: 'Budi Santoso', submittedSince: '2025-07-22 08:30' },
       ]);
-
-      });
-
+    } finally {
       setLoading(false);
     }
   };
@@ -265,8 +257,8 @@ function Dashboard() {
     fetchAllStats();
   }, []);
 
-  // Chart data for yearly stats only
-  const getChartData = () => ({
+  // Memoize chart data to prevent unnecessary re-renders
+  const chartData = useMemo(() => ({
     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
     datasets: [{
       label: 'Queue Stats',
@@ -276,7 +268,7 @@ function Dashboard() {
       fill: true,
       tension: 0.4,
     }],
-  });
+  }), [queueStats.monthly, isDarkMode]);
 
   // Chart options
   const chartOptions = {
@@ -307,7 +299,13 @@ function Dashboard() {
             {error && (
               <div className="p-4 rounded-[10px] bg-red-50 dark:bg-red-900/50 text-red-500 mb-6">
                 <p>Error: {error}</p>
-                <button className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600" onClick={fetchAllStats}>
+                <button
+                  className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  onClick={() => {
+                    setError(null);
+                    fetchAllStats();
+                  }}
+                >
                   Retry
                 </button>
               </div>
@@ -360,7 +358,7 @@ function Dashboard() {
                 </button>
               </div>
               <div className="h-64">
-                <Line data={getChartData()} options={chartOptions} ref={chartRef} />
+                <Line data={chartData} options={chartOptions} ref={chartRef} />
               </div>
             </div>
 

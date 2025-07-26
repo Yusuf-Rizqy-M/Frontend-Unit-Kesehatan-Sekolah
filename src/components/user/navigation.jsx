@@ -9,6 +9,7 @@ export default function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [nickname, setNickname] = useState("");
   const [token, setToken] = useState("");
+  const [role, setRole] = useState(""); // Added state for role
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const dropdownRef = useRef(null);
@@ -26,14 +27,17 @@ export default function Navigation() {
         try {
           const parsedUser = JSON.parse(userStorage);
           setNickname(parsedUser?.name || "User");
+          setRole(parsedUser?.role || ""); // Set role from user data
           setToken(tokenStorage);
         } catch (e) {
           console.error("Gagal parsing user:", e);
           setNickname("");
+          setRole("");
           setToken("");
         }
       } else {
         setNickname("");
+        setRole("");
         setToken("");
       }
     };
@@ -64,6 +68,7 @@ export default function Navigation() {
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("user");
     setNickname("");
+    setRole("");
     setToken("");
     navigate("/");
     window.dispatchEvent(new Event("storage"));
@@ -166,20 +171,15 @@ export default function Navigation() {
                       <i className="fas fa-user-cog text-cyan-700 w-5 text-center" />{" "}
                       Prefrence
                     </Link>
-                    {/* <Link
-                      to="/antrian"
-                      className="flex items-center gap-3 px-4 py-2 text-sm text-gray-800 hover:bg-cyan-200"
-                    >
-                      <i className="fas fa-notes-medical text-cyan-700 w-5 text-center" />{" "}
-                      Ambil Antrian
-                    </Link>
-                    <Link
-                      to="/kalkulatorbmi"
-                      className="flex items-center gap-3 px-4 py-2 text-sm text-gray-800 hover:bg-cyan-200"
-                    >
-                      <i className="fas fa-calculator text-cyan-700 w-5 text-center" />{" "}
-                      Kalkulator BMI
-                    </Link> */}
+                    {role === "admin" && (
+                      <Link
+                        to="/dashboard"
+                        className="flex items-center gap-3 px-4 py-2 text-sm text-gray-800 hover:bg-cyan-200"
+                      >
+                        <i className="fas fa-tachometer-alt text-cyan-700 w-5 text-center" />
+                        Dashboard
+                      </Link>
+                    )}
                   </div>
 
                   <button
@@ -295,7 +295,16 @@ export default function Navigation() {
                     <i className="fas fa-user-cog text-cyan-700 w-5 text-center" />
                     Edit Profile
                   </Link>
-
+                  {role === "admin" && (
+                    <Link
+                      to="/dashboard"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-2 text-base text-gray-800 hover:text-[#2A8F9E]"
+                    >
+                      <i className="fas fa-tachometer-alt text-cyan-700 w-5 text-center" />
+                      Dashboard
+                    </Link>
+                  )}
                   <button
                     onClick={() => {
                       setMobileMenuOpen(false);

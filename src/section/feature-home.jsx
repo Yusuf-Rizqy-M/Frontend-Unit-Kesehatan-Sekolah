@@ -4,13 +4,14 @@ import Consult from "../assets/img/consult_img.png";
 import Recap from "../assets/img/rekap.png";
 import Calculator from "../assets/img/calculator.png";
 
+// Animations
 const fadeInLeft = {
   hidden: { opacity: 0, x: -50 },
   visible: { opacity: 1, x: 0 },
 };
 
 const fadeInRight = {
-  hidden: { opacity: 0, x: 1 },
+  hidden: { opacity: 0, x: 50 },
   visible: { opacity: 1, x: 0 },
 };
 
@@ -34,15 +35,30 @@ const FeaturePage = () => {
         viewport={{ once: false, amount: 0.3 }}
       >
         <h2 className="text-2xl md:text-4xl font-bold text-[#1C4245] text-center mb-8 pb-2 relative group">
-          Feature UKS SMK Raden Umar Said
+          Fitur UKS SMK Raden Umar Said
           <span className="absolute left-1/2 -translate-x-1/2 bottom-[-4px] w-0 group-hover:w-full transition-all duration-300 h-[3px] bg-[#4FB7BD]" />
         </h2>
-      </motion.div>.
+      </motion.div>
 
-      
-      {/* changed */}
-      <motion.div> 
-      <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 md:gap-12 mt-10">
+      {/* Feature: Kalkulator BMI */}
+      <motion.div
+        className="relative z-10 flex flex-col md:flex-row items-center gap-6 md:gap-12 mt-10"
+        variants={fadeInLeft}
+        initial="hidden"
+        whileInView="visible"
+        transition={{ duration: 0.6, delay: 0.2 }}
+        viewport={{ once: false, amount: 0.3 }}
+      >
+        {/* Optional image */}
+        <motion.img
+          src={Calculator}
+          alt="calculator"
+          className="w-40 h-auto"
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: false, amount: 0.3 }}
+        />
         <div className="w-full md:w-1/2 text-center md:text-left">
           <h3 className="text-lg font-semibold text-gray-900 relative pb-2 w-fit mx-auto md:mx-0">
             Kalkulator BMI
@@ -58,7 +74,6 @@ const FeaturePage = () => {
             Explore Kalkulator BMI →
           </a>
         </div>
-        </div>
       </motion.div>
 
       {/* Feature: Rekap Medis */}
@@ -70,9 +85,15 @@ const FeaturePage = () => {
         transition={{ duration: 0.7, delay: 0.3 }}
         viewport={{ once: false, amount: 0.3 }}
       >
-        {/* <div className="w-20 md:w-40 flex-shrink-0 pr-6">
-          <img src={Recap} alt="recapimg" className="w-full h-auto" />
-        </div> */}
+        <motion.img
+          src={Recap}
+          alt="recapimg"
+          className="w-40 h-auto"
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: false, amount: 0.3 }}
+        />
         <div className="w-full md:w-3/4 text-right">
           <h3 className="text-lg font-semibold text-gray-900 relative pb-2 w-fit ml-auto">
             Rekap Medis

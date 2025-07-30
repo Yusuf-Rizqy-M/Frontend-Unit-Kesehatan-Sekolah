@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import Sidebar from '../../partials/Sidebar';
 import Header from '../../partials/Header';
 import { FaEdit, FaTrash } from 'react-icons/fa';
@@ -8,9 +8,8 @@ import UKS2Img from '../../assets/img/uks2.png'; // Favicon import
 const DetailRekamMedisSiswa = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
-  const { state } = useLocation();
-  const { student } = state || {};
-
+  const { id } = useParams(); // Ambil ID dari URL
+  const [userData, setUserData] = useState(null); // State untuk data pengguna
   const [searchQuery, setSearchQuery] = useState('');
   const [medicalRecords, setMedicalRecords] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -36,10 +35,46 @@ const DetailRekamMedisSiswa = () => {
     return localStorage.getItem('token') || sessionStorage.getItem('token');
   };
 
-  // Fetch medical records for the student
+  // Fetch user details berdasarkan ID dari URL
   useEffect(() => {
-    if (!student?.id) {
-      console.error('Student ID is missing');
+    const fetchUserDetails = async () => {
+      try {
+        const token = getToken();
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+
+        const response = await fetch(`https://api-uks.rplrus.com/api/users/${id}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch user details');
+        }
+
+        const data = await response.json();
+        if (data.status && data.data) {
+          setUserData(data.data);
+        } else {
+          throw new Error('Invalid response structure');
+        }
+      } catch (error) {
+        console.error('Error fetching user details:', error);
+        setUserData(null); // Set null jika gagal untuk menampilkan pesan fallback
+      }
+    };
+
+    fetchUserDetails();
+  }, [id]); // Bergantung pada id dari useParams
+
+  // Fetch medical records untuk pengguna
+  useEffect(() => {
+    if (!userData?.id) {
+      console.error('User ID is missing');
       return;
     }
 
@@ -50,7 +85,7 @@ const DetailRekamMedisSiswa = () => {
           throw new Error('No authentication token found');
         }
 
-        const response = await fetch(`https://api-uks.rplrus.com/api/health-conditions/${student.id}`, {
+        const response = await fetch(`https://api-uks.rplrus.com/api/healthcondition/${userData.id}`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -59,19 +94,23 @@ const DetailRekamMedisSiswa = () => {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to fetch medical records');
+          throw new Error(`Failed to fetch medical records: ${response.statusText}`);
         }
 
         const data = await response.json();
-        // Filter only active records
-        setMedicalRecords(data.data?.filter(record => record.status === 'active') || []);
+        if (data.status && data.data) {
+          setMedicalRecords(data.data.filter(record => record.status === 'active') || []);
+        } else {
+          throw new Error('Invalid response structure');
+        }
       } catch (error) {
         console.error('Error fetching medical records:', error);
+        setMedicalRecords([]); // Set empty array on error to avoid undefined issues
       }
     };
 
     fetchMedicalRecords();
-  }, [student?.id]);
+  }, [userData?.id]);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
@@ -102,7 +141,7 @@ const DetailRekamMedisSiswa = () => {
         }
 
         const response = await fetch(
-          `https://api-uks.rplrus.com/api/health-conditions/${student.id}/${recordId}`,
+          `https://api-uks.rplrus.com/api/health-conditions/${userData.id}/${recordId}`,
           {
             method: 'DELETE',
             headers: {
@@ -116,7 +155,6 @@ const DetailRekamMedisSiswa = () => {
           throw new Error('Failed to mark health condition as inactive');
         }
 
-        // Remove the record from display (since it's now inactive)
         setMedicalRecords(medicalRecords.filter((record) => record.id_user_condition !== recordId));
       } catch (error) {
         console.error('Error marking record as inactive:', error);
@@ -193,7 +231,7 @@ const DetailRekamMedisSiswa = () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            user_id: student.id,
+            user_id: userData.id,
             admin_id: JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user') || '{}').id,
             tension: parseInt(formData.tension),
             temperature: parseInt(formData.temperature),
@@ -359,7 +397,7 @@ const DetailRekamMedisSiswa = () => {
         }
 
         const response = await fetch(
-          `https://api-uks.rplrus.com/api/health-conditions/${student.id}/${record.id_user_condition}`,
+          `https://api-uks.rplrus.com/api/health-conditions/${userData.id}/${record.id_user_condition}`,
           {
             method: 'PUT',
             headers: {
@@ -618,41 +656,41 @@ const DetailRekamMedisSiswa = () => {
             <h2 className="text-2xl md:text-3xl text-gray-800 border-b-2 border-green-500 pb-2 mb-8 inline-block whitespace-nowrap">
               Detail Rekam Medis Siswa
             </h2>
-            {student ? (
+            {userData ? (
               <div className="bg-[#ffffff] dark:bg-[#051D4E] rounded-[10px] p-6 mb-6">
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Informasi Siswa</h3>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <p className="text-sm text-gray-600 dark:text-gray-300">
-                      <strong className="font-medium">Nama:</strong> {student.name || student.id || '-'}
+                      <strong className="font-medium">Nama:</strong> {userData.name || '-'}
                     </p>
                     <p className="text-sm text-gray-600 dark:text-gray-300">
-                      <strong className="font-medium">Gender:</strong> {student.gender || '-'}
+                      <strong className="font-medium">Gender:</strong> {userData.gender || '-'}
                     </p>
                     <p className="text-sm text-gray-600 dark:text-gray-300">
-                      <strong className="font-medium">Nomor HP:</strong> {student.phone_number || '-'}
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                      <strong className="font-medium">Kelas:</strong> {student.class || student.kelas || '-'}
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                      <strong className="font-medium">Nama Kelas:</strong> {student.name_grades || student.namaKelas || '-'}
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                      <strong className="font-medium">Jurusan:</strong> {student.name_department || '-'}
+                      <strong className="font-medium">Nomor HP:</strong> {userData.phone_number || '-'}
                     </p>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <p className="text-sm text-gray-600 dark:text-gray-300">
-                      <strong className="font-medium">Nama Orang Tua:</strong> {student.name_parent || '-'}
+                      <strong className="font-medium">Kelas:</strong> {userData.class || '-'}
                     </p>
                     <p className="text-sm text-gray-600 dark:text-gray-300">
-                      <strong className="font-medium">Nomor HP Orang Tua:</strong> {student.no_hp_parent || '-'}
+                      <strong className="font-medium">Nama Kelas:</strong> {userData.name_grades || '-'}
                     </p>
                     <p className="text-sm text-gray-600 dark:text-gray-300">
-                      <strong className="font-medium">Wali Kelas:</strong> {student.name_walikelas || '-'}
+                      <strong className="font-medium">Jurusan:</strong> {userData.name_department || '-'}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      <strong className="font-medium">Nama Orang Tua:</strong> {userData.name_parent || '-'}
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      <strong className="font-medium">Nomor HP Orang Tua:</strong> {userData.no_hp_parent || '-'}
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      <strong className="font-medium">Wali Kelas:</strong> {userData.name_walikelas || '-'}
                     </p>
                   </div>
                 </div>

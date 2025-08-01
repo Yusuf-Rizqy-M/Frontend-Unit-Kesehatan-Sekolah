@@ -21,12 +21,31 @@ function Dashboard() {
     hourly: [],
     totalUsers: 0,
   });
-  const [todayQueue, setTodayQueue] = useState([]);
+  const [todayQueue, setTodayQueue] = useState([]); // Removed duplicate declaration
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token') || null);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const chartRef = useRef(null);
+
+  // Mock data for fallback in case of API failure
+  const mockData = {
+    today: 10,
+    yesterday: 15,
+    week: 50,
+    all: 36,
+    monthly: [0, 0, 0, 0, 2, 1, 1, 0, 0, 0, 0, 0],
+    daily: [10, 12, 15, 18, 20, 10, 15],
+    hourly: [2, 5, 8, 10, 7, 6],
+    totalUsers: 5,
+    todayQueue: [
+      { queueNumber: 'Q001', status: 'Mengantri', studentName: 'John Doe', submittedSince: '2025-07-22 08:00' },
+      { queueNumber: 'Q002', status: 'Done', studentName: 'Jane Smith', submittedSince: '2025-07-22 07:30' },
+      { queueNumber: 'Q003', status: 'Mengantri', studentName: 'Ahmad Yani', submittedSince: '2025-07-22 08:15' },
+      { queueNumber: 'Q004', status: 'Done', studentName: 'Siti Nurhaliza', submittedSince: '2025-07-21 16:45' },
+      { queueNumber: 'Q005', status: 'Mengantri', studentName: 'Budi Santoso', submittedSince: '2025-07-22 08:30' },
+    ],
+  };
 
   // Set favicon, title, and sync dark mode
   useEffect(() => {
@@ -62,7 +81,9 @@ function Dashboard() {
         localStorage.setItem('token', newToken);
         setToken(newToken);
         return newToken;
-      } else throw new Error(data.message || 'Login unsuccessful');
+      } else {
+        throw new Error(data.message || 'Login unsuccessful');
+      }
     } catch (err) {
       console.error('Login Error:', err);
       setError('Failed to log in. Check credentials or server.');
@@ -109,7 +130,7 @@ function Dashboard() {
       if (!response.ok) throw new Error(`Failed to fetch monthly stats: ${response.status}`);
       const data = await response.json();
       const monthly = Array(12).fill(0);
-      data.forEach(item => {
+      data.forEach((item) => {
         if (item.bulan >= 1 && item.bulan <= 12) {
           monthly[item.bulan - 1] = item.total;
         }
@@ -144,7 +165,7 @@ function Dashboard() {
     }
   };
 
-  // Fetch today's queue from new API
+  // Fetch today's queue
   const fetchTodayQueue = async (currentToken) => {
     try {
       const response = await fetch('https://api-uks.rplrus.com/api/admin/queues/today', {
@@ -199,7 +220,7 @@ function Dashboard() {
         }));
 
       // Determine current queue position (first 'waiting' entry)
-      const currentQueueEntry = sortedQueue.find(entry => entry.status === 'Mengantri');
+      const currentQueueEntry = sortedQueue.find((entry) => entry.status === 'Mengantri');
       const currentQueueNumber = currentQueueEntry
         ? parseInt(currentQueueEntry.queueNumber.slice(1))
         : sortedQueue.length > 0
@@ -359,60 +380,6 @@ function Dashboard() {
               </div>
               <div className="h-64">
                 <Line data={chartData} options={chartOptions} ref={chartRef} />
-              </div>
-            </div>
-
-            {/* Student Queue Table */}
-            <div className="bg-white dark:bg-[#051D4E] rounded-[20px] shadow p-6">
-              <h2 className="text-xl text-gray-800 dark:text-gray-100 font-bold mb-4">Student Queue</h2>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="text-[#1B4A4F] dark:text-white">
-                      <th className="px-4 py-2 font-medium">Student Queue Number</th>
-                      <th className="px-4 py-2 font-medium">Status</th>
-                      <th className="px-4 py-2 font-medium">Student Name</th>
-                      <th className="px-4 py-2 font-medium">Submitted Since</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {loading ? (
-                      <tr>
-                        <td colSpan="4" className="px-4 py-2 text-center text-[#1B4A4F] dark:text-white">
-                          Loading...
-                        </td>
-                      </tr>
-                    ) : todayQueue.length === 0 ? (
-                      <tr>
-                        <td colSpan="4" className="px-4 py-2 text-center text-[#1B4A4F] dark:text-white">
-                          No queue data available
-                        </td>
-                      </tr>
-                    ) : (
-                      todayQueue.map((entry, index) => (
-                        <tr
-                          key={entry.queueNumber}
-                          className={`border-t border-gray-200 dark:border-gray-700 ${index % 2 === 0 ? 'bg-gray-50 dark:bg-[#0A2A5E]' : 'bg-white dark:bg-[#051D4E]'}`}
-                        >
-                          <td className="px-4 py-2 text-[#1B4A4F] dark:text-white">{entry.queueNumber}</td>
-                          <td className="px-4 py-2">
-                            <span
-                              className={`px-2 py-1 rounded-full text-sm ${
-                                entry.status === 'Done'
-                                  ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300'
-                                  : 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-300'
-                              }`}
-                            >
-                              {entry.status}
-                            </span>
-                          </td>
-                          <td className="px-4 py-2 text-[#1B4A4F] dark:text-white">{entry.studentName}</td>
-                          <td className="px-4 py-2 text-[#1B4A4F] dark:text-white">{entry.submittedSince}</td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
               </div>
             </div>
           </div>

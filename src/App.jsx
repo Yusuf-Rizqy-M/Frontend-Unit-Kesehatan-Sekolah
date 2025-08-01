@@ -73,17 +73,13 @@ function App() {
         <Route
           path="/"
           element={
-            <UserRoute>
-              <Home />
-            </UserRoute>
+            <Home />
           }
         />
         <Route
           path="/kalkulatorbmi"
           element={
-            <UserRoute>
-              <KalkulatorBmi />
-            </UserRoute>
+            <KalkulatorBmi />
           }
         />
         <Route
@@ -97,17 +93,14 @@ function App() {
         <Route
           path="/edukasikesehatan"
           element={
-            <UserRoute>
-              <EdukasiKesehatan />
-            </UserRoute>
+            <EdukasiKesehatan />
           }
         />
         <Route
           path="/aboutus"
           element={
-            <UserRoute>
-              <AboutUs />
-            </UserRoute>
+
+            <AboutUs />
           }
         />
         <Route
@@ -139,49 +132,41 @@ function App() {
         <Route
           path="/kesehatanmental"
           element={
-            <UserRoute>
-              <MentalEdu />
-            </UserRoute>
+            <MentalEdu />
           }
         />
         <Route
           path="/kesehatanfisik"
           element={
-            <UserRoute>
-              <FisikEdu />
-            </UserRoute>
+            <FisikEdu />
           }
         />
         <Route
           path="/PencegahanPenyakit"
           element={
-            <UserRoute>
-              <CegahSakit />
-            </UserRoute>
+            <CegahSakit />
           }
         />
         <Route
           path="/kebersihandiri"
           element={
-            <UserRoute>
-              <KebersihanDiri />
-            </UserRoute>
+
+            <KebersihanDiri />
           }
         />
         <Route
           path="/polahidupsehat"
           element={
-            <UserRoute>
-              <PolaHidupSehat />
-            </UserRoute>
+            <PolaHidupSehat />
+
           }
         />
         <Route
           path="/artikel"
           element={
-            <UserRoute>
-              <Article />
-            </UserRoute>
+
+            <Article />
+
           }
         />
         <Route

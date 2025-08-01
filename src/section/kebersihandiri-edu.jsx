@@ -1,7 +1,8 @@
 import Layout from '../components/user/layout';
 import Clean from '../assets/img/cleaannn.png';
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import DOMPurify from 'dompurify';
 
 function KebersihanDiri() {
   const [articles, setArticles] = useState([]);
@@ -9,7 +10,33 @@ function KebersihanDiri() {
   const [error, setError] = useState(null);
   const [categoryTitle, setCategoryTitle] = useState('Kebersihan Diri'); // Default title
   const [categoryIcon, setCategoryIcon] = useState(Clean); // Default icon
-  const { category } = useParams(); // Get category from URL (e.g., "KebersihanDiri")
+  const { category } = useParams(); // Get category from URL (e.g., "kebersihan-diri")
+  const navigate = useNavigate();
+
+  // Function to create a safe HTML excerpt from description
+  const createExcerpt = (htmlContent, maxLength = 200) => {
+    if (!htmlContent) return '';
+    
+    // Sanitize the HTML content
+    const cleanHTML = DOMPurify.sanitize(htmlContent, {
+      ALLOWED_TAGS: ['p', 'strong', 'em', 'u', 'blockquote', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'br'],
+      ALLOWED_ATTR: []
+    });
+    
+    // Remove HTML tags for length calculation
+    const textContent = cleanHTML.replace(/<[^>]*>/g, '');
+    
+    if (textContent.length <= maxLength) {
+      return cleanHTML;
+    }
+    
+    // Truncate and add ellipsis, preserving HTML structure
+    const truncatedText = textContent.substring(0, maxLength);
+    const lastSpaceIndex = truncatedText.lastIndexOf(' ');
+    const finalText = lastSpaceIndex > 0 ? truncatedText.substring(0, lastSpaceIndex) : truncatedText;
+    
+    return DOMPurify.sanitize(`<p>${finalText}...</p>`);
+  };
 
   useEffect(() => {
     // Map URL category to API-friendly format
@@ -68,7 +95,7 @@ function KebersihanDiri() {
           <div className="text-center mb-12">
             <img
               src={categoryIcon}
-              alt="Kebersihan Diri Icon"
+              alt={`${categoryTitle} Icon`}
               className="mx-auto w-40 h-40 mb-2"
             />
             <h2 className="text-xl md:text-2xl font-semibold text-[#2A8F9E]">
@@ -100,15 +127,28 @@ function KebersihanDiri() {
                 articles.map((article) => (
                   <div
                     key={article.id}
-                    className="flex flex-col md:flex-row justify-between items-center md:items-start gap-6 border-b border-gray-200 pb-6"
+                    className="flex flex-col md:flex-row justify-between items-center md:items-start gap-6 border-b border-gray-200 pb-6 cursor-pointer hover:bg-gray-50 transition-colors duration-200 p-4 rounded-lg"
+                    onClick={() => navigate(`/article/${article.id}`)}
                   >
                     {/* Text */}
                     <div className="w-full md:w-3/5 text-left pl-4 md:pl-6">
-                      <h3 className="text-base md:text-lg font-semibold text-[#1C4245] mb-2">
+                      <h3 className="text-base md:text-lg font-semibold text-[#1C4245] mb-2 hover:text-[#2A8F9E] transition-colors">
                         {article.title}
                       </h3>
-                      <p className="text-sm text-[#1C4245]">
-                        {article.description}
+                      <div 
+                        className="text-sm text-[#1C4245] prose prose-sm max-w-none
+                                   prose-p:text-[#1C4245] prose-strong:text-[#1C4245] 
+                                   prose-em:text-[#1C4245] prose-blockquote:text-[#1C4245]
+                                   prose-blockquote:border-l-[#2A8F9E] prose-blockquote:pl-4
+                                   prose-ul:text-[#1C4245] prose-ol:text-[#1C4245]
+                                   prose-li:text-[#1C4245] prose-h1:text-[#1C4245]
+                                   prose-h2:text-[#1C4245] prose-h3:text-[#1C4245]"
+                        dangerouslySetInnerHTML={{ 
+                          __html: createExcerpt(article.description, 300) 
+                        }}
+                      />
+                      <p className="text-xs text-[#2A8F9E] mt-3 font-medium">
+                        Klik untuk baca selengkapnya →
                       </p>
                     </div>
 
@@ -117,7 +157,7 @@ function KebersihanDiri() {
                       <img
                         src={article.image}
                         alt={article.title}
-                        className="w-full h-auto object-cover rounded-xl shadow-sm p-20px"
+                        className="w-full h-auto object-cover rounded-xl shadow-sm p-20px hover:shadow-md transition-shadow duration-200"
                         onError={(e) => (e.target.src = Clean)} // Fallback image
                       />
                     </div>

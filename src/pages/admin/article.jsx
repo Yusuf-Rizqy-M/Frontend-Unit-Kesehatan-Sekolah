@@ -4,6 +4,12 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "../../partials/Sidebar";
 import Header from "../../partials/Header";
 import { FaChevronRight, FaPlus, FaTrash } from "react-icons/fa";
+import DOMPurify from "dompurify";
+
+// Utility function to sanitize HTML content
+const sanitizeHTML = (html) => {
+  return DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
+};
 
 // SearchBar component
 const SearchBar = ({ searchQuery, onSearchChange, onAddClick, categories, categoryId, onCategoryChange }) => (
@@ -30,7 +36,7 @@ const SearchBar = ({ searchQuery, onSearchChange, onAddClick, categories, catego
         placeholder="Search"
         value={searchQuery}
         onChange={onSearchChange}
-        onKeyPress={(e) => e.key === "Enter" && onSearchChange(e)} // Trigger search on Enter
+        onKeyPress={(e) => e.key === "Enter" && onSearchChange(e)}
         className="w-full pl-10 pr-4 py-2 rounded-lg bg-white dark:bg-gray-700 text-[#6D9C9D] dark:text-white placeholder-[#6D9C9D] dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
       />
     </div>
@@ -104,14 +110,17 @@ const ArticleTable = ({ articles, indexOfFirstItem, onView, onDelete }) => (
                   alt={article.title}
                   className="w-16 h-16 object-cover rounded"
                   onError={(e) => {
-                    e.target.src = "https://via.placeholder.com/64"; // Fallback image
+                    e.target.src = "https://via.placeholder.com/64";
                   }}
                 />
               ) : (
                 <span className="text-gray-500 dark:text-gray-400">No Image</span>
               )}
             </td>
-            <td className="py-3 px-4 text-gray-700 dark:text-gray-200 italic">{article.description}</td>
+            <td
+              className="py-3 px-4 text-gray-700 dark:text-gray-200 italic"
+              dangerouslySetInnerHTML={{ __html: sanitizeHTML(article.description) }}
+            />
             <td className="py-3 px-4 text-center">
               <button
                 className="text-gray-500 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 mr-2 focus:outline-none"
@@ -140,7 +149,7 @@ ArticleTable.propTypes = {
       title: PropTypes.string.isRequired,
       description: PropTypes.string.isRequired,
       jurusan: PropTypes.string,
-      image: PropTypes.string, // Added image field
+      image: PropTypes.string,
     })
   ).isRequired,
   indexOfFirstItem: PropTypes.number.isRequired,
@@ -248,7 +257,6 @@ const Article = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Initialize theme
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "dark" || (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
       setIsDarkMode(true);
@@ -286,7 +294,7 @@ const Article = () => {
       if (data.status) {
         setCategories(data.data);
         if (!categoryId && data.data.length > 0) {
-          setCategoryId(data.data[0].id); // Set default category
+          setCategoryId(data.data[0].id);
         }
       } else {
         throw new Error(data.message || "Error fetching categories");
@@ -315,7 +323,7 @@ const Article = () => {
             title: item.title,
             description: item.description,
             jurusan: item.jurusan || "N/A",
-            image: item.image || "", // Include image field
+            image: item.image || "",
           }))
         );
       } else {
@@ -334,19 +342,34 @@ const Article = () => {
     if (window.confirm("Are you sure you want to delete this article?")) {
       setError(null);
       try {
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        if (!token) {
+          throw new Error('Authentication token not found. Please log in.');
+        }
+
         const response = await fetch(`https://api-uks.rplrus.com/api/articles/${articleId}`, {
           method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
-        if (!response.ok) throw new Error("Failed to delete article");
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error("Article not found. It may have been already deleted.");
+          }
+          throw new Error("Failed to deactivate article");
+        }
+
         const data = await response.json();
         if (data.status) {
           setArticles(articles.filter((article) => article.id !== articleId));
         } else {
-          throw new Error(data.message || "Delete failed");
+          throw new Error(data.message || "Deactivation failed");
         }
       } catch (error) {
-        console.error("Error deleting article:", error);
-        setError("Failed to delete article. Please try again.");
+        console.error("Error deactivating article:", error);
+        setError(error.message || "Failed to deactivate article. Please try again.");
       }
     }
   };
@@ -374,7 +397,7 @@ const Article = () => {
               title: data.data.title,
               description: data.data.description,
               jurusan: data.data.jurusan || "N/A",
-              image: data.data.image || "", // Include image field
+              image: data.data.image || "",
             },
           ]);
         } else {
@@ -388,7 +411,7 @@ const Article = () => {
         setLoading(false);
       }
     } else {
-      fetchArticles(); // Reset to full article list when search is cleared
+      fetchArticles();
     }
   };
 
@@ -410,7 +433,7 @@ const Article = () => {
   };
 
   const handleView = (article) => {
-    navigate(`/article/${article.id}`); // Navigate to article detail page
+    navigate(`/article/${article.id}`);
   };
 
   const handleAddClick = () => {
@@ -420,7 +443,7 @@ const Article = () => {
   const handleCategoryChange = (newCategoryId) => {
     setCategoryId(newCategoryId);
     setCurrentPage(1);
-    setSearchQuery(""); // Reset search when changing category
+    setSearchQuery("");
   };
 
   return (

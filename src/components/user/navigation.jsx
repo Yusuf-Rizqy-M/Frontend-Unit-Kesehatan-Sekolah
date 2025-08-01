@@ -84,7 +84,7 @@ export default function Navigation() {
     { name: "Kalkulator BMI", href: "/kalkulatorbmi" },
     { name: "Antrian", href: "/antreuser" },
     { name: "Edukasi Kesehatan", href: "/edukasikesehatan" },
-    { name: "About Us", href: "/aboutus" },
+    { name: "Tentang Kami", href: "/aboutus" },
   ];
 
   return (

@@ -10,8 +10,23 @@ export default function UploadBlog() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [imageSelected, setImageSelected] = useState(false);
   const [selectedFileName, setSelectedFileName] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const quillRef = useRef(null);
   const editorRef = useRef(null);
+
+  // Category mapping based on your select options
+  const categoryMap = {
+    "Kesehatan mental": "1",
+    "Kesehatan Fisik": "2", 
+    "Pencegahan penyakit": "3",
+    "Kebersihan diri": "4",
+    "Pola Hidup Sehat": "5"
+  };
+
+
 
   useEffect(() => {
     if (!quillRef.current && editorRef.current) {
@@ -47,7 +62,113 @@ export default function UploadBlog() {
     if (file) {
       setImageSelected(true);
       setSelectedFileName(file.name);
+      setSelectedFile(file);
       console.log("Image selected:", file);
+    }
+  };
+
+  const handlePublishArticle = async () => {
+    // Validation
+    if (!title.trim()) {
+      alert('Judul artikel harus diisi');
+      return;
+    }
+
+    if (!category) {
+      alert('Kategori harus dipilih');
+      return;
+    }
+
+    if (!selectedFile) {
+      alert('Gambar harus dipilih');
+      return;
+    }
+
+    if (!quillRef.current) {
+      alert('Editor belum siap');
+      return;
+    }
+
+    const content = quillRef.current.root.innerHTML;
+    if (!content.trim() || content === '<p><br></p>') {
+      alert('Konten artikel harus diisi');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Create FormData for multipart/form-data request
+      const formData = new FormData();
+      formData.append('title', title);
+      formData.append('description', content);
+      formData.append('category_id', categoryMap[category]);
+      formData.append('image', selectedFile);
+
+      // Log the FormData contents for debugging
+      console.log('FormData contents:');
+      for (let [key, value] of formData.entries()) {
+        console.log(key, ':', value);
+      }
+
+      // Get token from localStorage if it exists
+      const token = localStorage.getItem('token');
+      
+      const headers = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch('https://api-uks.rplrus.com/api/articles', {
+        method: 'POST',
+        headers: headers,
+        body: formData,
+        // Don't set Content-Type header - let browser set it automatically for FormData
+      });
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+
+      // Check if response is JSON before parsing
+      const contentType = response.headers.get('content-type');
+      let result;
+      
+      if (contentType && contentType.includes('application/json')) {
+        result = await response.json();
+      } else {
+        // If not JSON, get text to see what the server actually returned
+        const textResponse = await response.text();
+        console.log('Non-JSON response:', textResponse);
+        throw new Error(`Server returned non-JSON response (Status: ${response.status}). Check console for details.`);
+      }
+
+      console.log('API Response:', result);
+
+      if (response.ok && result.status) {
+        alert('Artikel berhasil dipublish!');
+        console.log('Article created:', result.data);
+        
+        // Reset form
+        setTitle('');
+        setCategory('');
+        setImageSelected(false);
+        setSelectedFileName('');
+        setSelectedFile(null);
+        if (quillRef.current) {
+          quillRef.current.setContents([]);
+        }
+
+        // Optional: Redirect to articles page or refresh the articles list
+        // window.location.href = '/articles'; // Uncomment if you want to redirect
+        
+      } else {
+        throw new Error(result.message || `API Error: ${response.status} - ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error publishing article:', error);
+      alert(`Error: ${error.message}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -71,6 +192,8 @@ export default function UploadBlog() {
                 <input
                   type="text"
                   placeholder="Masukkan judul"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
                   className="w-full pl-4 pr-4 py-2 rounded-[10px] border-none bg-white dark:bg-gray-700 text-[#6D9C9D] dark:text-white placeholder-[#6D9C9D] dark:placeholder-gray-400 focus:outline-none focus:ring-0"
                 />
               </div>
@@ -90,13 +213,17 @@ export default function UploadBlog() {
                 />
               </label>
 
-              <select className="w-[200px] rounded-[10px] border-none bg-white dark:bg-gray-700 text-[#6D9C9D] dark:text-gray-200 text-left pl-5 py-2 focus:outline-none appearance-none">
-                <option> Kategori</option>
-                <option>Kesehatan mental</option>
-                <option>Kesehatan Fisik</option>
-                <option>Pencegahan penyakit</option>
-                <option>Kebersihan diri</option>
-                <option>Pola Hidup Sehat</option>
+              <select 
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-[200px] rounded-[10px] border-none bg-white dark:bg-gray-700 text-[#6D9C9D] dark:text-gray-200 text-left pl-5 py-2 focus:outline-none appearance-none"
+              >
+                <option value="">Kategori</option>
+                <option value="Kesehatan mental">Kesehatan mental</option>
+                <option value="Kesehatan Fisik">Kesehatan Fisik</option>
+                <option value="Pencegahan penyakit">Pencegahan penyakit</option>
+                <option value="Kebersihan diri">Kebersihan diri</option>
+                <option value="Pola Hidup Sehat">Pola Hidup Sehat</option>
               </select>
             </div>
 
@@ -109,15 +236,15 @@ export default function UploadBlog() {
 
             <div className="flex justify-end mt-6">
               <button
-                className="px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors duration-200"
-                onClick={() => {
-                  if (quillRef.current) {
-                    const content = quillRef.current.root.innerHTML;
-                    console.log("Editor content:", content);
-                  }
-                }}
+                className={`px-6 py-2 font-medium rounded-lg transition-colors duration-200 ${
+                  isLoading 
+                    ? 'bg-gray-400 cursor-not-allowed' 
+                    : 'bg-teal-600 hover:bg-teal-700'
+                } text-white`}
+                onClick={handlePublishArticle}
+                disabled={isLoading}
               >
-                Publish Artikel
+                {isLoading ? 'Publishing...' : 'Publish Artikel'}
               </button>
             </div>
           </div>

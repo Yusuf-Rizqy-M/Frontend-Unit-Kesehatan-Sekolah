@@ -22,12 +22,7 @@ import EditProfile from "./pages/user/edit_profile";
 import AntreUser from "./pages/user/antre-user";
 import Antrian from "./pages/user/antrian";
 
-// Edukasi sections
-import MentalEdu from "./section/mental-edu";
-import FisikEdu from "./section/fisik-edu";
-import CegahSakit from "./section/cegahsakit-edu";
-import KebersihanDiri from "./section/kebersihandiri-edu";
-import PolaHidupSehat from "./section/hidupsehat-edu";
+
 
 // Admin
 import Dashboard from "./pages/admin/dashboard";
@@ -49,7 +44,7 @@ import Settingpage from "./pages/admin/settings";
 import ProtectedRoute from "./routes/protectedRoute";
 import UserRoute from "./routes/userRoute";
 import NotFound from "./pages/notfound";
-import HidupSehat from "./section/hidupsehat-edu";
+
 
 function App() {
   const location = useLocation();
@@ -97,6 +92,10 @@ function App() {
           }
         />
         <Route
+          path="/edukasi-kesehatan/:categoryId?"
+          element={<EdukasiKesehatan />}
+        />
+        <Route
           path="/aboutus"
           element={
 
@@ -128,7 +127,7 @@ function App() {
           }
         />
 
-        {/* Edukasi detail routes */}
+        {/* Edukasi detail routes
         <Route
           path="/kesehatanmental"
           element={
@@ -160,7 +159,7 @@ function App() {
             <PolaHidupSehat />
 
           }
-        />
+        /> */}
         <Route
           path="/artikel"
           element={

@@ -91,8 +91,8 @@ const ArticleTable = ({ articles, indexOfFirstItem, onView, onDelete }) => (
     <tbody>
       {articles.length === 0 ? (
         <tr className="border-b border-gray-100 dark:border-gray-700">
-          <td className="py-3 px-4 text-center text-gray-500 dark:text-gray-400" colSpan="5">
-            No articles available.
+          <td className="py-3 px-4 text-center text-black dark:text-gray-200" colSpan="5">
+            Tidak ada artikel yang ditemukan.
           </td>
         </tr>
       ) : (
@@ -331,7 +331,6 @@ const Article = () => {
       }
     } catch (error) {
       console.error("Error fetching articles:", error);
-      setError("Failed to load articles. Please try again.");
       setArticles([]);
     } finally {
       setLoading(false);

@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
-import { Helmet } from 'react-helmet'; // Import react-helmet
+import { useState, useEffect, useRef } from 'react';
+import { Helmet } from 'react-helmet';
+import { motion, useAnimation, useInView } from 'framer-motion';
 import Layout from '../../components/user/layout';
-import UksImg1 from '../../assets/img/hospital-room-interior.jpg';
+import UksImg1 from '../../assets/img/uks.jpg';
 import UksImg2 from '../../assets/img/person_bg.png';
-import UKS2Img from '../../assets/img/uks2.png'; // Favicon import
+import UksImg3 from '../../assets/img/uks2.jpg';
+import UKS2Img from '../../assets/img/uks2.png';
 
 // Fetch staff data from the API
 const fetchPengurusData = async () => {
@@ -13,27 +15,71 @@ const fetchPengurusData = async () => {
       throw new Error('Network response was not ok');
     }
     const data = await response.json();
-    // Map API fields to match the component's expected structure
     const mappedData = data.map(item => ({
       nama: item.name,
       jabatan: item.role,
       deskripsi: `Bertugas sebagai ${item.role.toLowerCase()} untuk mendukung program kesehatan sekolah.`,
       foto: item.image.replace('https://api-uks.rplrus.com/storage/https://api-uks.rplrus.com/storage/', 'https://api-uks.rplrus.com/storage/') || UksImg2,
     }));
-    // Cache the data in localStorage
     localStorage.setItem('pengurusData', JSON.stringify(mappedData));
     return mappedData;
   } catch (error) {
     console.error('Error fetching pengurus data:', error);
-    // Try to load cached data from localStorage
     const cachedData = localStorage.getItem('pengurusData');
     return cachedData ? JSON.parse(cachedData) : [];
   }
 };
 
+// Animation variants for sections
+const sectionVariants = {
+  hidden: { scale: 0.95, y: 20, transition: { duration: 0.5, ease: 'easeOut' } },
+  visible: { scale: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
+};
+
+// Animation variants for pengurus cards
+const cardContainerVariants = {
+  hidden: { transition: { staggerChildren: 0.1 } },
+  visible: { transition: { staggerChildren: 0.1 } },
+};
+
+const cardVariants = {
+  hidden: { scale: 0.9, y: 15, transition: { duration: 0.4, ease: 'easeOut' } },
+  visible: { scale: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+};
+
 export default function AboutUs() {
   const [pengurusData, setPengurusData] = useState([]);
   const [error, setError] = useState(null);
+
+  // Refs and animation controls for each section
+  const section1Ref = useRef(null);
+  const section2Ref = useRef(null);
+  const section3Ref = useRef(null);
+  const section1Controls = useAnimation();
+  const section2Controls = useAnimation();
+  const section3Controls = useAnimation();
+  const section1InView = useInView(section1Ref, { margin: '-100px' });
+  const section2InView = useInView(section2Ref, { margin: '-100px' });
+  const section3InView = useInView(section3Ref, { margin: '-100px' });
+
+  // Animate sections based on visibility
+  useEffect(() => {
+    if (section1InView) {
+      section1Controls.start('visible');
+    } else {
+      section1Controls.start('hidden');
+    }
+    if (section2InView) {
+      section2Controls.start('visible');
+    } else {
+      section2Controls.start('hidden');
+    }
+    if (section3InView) {
+      section3Controls.start('visible');
+    } else {
+      section3Controls.start('hidden');
+    }
+  }, [section1InView, section2InView, section3InView, section1Controls, section2Controls, section3Controls]);
 
   // Debug title and favicon
   useEffect(() => {
@@ -41,14 +87,12 @@ export default function AboutUs() {
     console.log('Initial document title:', document.title);
     const favicon = document.querySelector('link[rel="icon"]');
     console.log('Initial favicon href:', favicon ? favicon.href : 'No favicon found');
-    console.log('UKS2Img import path:', UKS2Img); // Log the resolved import path
+    console.log('UKS2Img import path:', UKS2Img);
 
-    // Check title and favicon after rendering
     const timeout = setTimeout(() => {
       console.log('Document title after render:', document.title);
       const updatedFavicon = document.querySelector('link[rel="icon"]');
       console.log('Favicon after render:', updatedFavicon ? updatedFavicon.href : 'No favicon found');
-      // Attempt to force favicon update
       if (updatedFavicon) {
         updatedFavicon.href = `${UKS2Img}?v=${Date.now()}`;
         console.log('Forced favicon update to:', updatedFavicon.href);
@@ -66,7 +110,6 @@ export default function AboutUs() {
     const loadData = async () => {
       const cachedData = localStorage.getItem('pengurusData');
       if (cachedData) {
-        // Use cached data immediately to avoid delay
         setPengurusData(JSON.parse(cachedData));
       }
       const data = await fetchPengurusData();
@@ -84,10 +127,17 @@ export default function AboutUs() {
     <Layout>
       <Helmet>
         <title>About Us</title>
-        <link rel="icon" href={`${UKS2Img}?v=${Date.now()}`} /> {/* Use imported UKS2Img with cache-busting */}
+        <link rel="icon" href={`${UKS2Img}?v=${Date.now()}`} />
       </Helmet>
       <div className="bg-white text-black">
-        <section className="min-h-[80vh] flex items-center px-6 md:px-20 py-20">
+        {/* Section: Apa Itu UKS */}
+        <motion.section
+          ref={section1Ref}
+          initial="hidden"
+          animate={section1Controls}
+          variants={sectionVariants}
+          className="min-h-[80vh] flex items-center px-6 md:px-20 py-20"
+        >
           <div className="grid md:grid-cols-2 gap-10 items-center w-full">
             <div className="space-y-4 text-left">
               <h2 className="text-2xl font-bold">Apa Itu UKS</h2>
@@ -104,21 +154,29 @@ export default function AboutUs() {
                 Jelajahi Sekarang
               </button>
             </div>
-            <img
+            <motion.img
               src={UksImg1}
               alt="Ruangan Rumah Sakit"
               className="object-cover w-[455px] h-[455px] rounded-md mx-auto"
+              variants={cardVariants}
             />
           </div>
-        </section>
+        </motion.section>
 
         {/* Section: Tujuan UKS */}
-        <section className="min-h-[80vh] flex items-center px-6 md:px-20 py-20">
+        <motion.section
+          ref={section2Ref}
+          initial="hidden"
+          animate={section2Controls}
+          variants={sectionVariants}
+          className="min-h-[80vh] flex items-center px-6 md:px-20 py-20"
+        >
           <div className="grid md:grid-cols-2 gap-6 items-center w-full">
-            <img
-              src={UksImg1}
+            <motion.img
+              src={UksImg3}
               alt="Tujuan UKS"
               className="object-cover w-full max-w-[600px] h-[250px] md:h-[350px] rounded-md mx-auto"
+              variants={cardVariants}
             />
             <div className="space-y-3 text-left">
               <h2 className="text-2xl font-bold">Tujuan UKS</h2>
@@ -130,10 +188,16 @@ export default function AboutUs() {
               </p>
             </div>
           </div>
-        </section>
+        </motion.section>
 
         {/* Section: Mengenal Para Pengurus */}
-        <section className="min-h-[80vh] flex flex-col justify-center items-center px-6 md:px-20 py-20 text-center">
+        <motion.section
+          ref={section3Ref}
+          initial="hidden"
+          animate={section3Controls}
+          variants={sectionVariants}
+          className="min-h-[80vh] flex flex-col justify-center items-center px-6 md:px-20 py-20 text-center"
+        >
           <div className="space-y-12 w-full">
             <div>
               <h2 className="text-2xl font-bold">Mengenal Para Pengurus UKS</h2>
@@ -144,13 +208,19 @@ export default function AboutUs() {
               </p>
             </div>
 
-            <div className="flex flex-col md:flex-row justify-center gap-16">
+            <motion.div
+              className="flex flex-col md:flex-row justify-center gap-16"
+              variants={cardContainerVariants}
+              initial="hidden"
+              animate={section3InView ? 'visible' : 'hidden'}
+            >
               {error ? (
                 <p className="text-red-500">{error}</p>
               ) : pengurusData.length > 0 ? (
                 pengurusData.map((pengurus, index) => (
-                  <div
+                  <motion.div
                     key={index}
+                    variants={cardVariants}
                     className="flex flex-col items-center space-y-6 p-8 bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300"
                   >
                     <img
@@ -163,14 +233,14 @@ export default function AboutUs() {
                     <p className="text-gray-500 text-sm max-w-xs text-center">
                       {pengurus.deskripsi}
                     </p>
-                  </div>
+                  </motion.div>
                 ))
               ) : (
                 <p className="text-gray-500">Loading pengurus data...</p>
               )}
-            </div>
+            </motion.div>
           </div>
-        </section>
+        </motion.section>
       </div>
     </Layout>
   );

@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'; // Impor useEffect untuk mengatur title dan favicon
+import { useEffect, useState } from 'react';
 import Layout from '../../components/user/layout';
-import laki from '../../assets/img/laki.png'; // Gambar untuk laki-laki
-import Perempuan from '../../assets/img/Perempuan.png'; // Gambar untuk perempuan
-import UKS2Img from '../../assets/img/uks2.png'; // Impor gambar UKS2Img untuk favicon, sesuaikan path
+import laki from '../../assets/img/laki.png';
+import Perempuan from '../../assets/img/Perempuan.png';
+import UKS2Img from '../../assets/img/uks2.png';
 
 function KalkulatorBmi() {
   const [gender, setGender] = useState('man');
@@ -10,16 +10,16 @@ function KalkulatorBmi() {
   const [weight, setWeight] = useState('');
   const [result, setResult] = useState(null);
 
-   useEffect(() => {
-     // Mengatur judul tab
-     document.title = 'Home';
-     
-     // Mengatur favicon
-     const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
-     favicon.rel = 'icon';
-     favicon.href = UKS2Img; // Menggunakan UKS2Img sebagai favicon
-     document.head.appendChild(favicon);
-   }, []); // Efek hanya dijalankan sekali saat komponen dimuat
+  useEffect(() => {
+    // Mengatur judul tab
+    document.title = 'Kalkulator BMI'; // Updated title to reflect the page
+
+    // Mengatur favicon
+    const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
+    favicon.rel = 'icon';
+    favicon.href = UKS2Img;
+    document.head.appendChild(favicon);
+  }, []);
 
   const calculateBMI = () => {
     if (height && weight) {
@@ -46,7 +46,7 @@ function KalkulatorBmi() {
   };
 
   const getIndicatorPosition = () => {
-    if (!result) return 'left-[37%]'; // posisi default tengah-tengah
+    if (!result) return 'left-[37%]'; // Default position
     if (result.status === 'Kurus') return 'left-[10%]';
     if (result.status === 'Berat Ideal') return 'left-[35%]';
     if (result.status === 'Berat Berlebih') return 'left-[60%]';
@@ -55,26 +55,26 @@ function KalkulatorBmi() {
 
   return (
     <Layout>
-      <main className="max-w-7xl mx-auto px-4 pb-16 grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
+      <main className="max-w-7xl mx-auto px-4 pb-16 grid grid-cols-1 md:grid-cols-2 gap-10 items-start animate-fade-in">
         {/* Kiri - Ilustrasi & Hasil */}
-        <div className="bg-white p-8 rounded-2xl shadow-md text-center w-full h-full">
+        <div className="bg-white p-8 rounded-2xl shadow-md text-center w-full h-full transform transition-all duration-500 ease-in-out">
           <img
             src={gender === 'man' ? laki : Perempuan}
             alt="Ilustrasi Olahraga"
-            className="mx-auto mb-6 w-48 h-48 object-contain"
+            className="mx-auto mb-6 w-48 h-48 object-contain transform transition-transform duration-300 hover:scale-105"
           />
 
-          <h2 className="text-xl font-bold text-gray-700 mb-2">
+          <h2 className="text-xl font-bold text-gray-700 mb-2 animate-slide-up">
             BMI untuk {gender === 'man' ? 'Laki-laki' : 'Perempuan'}
           </h2>
           <p
-            className={`text-3xl font-bold mb-2 ${
+            className={`text-3xl font-bold mb-2 transition-all duration-500 ease-in-out ${
               result
                 ? result.status === 'Kurus' || result.status === 'Obesitas'
-                  ? 'text-red-500'
+                  ? 'text-red-500 animate-pulse'
                   : result.status === 'Berat Ideal'
-                    ? 'text-green-500'
-                    : 'text-yellow-400'
+                    ? 'text-green-500 animate-pulse'
+                    : 'text-yellow-400 animate-pulse'
                 : 'text-emerald-500'
             }`}
           >
@@ -89,23 +89,25 @@ function KalkulatorBmi() {
 
               {/* Bulatan indikator bergerak */}
               <div
-                className={`absolute top-1/2 ${getIndicatorPosition()} -translate-y-1/2 w-5 h-5 bg-white border-2 border-gray-300 rounded-full z-10 transition-all duration-500`}
+                className={`absolute top-1/2 ${getIndicatorPosition()} -translate-y-1/2 w-5 h-5 bg-white border-2 border-gray-300 rounded-full z-10 transition-all duration-700 ease-in-out`}
               ></div>
             </div>
           </div>
 
-          <p className="text-sm text-gray-500 leading-relaxed">
+          <p className="text-sm text-gray-500 leading-relaxed animate-slide-up">
             Pastikan asupan kalori sesuai kebutuhan harian & konsumsi makanan sehat
           </p>
         </div>
 
         {/* Kanan - Form */}
-        <div className="bg-white p-8 rounded-2xl shadow-md">
-          <h2 className="text-4xl font-extrabold text-gray-800 mb-8">BMI Kalkulator</h2>
+        <div className="bg-white p-8 rounded-2xl shadow-md transform transition-all duration-500 ease-in-out">
+          <h2 className="text-4xl font-extrabold text-gray-800 mb-8 animate-slide-up">
+            BMI Kalkulator
+          </h2>
 
           <div className="flex mb-6 w-full h-12 rounded-lg overflow-hidden border border-gray-300">
             <button
-              className={`flex-1 font-semibold transition ${
+              className={`flex-1 font-semibold transition-all duration-300 transform hover:scale-105 ${
                 gender === 'man' ? 'bg-cyan-600 text-white' : 'bg-white text-gray-700'
               }`}
               onClick={() => setGender('man')}
@@ -113,7 +115,7 @@ function KalkulatorBmi() {
               Man
             </button>
             <button
-              className={`flex-1 font-semibold transition ${
+              className={`flex-1 font-semibold transition-all duration-300 transform hover:scale-105 ${
                 gender === 'woman' ? 'bg-cyan-600 text-white' : 'bg-white text-gray-700'
               }`}
               onClick={() => setGender('woman')}
@@ -123,20 +125,24 @@ function KalkulatorBmi() {
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-semibold text-gray-600 mb-1">Tinggi (cm)</label>
+            <label className="block text-sm font-semibold text-gray-600 mb-1 animate-slide-up">
+              Tinggi (cm)
+            </label>
             <input
               type="number"
-              className="w-full border border-gray-300 rounded-lg p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+              className="w-full border border-gray-300 rounded-lg p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition-all duration-300 focus:scale-[1.02]"
               value={height}
               onChange={(e) => setHeight(e.target.value)}
             />
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-600 mb-1">Berat (kg)</label>
+            <label className="block text-sm font-semibold text-gray-600 mb-1 animate-slide-up">
+              Berat (kg)
+            </label>
             <input
               type="number"
-              className="w-full border border-gray-300 rounded-lg p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+              className="w-full border border-gray-300 rounded-lg p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition-all duration-300 focus:scale-[1.02]"
               value={weight}
               onChange={(e) => setWeight(e.target.value)}
             />
@@ -144,12 +150,42 @@ function KalkulatorBmi() {
 
           <button
             onClick={calculateBMI}
-            className="w-full bg-cyan-600 hover:bg-cyan-700 text-white py-3 rounded-full text-lg font-bold transition"
+            className="w-full bg-cyan-600 hover:bg-cyan-700 text-white py-3 rounded-full text-lg font-bold transition-all duration-300 transform hover:scale-105 active:scale-95"
           >
             Hitung BMI
           </button>
         </div>
       </main>
+
+      {/* Inline CSS for custom animations */}
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.5s ease-in-out;
+        }
+        .animate-slide-up {
+          animation: slideUp 0.5s ease-in-out;
+        }
+      `}</style>
     </Layout>
   );
 }

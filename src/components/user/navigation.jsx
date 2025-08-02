@@ -9,7 +9,7 @@ export default function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [nickname, setNickname] = useState("");
   const [token, setToken] = useState("");
-  const [role, setRole] = useState(""); // Added state for role
+  const [role, setRole] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const dropdownRef = useRef(null);
@@ -27,7 +27,7 @@ export default function Navigation() {
         try {
           const parsedUser = JSON.parse(userStorage);
           setNickname(parsedUser?.name || "User");
-          setRole(parsedUser?.role || ""); // Set role from user data
+          setRole(parsedUser?.role || "");
           setToken(tokenStorage);
         } catch (e) {
           console.error("Gagal parsing user:", e);
@@ -87,6 +87,17 @@ export default function Navigation() {
     { name: "Tentang Kami", href: "/aboutus" },
   ];
 
+  // Function to determine if a menu item is active
+  const isActive = (itemHref) => {
+    if (itemHref === "/edukasikesehatan") {
+      return (
+        location.pathname === itemHref ||
+        location.pathname.startsWith("/edukasi-kesehatan")
+      );
+    }
+    return location.pathname === itemHref;
+  };
+
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-300 shadow-md">
       <nav className="mx-auto flex max-w-7xl items-center justify-between p-1 lg:px-8">
@@ -114,17 +125,13 @@ export default function Navigation() {
               key={item.name}
               to={item.href}
               className={`relative group text-sm font-semibold transition-all duration-300 ${
-                location.pathname === item.href
-                  ? "text-gray-900"
-                  : "text-gray-500"
+                isActive(item.href) ? "text-gray-900" : "text-gray-500"
               }`}
             >
               {item.name}
               <span
                 className={`absolute left-0 bottom-0 h-[2px] w-full bg-[#00ACC1] origin-center scale-x-0 transition-transform duration-300 ${
-                  location.pathname === item.href
-                    ? "scale-x-100"
-                    : "group-hover:scale-x-100"
+                  isActive(item.href) ? "scale-x-100" : "group-hover:scale-x-100"
                 }`}
               ></span>
             </Link>
@@ -256,7 +263,7 @@ export default function Navigation() {
                 to={item.href}
                 onClick={() => setMobileMenuOpen(false)}
                 className={`block text-lg font-semibold ${
-                  location.pathname === item.href
+                  isActive(item.href)
                     ? "text-[#2A8F9E]"
                     : "text-gray-700 hover:text-[#00ACC1]"
                 }`}

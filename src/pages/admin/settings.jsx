@@ -80,8 +80,8 @@ const ProfileSettings = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-        <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full animate-pulse">
+      <div className="min-h-screen bg-white flex items-center justify-center p-6">
+        <div className="bg-white rounded-3xl shadow-lg p-8 max-w-md w-full animate-pulse">
           <div className="flex justify-center">
             <div className="w-16 h-16 bg-gray-200 rounded-full"></div>
           </div>
@@ -92,13 +92,13 @@ const ProfileSettings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-6 font-sans">
-      <div className="bg-white rounded-3xl shadow-2xl p-10 max-w-lg w-full transition-all duration-300 hover:shadow-3xl">
+    <div className="min-h-screen bg-white flex items-center justify-center p-6 font-sans">
+      <div className="bg-white rounded-3xl shadow-lg p-10 max-w-lg w-full transition-all duration-300 hover:shadow-xl">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-20 h-20 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center text-white text-3xl font-bold mb-4 shadow-md">
+          <div className="w-20 h-20 bg-[#75CCD1] rounded-full flex items-center justify-center text-white text-3xl font-bold mb-4 shadow-md">
             {profile.name ? profile.name.charAt(0).toUpperCase() : 'U'}
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Profile Settings</h1>
+          <h1 className="text-3xl font-bold text-[#75CCD1] tracking-tight">Profile Settings</h1>
           <p className="text-gray-500 mt-2 text-sm">Update your personal information</p>
         </div>
 
@@ -108,14 +108,14 @@ const ProfileSettings = () => {
           </div>
         )}
         {success && (
-          <div className="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded-xl mb-6 animate-fade-in">
+          <div className="bg-[#75CCD1] bg-opacity-10 border-l-4 border-[#75CCD1] text-[#75CCD1] p-4 rounded-xl mb-6 animate-fade-in">
             {success}
           </div>
         )}
 
         {isEditing ? (
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
+            < div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Full Name
               </label>
@@ -124,7 +124,7 @@ const ProfileSettings = () => {
                 name="name"
                 value={profile.name}
                 onChange={handleInputChange}
-                className="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-200 ease-in-out py-3 px-4 bg-gray-50"
+                className="block w-full rounded-xl border-gray-200 shadow-sm focus:border-[#75CCD1] focus:ring-[#75CCD1] transition duration-200 ease-in-out py-3 px-4 bg-white"
                 required
               />
             </div>
@@ -137,7 +137,7 @@ const ProfileSettings = () => {
                 name="email"
                 value={profile.email}
                 onChange={handleInputChange}
-                className="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-200 ease-in-out py-3 px-4 bg-gray-50"
+                className="block w-full rounded-xl border-gray-200 shadow-sm focus:border-[#75CCD1] focus:ring-[#75CCD1] transition duration-200 ease-in-out py-3 px-4 bg-white"
                 required
               />
             </div>
@@ -150,7 +150,7 @@ const ProfileSettings = () => {
                 name="phone_number"
                 value={profile.phone_number}
                 onChange={handleInputChange}
-                className="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-200 ease-in-out py-3 px-4 bg-gray-50"
+                className="block w-full rounded-xl border-gray-200 shadow-sm focus:border-[#75CCD1] focus:ring-[#75CCD1] transition duration-200 ease-in-out py-3 px-4 bg-white"
                 required
               />
             </div>
@@ -171,7 +171,7 @@ const ProfileSettings = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition duration-200 ease-in-out font-medium"
+                  className="px-5 py-2 bg-[#75CCD1] text-white rounded-xl hover:bg-[#5ABBC0] transition duration-200 ease-in-out font-medium"
                 >
                   Save Changes
                 </button>
@@ -182,15 +182,15 @@ const ProfileSettings = () => {
           <div className="space-y-6">
             <div className="border-b border-gray-200 pb-4">
               <p className="text-sm font-medium text-gray-600">Full Name</p>
-              <p className="mt-1 text-lg text-gray-900 font-semibold">{profile.name || 'Not set'}</p>
+              <p className="mt-1 text-lg text-[#75CCD1] font-semibold">{profile.name || 'Not set'}</p>
             </div>
             <div className="border-b border-gray-200 pb-4">
               <p className="text-sm font-medium text-gray-600">Email Address</p>
-              <p className="mt-1 text-lg text-gray-900 font-semibold">{profile.email || 'Not set'}</p>
+              <p className="mt-1 text-lg text-[#75CCD1] font-semibold">{profile.email || 'Not set'}</p>
             </div>
             <div className="border-b border-gray-200 pb-4">
               <p className="text-sm font-medium text-gray-600">Phone Number</p>
-              <p className="mt-1 text-lg text-gray-900 font-semibold">{profile.phone_number || 'Not set'}</p>
+              <p className="mt-1 text-lg text-[#75CCD1] font-semibold">{profile.phone_number || 'Not set'}</p>
             </div>
             <div className="flex justify-between">
               <Link
@@ -201,7 +201,7 @@ const ProfileSettings = () => {
               </Link>
               <button
                 onClick={() => setIsEditing(true)}
-                className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition duration-200 ease-in-out font-medium"
+                className="px-5 py-2 bg-[#75CCD1] text-white rounded-xl hover:bg-[#5ABBC0] transition duration-200 ease-in-out font-medium"
               >
                 Edit Profile
               </button>

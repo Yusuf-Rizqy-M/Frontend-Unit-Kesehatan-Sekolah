@@ -13,6 +13,8 @@ function EdukasiKesehatan() {
   const [error, setError] = useState(null);
   const [categoryTitle, setCategoryTitle] = useState('');
   const [categoryIcon, setCategoryIcon] = useState(Clean);
+  const [selectedArticle, setSelectedArticle] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { categoryId } = useParams();
   const navigate = useNavigate();
 
@@ -36,6 +38,26 @@ function EdukasiKesehatan() {
     const finalText = lastSpaceIndex > 0 ? truncatedText.substring(0, lastSpaceIndex) : truncatedText;
     
     return DOMPurify.sanitize(`<p>${finalText}...</p>`);
+  };
+
+  // Function to fetch article details
+  const fetchArticleDetails = async (articleId) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`https://api-uks.rplrus.com/api/categories/${categoryId}/article/${articleId}`);
+      const data = await response.json();
+      if (data.status) {
+        setSelectedArticle(data.data);
+        setIsModalOpen(true);
+      } else {
+        setError(data.message || 'Failed to load article details');
+      }
+    } catch (error) {
+      console.error('Error fetching article details:', error);
+      setError('Error fetching article details. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -157,6 +179,76 @@ function EdukasiKesehatan() {
           .animate-slide-up {
             animation: slideUp 0.5s ease-in-out;
           }
+          .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+          }
+          .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          }
+          .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: #2A8F9E;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.3s;
+          }
+          .modal-close:hover {
+            background: #005A79;
+          }
+          .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #2A8F9E;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+          }
+          .back-button:hover {
+            background: #005A79;
+            transform: translateX(-4px);
+          }
+          .back-button svg {
+            width: 1.25rem;
+            height: 1.25rem;
+          }
+          @media (max-width: 640px) {
+            .back-button {
+              padding: 0.5rem 1rem;
+              font-size: 0.875rem;
+            }
+            .back-button svg {
+              width: 1rem;
+              height: 1rem;
+            }
+          }
         `}
       </style>
       <main className="animate-fade-in">
@@ -196,6 +288,18 @@ function EdukasiKesehatan() {
           </>
         ) : (
           <section className="w-full px-4 md:px-20 py-5 bg-white animate-fade-in">
+            <div className="flex items-center justify-start mb-8">
+              <button 
+                onClick={() => navigate('/edukasikesehatan')} 
+                className="back-button"
+              >
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                Kembali ke Edukasi Kesehatan
+              </button>
+            </div>
+
             <div className="text-center mb-12">
               <img
                 src={categoryIcon}
@@ -215,7 +319,6 @@ function EdukasiKesehatan() {
                     key={article.id}
                     className="flex flex-col md:flex-row justify-between items-center md:items-start gap-6 border-b border-gray-200 pb-6 cursor-pointer hover:bg-gray-50 transition-all duration-300 p-4 rounded-lg animate-slide-up"
                     style={{ animationDelay: `${index * 0.1}s` }}
-                    onClick={() => navigate(`/article/${article.id}`)}
                   >
                     <div className="w-full md:w-3/5 text-left pl-4 md:pl-6">
                       <h3 className="text-base md:text-lg font-semibold text-[#1C4245] mb-2 hover:text-[#2A8F9E] transition-colors duration-200">
@@ -233,7 +336,10 @@ function EdukasiKesehatan() {
                           __html: createExcerpt(article.description, 300) 
                         }}
                       />
-                      <p className="text-xs text-[#2A8F9E] mt-3 font-medium transform transition-transform duration-200 hover:translate-x-1">
+                      <p 
+                        className="text-xs text-[#2A8F9E] mt-3 font-medium transform transition-transform duration-200 hover:translate-x-1"
+                        onClick={() => fetchArticleDetails(article.id)}
+                      >
                         Klik untuk baca selengkapnya →
                       </p>
                     </div>
@@ -252,6 +358,33 @@ function EdukasiKesehatan() {
               )}
             </div>
           </section>
+        )}
+
+        {isModalOpen && selectedArticle && (
+          <div className="modal">
+            <div className="modal-content">
+              <button className="modal-close" onClick={() => setIsModalOpen(false)}>×</button>
+              <h2 className="text-2xl font-semibold text-[#2A8F9E] mb-4">{selectedArticle.title}</h2>
+              <img
+                src={selectedArticle.image}
+                alt={selectedArticle.title}
+                className="w-full h-auto object-cover rounded-xl mb-4"
+                onError={(e) => (e.target.src = Clean)}
+              />
+              <div 
+                className="text-sm text-[#1C4245] prose prose-sm max-w-none
+                           prose-p:text-[#1C4245] prose-strong:text-[#1C4245] 
+                           prose-em:text-[#1C4245] prose-blockquote:text-[#1C4245]
+                           prose-blockquote:border-l-[#2A8F9E] prose-blockquote:pl-4
+                           prose-ul:text-[#1C4245] prose-ol:text-[#1C4245]
+                           prose-li:text-[#1C4245] prose-h1:text-[#1C4245]
+                           prose-h2:text-[#1C4245] prose-h3:text-[#1C4245]"
+                dangerouslySetInnerHTML={{ 
+                  __html: DOMPurify.sanitize(selectedArticle.description)
+                }}
+              />
+            </div>
+          </div>
         )}
       </main>
     </Layout>

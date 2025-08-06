@@ -14,7 +14,6 @@ const sanitizeHTML = (html) => {
 // Utility function to truncate text to a specified word count
 const truncateText = (text, maxWords) => {
   if (!text) return "";
-  // Strip HTML tags for word counting
   const plainText = text.replace(/<[^>]+>/g, "");
   const words = plainText.trim().split(/\s+/);
   if (words.length <= maxWords) return text;
@@ -349,18 +348,21 @@ const ArticleTable = ({ articles, onView, onEdit, onDelete }) => (
               <button
                 className="text-gray-500 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 mr-2 focus:outline-none"
                 onClick={() => onView(article)}
+                aria-label={`View article ${article.title}`}
               >
                 <FaChevronRight className="w-4 h-4" />
               </button>
               <button
                 className="text-yellow-500 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300 mr-2 focus:outline-none"
                 onClick={() => onEdit(article)}
+                aria-label={`Edit article ${article.title}`}
               >
                 <FaEdit className="w-4 h-4" />
               </button>
               <button
                 className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 focus:outline-none"
                 onClick={() => onDelete(article.id)}
+                aria-label={`Delete article ${article.title}`}
               >
                 <FaTrash className="w-4 h-4" />
               </button>
@@ -419,6 +421,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange, filteredArticles, i
           }`}
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
+          aria-label="Previous page"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
@@ -431,6 +434,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange, filteredArticles, i
               currentPage === pageNumber ? "bg-teal-500 dark:bg-teal-600 text-white" : ""
             }`}
             onClick={() => onPageChange(pageNumber)}
+            aria-label={`Go to page ${pageNumber}`}
           >
             {pageNumber}
           </button>
@@ -444,6 +448,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange, filteredArticles, i
           <button
             className="px-3 py-1 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none"
             onClick={() => onPageChange(totalPages)}
+            aria-label={`Go to page ${totalPages}`}
           >
             {totalPages}
           </button>
@@ -454,6 +459,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange, filteredArticles, i
           }`}
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
+          aria-label="Next page"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
@@ -487,6 +493,8 @@ const Article = () => {
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -634,40 +642,46 @@ const Article = () => {
     );
   };
 
-  const handleDelete = async (articleId) => {
-    if (window.confirm("Are you sure you want to delete this article?")) {
-      setError(null);
-      try {
-        const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-        if (!token) {
-          throw new Error("Authentication token not found. Please log in.");
-        }
+  const handleDeleteConfirm = (articleId) => {
+    setDeleteId(articleId);
+    setIsConfirmModalOpen(true);
+  };
 
-        const response = await fetch(`https://api-uks.rplrus.com/api/articles/${articleId}`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          if (response.status === 404) {
-            throw new Error("Article not found. It may have been already deleted.");
-          }
-          throw new Error("Failed to deactivate article");
-        }
-
-        const data = await response.json();
-
-        if (data.status) {
-          setArticles(articles.filter((article) => article.id !== articleId));
-        } else {
-          throw new Error(data.message || "Deactivation failed");
-        }
-      } catch (error) {
-        console.error("Error deactivating article:", error);
-        setError(error.message || "Failed to deactivate article. Please try again.");
+  const handleDelete = async () => {
+    setError(null);
+    try {
+      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+      if (!token) {
+        throw new Error("Authentication token not found. Please log in.");
       }
+
+      const response = await fetch(`https://api-uks.rplrus.com/api/articles/${deleteId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error("Article not found. It may have been already deleted.");
+        }
+        throw new Error("Failed to deactivate article");
+      }
+
+      const data = await response.json();
+
+      if (data.status) {
+        setArticles(articles.filter((article) => article.id !== deleteId));
+        setIsConfirmModalOpen(false);
+      } else {
+        throw new Error(data.message || "Deactivation failed");
+      }
+    } catch (error) {
+      console.error("Error deactivating article:", error);
+      setError(error.message || "Failed to deactivate article. Please try again.");
+    } finally {
+      setDeleteId(null);
     }
   };
 
@@ -791,7 +805,7 @@ const Article = () => {
                   articles={currentArticles}
                   onView={handleView}
                   onEdit={handleEdit}
-                  onDelete={handleDelete}
+                  onDelete={handleDeleteConfirm}
                 />
                 {filteredArticles.length > 0 && (
                   <Pagination
@@ -814,11 +828,51 @@ const Article = () => {
                   article={selectedArticle}
                   onSave={handleSaveEdit}
                 />
+                {isConfirmModalOpen && (
+                  <div className="fixed inset-0 bg-opacity-40 flex items-center justify-center z-50">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-2xl relative animate-fade-in">
+                      <div className="p-6 text-center">
+                        <h3 className="text-xl font-bold text-red-600 dark:text-red-400 mb-2">
+                          Yakin ingin Menghapus Artikel?
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-300 mb-4">
+                          Fitur ini digunakan untuk menghapus artikel dari sistem secara aman. Seluruh data artikel akan dihapus. Pastikan untuk menyimpan progres Anda sebelum menghapus artikel.
+                        </p>
+                        <div className="flex justify-center gap-4">
+                          <button
+                            className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition duration-200"
+                            onClick={() => setIsConfirmModalOpen(false)}
+                            aria-label="Batal menghapus artikel"
+                          >
+                            Batal
+                          </button>
+                          <button
+                            className="px-6 py-2 bg-red-500 dark:bg-red-600 text-white rounded-lg hover:bg-red-600 dark:hover:bg-red-700 transition duration-200"
+                            onClick={handleDelete}
+                            aria-label="Lanjutkan menghapus artikel"
+                          >
+                            Lanjut Hapus
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </div>
         </main>
       </div>
+
+      <style jsx>{`
+        .animate-fade-in {
+          animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+          0% { opacity: 0; }
+          100% { opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 };

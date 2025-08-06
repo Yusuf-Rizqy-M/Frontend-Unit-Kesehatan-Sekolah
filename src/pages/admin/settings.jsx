@@ -12,8 +12,8 @@ const ProfileSettings = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch profile data on mount
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -29,7 +29,7 @@ const ProfileSettings = () => {
             Authorization: `Bearer ${token}`,
           },
         });
-        
+
         const { name, email, phone_number } = response.data.data;
         setProfile({ name, email, phone_number: phone_number || '' });
       } catch (err) {
@@ -47,10 +47,41 @@ const ProfileSettings = () => {
     setProfile((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handlePhoneKeyDown = (e) => {
+    // Allow only digits, backspace, delete, arrow keys, and tab
+    const allowedKeys = [
+      'Backspace',
+      'Delete',
+      'ArrowLeft',
+      'ArrowRight',
+      'Tab',
+    ];
+    if (!/^\d$/.test(e.key) && !allowedKeys.includes(e.key)) {
+      e.preventDefault();
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
+    setIsSubmitting(true);
+
+    // Validate email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(profile.email)) {
+      setError('Please enter a valid email address');
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Validate phone number
+    const phoneRegex = /^\d{10,15}$/;
+    if (profile.phone_number && !phoneRegex.test(profile.phone_number)) {
+      setError('Please enter a valid phone number (10 to 15 digits)');
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -58,23 +89,38 @@ const ProfileSettings = () => {
         throw new Error('No token found. Please login.');
       }
 
+      // Hanya kirim email dan phone_number, karena name tidak boleh diubah
+      const { email, phone_number } = profile;
+      const dataToSend = { email, phone_number };
+
+      console.log('Data being sent:', dataToSend);
+
       const response = await axios({
         method: 'put',
         url: 'https://api-uks.rplrus.com/api/user/update',
-        data: profile,
+        data: dataToSend,
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      if (response.data.status) {
+      console.log('Response from server:', response.data);
+
+      if (response.data.message === 'Profile updated successfully') {
         setSuccess('Profile updated successfully');
         setIsEditing(false);
       } else {
         throw new Error(response.data.message || 'Failed to update profile');
       }
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Failed to update profile. Please check the method or endpoint.');
+      console.error('Error details:', err.response || err);
+      if (err.response?.status === 401) {
+        setError('Unauthorized: Invalid or expired token. Please login again.');
+      } else {
+        setError(err.response?.data?.message || err.message || 'Failed to update profile.');
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -115,7 +161,7 @@ const ProfileSettings = () => {
 
         {isEditing ? (
           <form onSubmit={handleSubmit} className="space-y-6">
-            < div>
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Full Name
               </label>
@@ -124,9 +170,11 @@ const ProfileSettings = () => {
                 name="name"
                 value={profile.name}
                 onChange={handleInputChange}
-                className="block w-full rounded-xl border-gray-200 shadow-sm focus:border-[#75CCD1] focus:ring-[#75CCD1] transition duration-200 ease-in-out py-3 px-4 bg-white"
-                required
+                className="block w-full rounded-xl border-gray-200 shadow-sm bg-gray-100 text-gray-500 cursor-not-allowed py-3 px-4"
+                disabled
+                title="Name can only be changed by an admin"
               />
+              <p className="text-sm text-gray-500 mt-1">Contact an admin to change your name</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -150,8 +198,9 @@ const ProfileSettings = () => {
                 name="phone_number"
                 value={profile.phone_number}
                 onChange={handleInputChange}
+                onKeyDown={handlePhoneKeyDown}
+                maxLength={15}
                 className="block w-full rounded-xl border-gray-200 shadow-sm focus:border-[#75CCD1] focus:ring-[#75CCD1] transition duration-200 ease-in-out py-3 px-4 bg-white"
-                required
               />
             </div>
             <div className="flex justify-between items-center">
@@ -171,9 +220,10 @@ const ProfileSettings = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-[#75CCD1] text-white rounded-xl hover:bg-[#5ABBC0] transition duration-200 ease-in-out font-medium"
+                  disabled={isSubmitting}
+                  className={`px-5 py-2 bg-[#75CCD1] text-white rounded-xl hover:bg-[#5ABBC0] transition duration-200 ease-in-out font-medium ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  Save Changes
+                  {isSubmitting ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </div>

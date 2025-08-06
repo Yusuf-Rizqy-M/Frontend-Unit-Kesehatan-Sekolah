@@ -53,16 +53,16 @@ const StaffPage = () => {
     }
   }, []);
 
-     useEffect(() => {
-          // Mengatur judul tab
-          document.title = 'Staff UKS';
-          
-          // Mengatur favicon
-          const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
-          favicon.rel = 'icon';
-          favicon.href = UKS2Img; // Menggunakan UKS2Img sebagai favicon
-          document.head.appendChild(favicon);
-        }, []); // Efek hanya dijalankan sekali saat komponen dimuat
+  useEffect(() => {
+    // Mengatur judul tab
+    document.title = 'Staff UKS';
+    
+    // Mengatur favicon
+    const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
+    favicon.rel = 'icon';
+    favicon.href = UKS2Img; // Menggunakan UKS2Img sebagai favicon
+    document.head.appendChild(favicon);
+  }, []); // Efek hanya dijalankan sekali saat komponen dimuat
 
   // Fetch staff data
   useEffect(() => {
@@ -117,16 +117,15 @@ const StaffPage = () => {
     setWaError(null); // Clear phone number error
   };
 
-  // Validate phone number (only numbers)
+  // Validate phone number (only numbers and max 15 digits)
   const validatePhoneNumber = (value) => {
-    // Allow only digits
     const phoneRegex = /^\d*$/;
-    return phoneRegex.test(value);
+    return phoneRegex.test(value) && value.length <= 15;
   };
 
-  // Validate phone number length (at least 8 digits)
+  // Validate phone number length (8 to 15 digits)
   const isPhoneNumberValid = (value) => {
-    return value.length >= 8;
+    return value.length >= 8 && value.length <= 15;
   };
 
   // Handle input changes for new staff
@@ -137,7 +136,7 @@ const StaffPage = () => {
         setNewStaff({ ...newStaff, [name]: value });
         setWaError(null);
       } else {
-        setWaError("Nomor WA hanya boleh berisi angka");
+        setWaError(value.length > 15 ? "Nomor WA tidak boleh lebih dari 15 digit" : "Nomor WA hanya boleh berisi angka");
       }
     } else if (name === "image" && files) {
       setNewStaff({ ...newStaff, [name]: files[0] });
@@ -154,7 +153,7 @@ const StaffPage = () => {
         setEditStaff({ ...editStaff, [name]: value });
         setWaError(null);
       } else {
-        setWaError("Nomor WA hanya boleh berisi angka");
+        setWaError(value.length > 15 ? "Nomor WA tidak boleh lebih dari 15 digit" : "Nomor WA hanya boleh berisi angka");
       }
     } else if (name === "image" && files) {
       setEditStaff({ ...editStaff, [name]: files[0] });
@@ -174,7 +173,7 @@ const StaffPage = () => {
 
     // Validate phone number length
     if (!isPhoneNumberValid(newStaff.wa)) {
-      setWaError("Nomor WA harus memiliki minimal 8 digit");
+      setWaError("Nomor WA harus memiliki 8 hingga 15 digit");
       return;
     }
 
@@ -214,7 +213,7 @@ const StaffPage = () => {
 
     // Validate phone number length
     if (!isPhoneNumberValid(editStaff.wa)) {
-      setWaError("Nomor WA harus memiliki minimal 8 digit");
+      setWaError("Nomor WA harus memiliki 8 hingga 15 digit");
       return;
     }
 
@@ -543,6 +542,7 @@ const StaffPage = () => {
                     name="wa"
                     value={newStaff.wa}
                     onChange={handleInputChange}
+                    maxLength={15}
                     className="input w-full rounded-lg bg-teal-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 placeholder-gray-500 dark:placeholder-gray-400"
                     required
                     aria-required="true"
@@ -653,6 +653,7 @@ const StaffPage = () => {
                     name="wa"
                     value={editStaff.wa}
                     onChange={handleEditInputChange}
+                    maxLength={15}
                     className="input w-full rounded-lg bg-teal-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 placeholder-gray-500 dark:placeholder-gray-400"
                     required
                     aria-required="true"

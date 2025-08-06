@@ -3,12 +3,236 @@ import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../../partials/Sidebar";
 import Header from "../../partials/Header";
-import { FaChevronRight, FaPlus, FaTrash } from "react-icons/fa";
+import { FaChevronRight, FaPlus, FaTrash, FaEdit } from "react-icons/fa";
 import DOMPurify from "dompurify";
 
 // Utility function to sanitize HTML content
 const sanitizeHTML = (html) => {
   return DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
+};
+
+// Utility function to truncate text to a specified word count
+const truncateText = (text, maxWords) => {
+  if (!text) return "";
+  // Strip HTML tags for word counting
+  const plainText = text.replace(/<[^>]+>/g, "");
+  const words = plainText.trim().split(/\s+/);
+  if (words.length <= maxWords) return text;
+  const truncated = words.slice(0, maxWords).join(" ");
+  return `${truncated}...`;
+};
+
+// Modal component for viewing article details
+const ArticleDetailModal = ({ isOpen, onClose, article }) => {
+  if (!isOpen || !article) return null;
+
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-40 flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4">{article.title}</h3>
+        {article.image && (
+          <img
+            src={article.image}
+            alt={article.title}
+            className="w-full h-48 object-cover rounded mb-4"
+            onError={(e) => {
+              e.target.src = "https://via.placeholder.com/150";
+            }}
+          />
+        )}
+        <div
+          className="text-gray-700 dark:text-gray-200 mb-4"
+          dangerouslySetInnerHTML={{ __html: sanitizeHTML(article.description) }}
+        />
+        <button
+          onClick={onClose}
+          className="w-full px-4 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 focus:outline-none"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  );
+};
+
+ArticleDetailModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  article: PropTypes.shape({
+    id: PropTypes.number,
+    title: PropTypes.string,
+    description: PropTypes.string,
+    image: PropTypes.string,
+  }),
+};
+
+// Modal component for editing article
+const ArticleEditModal = ({ isOpen, onClose, article, onSave }) => {
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    image: null,
+    category_id: "",
+    _method: "PUT",
+  });
+  const [previewImage, setPreviewImage] = useState(null);
+
+  useEffect(() => {
+    if (article) {
+      setFormData({
+        title: article.title || "",
+        description: article.description || "",
+        image: null,
+        category_id: article.category_id || "",
+        _method: "PUT",
+      });
+      setPreviewImage(article.image || null);
+    }
+  }, [article]);
+
+  const handleChange = (e) => {
+    const { name, value, files } = e.target;
+    if (name === "image" && files[0]) {
+      setFormData((prev) => ({ ...prev, image: files[0] }));
+      setPreviewImage(URL.createObjectURL(files[0]));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+      if (!token) {
+        throw new Error("Authentication token not found. Please log in.");
+      }
+
+      const formDataToSend = new FormData();
+      formDataToSend.append("title", formData.title);
+      formDataToSend.append("description", formData.description);
+      if (formData.image) {
+        formDataToSend.append("image", formData.image);
+      }
+      formDataToSend.append("category_id", formData.category_id);
+      formDataToSend.append("_method", "PUT");
+
+      const response = await fetch(`https://api-uks.rplrus.com/api/articles/${article.id}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formDataToSend,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to update article");
+      }
+
+      if (data.status) {
+        onSave({
+          id: data.data.id,
+          title: data.data.title,
+          description: data.data.description,
+          image: data.data.image,
+          category_id: data.data.category_id,
+          status: data.data.status,
+          created_at: data.data.created_at,
+          updated_at: data.data.updated_at,
+        });
+        onClose();
+      } else {
+        throw new Error(data.message || "Update failed");
+      }
+    } catch (error) {
+      console.error("Error updating article:", error);
+      alert(error.message || "Failed to update article. Please try again.");
+    }
+  };
+
+  if (!isOpen || !article) return null;
+
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-40 flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4">Edit Article</h3>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block text-gray-700 dark:text-gray-200 mb-2">Title</label>
+            <input
+              type="text"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              className="w-full p-2 rounded bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-700 dark:text-gray-200 mb-2">Description</label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              className="w-full p-2 rounded bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              rows="4"
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-700 dark:text-gray-200 mb-2">Upload Image</label>
+            <input
+              type="file"
+              name="image"
+              accept="image/*"
+              onChange={handleChange}
+              className="w-full p-2 rounded bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-500"
+            />
+            {previewImage && (
+              <img
+                src={previewImage}
+                alt="Preview"
+                className="mt-2 w-full h-32 object-cover rounded"
+                onError={(e) => {
+                  e.target.src = "https://via.placeholder.com/150";
+                }}
+              />
+            )}
+          </div>
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-500 focus:outline-none"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 focus:outline-none"
+            >
+              Save
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+ArticleEditModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  article: PropTypes.shape({
+    id: PropTypes.number,
+    title: PropTypes.string,
+    description: PropTypes.string,
+    image: PropTypes.string,
+    category_id: PropTypes.number,
+  }),
+  onSave: PropTypes.func.isRequired,
 };
 
 // SearchBar component
@@ -77,7 +301,7 @@ SearchBar.propTypes = {
 };
 
 // ArticleTable component
-const ArticleTable = ({ articles, indexOfFirstItem, onView, onDelete }) => (
+const ArticleTable = ({ articles, onView, onEdit, onDelete }) => (
   <table className="w-full text-sm bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden">
     <thead>
       <tr className="text-left text-gray-500 dark:text-gray-300 bg-gray-50 dark:bg-gray-700">
@@ -96,12 +320,12 @@ const ArticleTable = ({ articles, indexOfFirstItem, onView, onDelete }) => (
           </td>
         </tr>
       ) : (
-        articles.map((article, index) => (
+        articles.map((article) => (
           <tr
             key={article.id}
             className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
           >
-            <td className="py-3 px-4 text-gray-700 dark:text-gray-200">{indexOfFirstItem + index + 1}</td>
+            <td className="py-3 px-4 text-gray-700 dark:text-gray-200">{article.id}</td>
             <td className="py-3 px-4 text-gray-700 dark:text-gray-200">{article.title}</td>
             <td className="py-3 px-4">
               {article.image ? (
@@ -119,7 +343,7 @@ const ArticleTable = ({ articles, indexOfFirstItem, onView, onDelete }) => (
             </td>
             <td
               className="py-3 px-4 text-gray-700 dark:text-gray-200 italic"
-              dangerouslySetInnerHTML={{ __html: sanitizeHTML(article.description) }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHTML(truncateText(article.description, 25)) }}
             />
             <td className="py-3 px-4 text-center">
               <button
@@ -127,6 +351,12 @@ const ArticleTable = ({ articles, indexOfFirstItem, onView, onDelete }) => (
                 onClick={() => onView(article)}
               >
                 <FaChevronRight className="w-4 h-4" />
+              </button>
+              <button
+                className="text-yellow-500 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300 mr-2 focus:outline-none"
+                onClick={() => onEdit(article)}
+              >
+                <FaEdit className="w-4 h-4" />
               </button>
               <button
                 className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 focus:outline-none"
@@ -152,8 +382,8 @@ ArticleTable.propTypes = {
       image: PropTypes.string,
     })
   ).isRequired,
-  indexOfFirstItem: PropTypes.number.isRequired,
   onView: PropTypes.func.isRequired,
+  onEdit: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
 };
 
@@ -254,6 +484,9 @@ const Article = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [selectedArticle, setSelectedArticle] = useState(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -324,6 +557,7 @@ const Article = () => {
             description: item.description,
             jurusan: item.jurusan || "N/A",
             image: item.image || "",
+            category_id: item.category_id,
           }))
         );
       } else {
@@ -337,13 +571,76 @@ const Article = () => {
     }
   };
 
+  const handleView = async (article) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`https://api-uks.rplrus.com/api/categories/${categoryId}/article/${article.id}`);
+      if (!response.ok) throw new Error("Failed to fetch article details");
+      const data = await response.json();
+      if (data.status) {
+        setSelectedArticle(data.data);
+        setIsDetailModalOpen(true);
+      } else {
+        throw new Error(data.message || "Error fetching article details");
+      }
+    } catch (error) {
+      console.error("Error fetching article details:", error);
+      setError("Failed to load article details. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = async (article) => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+      if (!token) {
+        throw new Error("Authentication token not found. Please log in.");
+      }
+
+      const response = await fetch(`https://api-uks.rplrus.com/api/categories/${categoryId}/article/${article.id}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch article details");
+      }
+
+      const data = await response.json();
+
+      if (data.status) {
+        setSelectedArticle(data.data);
+        setIsEditModalOpen(true);
+      } else {
+        throw new Error(data.message || "Error fetching article details");
+      }
+    } catch (error) {
+      console.error("Error fetching article details:", error);
+      setError("Failed to load article details. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveEdit = (updatedArticle) => {
+    setArticles((prevArticles) =>
+      prevArticles.map((article) =>
+        article.id === updatedArticle.id ? { ...article, ...updatedArticle } : article
+      )
+    );
+  };
+
   const handleDelete = async (articleId) => {
     if (window.confirm("Are you sure you want to delete this article?")) {
       setError(null);
       try {
-        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        const token = localStorage.getItem("token") || sessionStorage.getItem("token");
         if (!token) {
-          throw new Error('Authentication token not found. Please log in.');
+          throw new Error("Authentication token not found. Please log in.");
         }
 
         const response = await fetch(`https://api-uks.rplrus.com/api/articles/${articleId}`, {
@@ -361,6 +658,7 @@ const Article = () => {
         }
 
         const data = await response.json();
+
         if (data.status) {
           setArticles(articles.filter((article) => article.id !== articleId));
         } else {
@@ -397,6 +695,7 @@ const Article = () => {
               description: data.data.description,
               jurusan: data.data.jurusan || "N/A",
               image: data.data.image || "",
+              category_id: data.data.category_id,
             },
           ]);
         } else {
@@ -431,10 +730,6 @@ const Article = () => {
     }
   };
 
-  const handleView = (article) => {
-    navigate(`/article/${article.id}`);
-  };
-
   const handleAddClick = () => {
     navigate("/uploadblog");
   };
@@ -451,7 +746,7 @@ const Article = () => {
       <div className="relative flex flex-col flex-1 overflow-y-auto">
         <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} toggleDarkMode={toggleDarkMode} />
         <main className="grow p-6">
-          <div className="w-full max-w-7xl mx-auto">
+          <div className="w-full max-w-7xl mx-auto relative">
             <h2 className="text-2xl text-gray-800 dark:text-gray-200 font-bold mb-6">Articles</h2>
             <SearchBar
               searchQuery={searchQuery}
@@ -494,8 +789,8 @@ const Article = () => {
               <>
                 <ArticleTable
                   articles={currentArticles}
-                  indexOfFirstItem={indexOfFirstItem}
                   onView={handleView}
+                  onEdit={handleEdit}
                   onDelete={handleDelete}
                 />
                 {filteredArticles.length > 0 && (
@@ -508,6 +803,17 @@ const Article = () => {
                     itemsPerPage={itemsPerPage}
                   />
                 )}
+                <ArticleDetailModal
+                  isOpen={isDetailModalOpen}
+                  onClose={() => setIsDetailModalOpen(false)}
+                  article={selectedArticle}
+                />
+                <ArticleEditModal
+                  isOpen={isEditModalOpen}
+                  onClose={() => setIsEditModalOpen(false)}
+                  article={selectedArticle}
+                  onSave={handleSaveEdit}
+                />
               </>
             )}
           </div>

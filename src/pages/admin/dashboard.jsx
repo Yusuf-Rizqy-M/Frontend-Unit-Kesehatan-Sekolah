@@ -21,7 +21,7 @@ function Dashboard() {
     hourly: [],
     totalUsers: 0,
   });
-  const [todayQueue, setTodayQueue] = useState([]); // Removed duplicate declaration
+  const [todayQueue, setTodayQueue] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token') || null);
@@ -371,12 +371,6 @@ function Dashboard() {
             <div className="bg-white dark:bg-[#051D4E] rounded-[20px] shadow p-6 mb-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl text-gray-800 dark:text-gray-100 font-bold">Statistik Siswa</h2>
-                <button
-                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
-                  onClick={() => setIsDarkMode(!isDarkMode)}
-                >
-                  {isDarkMode ? 'Light Mode' : 'Dark Mode'}
-                </button>
               </div>
               <div className="h-64">
                 <Line data={chartData} options={chartOptions} ref={chartRef} />

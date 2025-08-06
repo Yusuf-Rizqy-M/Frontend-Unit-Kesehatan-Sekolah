@@ -560,7 +560,7 @@ const KategoriPage = () => {
 
         {/* Add Category Modal */}
         {isAddModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50" role="dialog" aria-modal="true">
+          <div className="fixed inset-0 flex items-center justify-center z-50" role="dialog" aria-modal="true">
             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-2xl relative animate-scale-in">
               <button
                 className="absolute top-4 right-4 text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100"
@@ -663,7 +663,7 @@ const KategoriPage = () => {
 
         {/* Edit Category Modal */}
         {isEditModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50" role="dialog" aria-modal="true">
+          <div className="fixed inset-0 flex items-center justify-center z-50" role="dialog" aria-modal="true">
             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-2xl relative animate-scale-in">
               <button
                 className="absolute top-4 right-4 text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100"
@@ -766,7 +766,7 @@ const KategoriPage = () => {
 
         {/* View Category Modal */}
         {isModalOpen && selectedCategory && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50" role="dialog" aria-modal="true">
+          <div className="fixed inset-0 flex items-center justify-center z-50" role="dialog" aria-modal="true">
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md shadow-lg relative animate-scale-in">
               <button
                 className="absolute top-4 right-4 text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100"
@@ -810,7 +810,7 @@ const KategoriPage = () => {
 
         {/* Delete Confirmation Modal */}
         {isConfirmModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50" role="dialog" aria-modal="true">
+          <div className="fixed inset-0 flex items-center justify-center z-50" role="dialog" aria-modal="true">
             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-2xl relative animate-scale-in">
               <h3 className="text-xl font-bold text-red-600 dark:text-red-400 mb-2">Yakin ingin Menghapus Kategori?</h3>
               <p className="text-gray-600 dark:text-gray-300 mb-4">

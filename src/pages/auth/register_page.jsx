@@ -238,7 +238,7 @@ const RegisterPage = () => {
         <div className="absolute bottom-10 left-10 w-8 h-8 bg-cyan-500 rotate-45" />
         <div className="absolute top-20 right-10 w-6 h-6 bg-cyan-500 rotate-45" />
         <h1 className="text-4xl font-bold text-gray-800 text-center mb-8 leading-tight">
-          Hallo, Teman<br />Selamat++++++++ Datang!
+          Hallo, Teman<br />Selamat Datang!
         </h1>
         <img src={UksImg} alt="Doctor" className="w-60 h-60 mb-8" />
         <hr className="w-24 border-[1.5px] border-gray-400 mb-6" />

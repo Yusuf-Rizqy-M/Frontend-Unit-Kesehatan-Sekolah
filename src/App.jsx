@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 
 import "./css/style.css";
 import "./charts/ChartjsConfig";
@@ -22,8 +22,6 @@ import EditProfile from "./pages/user/edit_profile";
 import AntreUser from "./pages/user/antre-user";
 import Antrian from "./pages/user/antrian";
 
-
-
 // Admin
 import Dashboard from "./pages/admin/dashboard";
 import ManajemenUser from "./pages/admin/ManajemenUser";
@@ -34,7 +32,6 @@ import DetailRekamMedisSiswa from "./pages/admin/detail_rekam_medas";
 import Staff from "./pages/admin/staff_admin";
 import RekamAntri from "./pages/admin/rekam_antri_siswa";
 import DetailRekamAntri from "./pages/admin/detail_rekam_antri";
-// FIXED: Rename to Article to match usage below
 import Article from "./pages/admin/article";
 import KelasPage from "./pages/admin/kelas";
 import Jurusanpage from "./pages/admin/jurusan";
@@ -45,6 +42,12 @@ import ProtectedRoute from "./routes/protectedRoute";
 import UserRoute from "./routes/userRoute";
 import NotFound from "./pages/notfound";
 
+// Custom PublicRoute component to handle login redirection
+function PublicRoute({ children }) {
+  const isAuthenticated = !!localStorage.getItem("token"); // Replace with your auth check logic
+
+  return isAuthenticated ? <Navigate to="/" replace /> : children;
+}
 
 function App() {
   const location = useLocation();
@@ -59,24 +62,21 @@ function App() {
     <>
       <Routes>
         {/* Public routes */}
-        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <LoginPage />
+            </PublicRoute>
+          }
+        />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/otp" element={<OtpPage />} />
         <Route path="/gantipassword" element={<GantiPasswordPage />} />
 
         {/* User protected routes */}
-        <Route
-          path="/"
-          element={
-            <Home />
-          }
-        />
-        <Route
-          path="/kalkulatorbmi"
-          element={
-            <KalkulatorBmi />
-          }
-        />
+        <Route path="/" element={<Home />} />
+        <Route path="/kalkulatorbmi" element={<KalkulatorBmi />} />
         <Route
           path="/kondisi"
           element={
@@ -85,23 +85,12 @@ function App() {
             </UserRoute>
           }
         />
-        <Route
-          path="/edukasikesehatan"
-          element={
-            <EdukasiKesehatan />
-          }
-        />
+        <Route path="/edukasikesehatan" element={<EdukasiKesehatan />} />
         <Route
           path="/edukasi-kesehatan/:categoryId?"
           element={<EdukasiKesehatan />}
         />
-        <Route
-          path="/aboutus"
-          element={
-
-            <AboutUs />
-          }
-        />
+        <Route path="/aboutus" element={<AboutUs />} />
         <Route
           path="/infoprofile"
           element={
@@ -126,48 +115,7 @@ function App() {
             </UserRoute>
           }
         />
-
-        {/* Edukasi detail routes
-        <Route
-          path="/kesehatanmental"
-          element={
-            <MentalEdu />
-          }
-        />
-        <Route
-          path="/kesehatanfisik"
-          element={
-            <FisikEdu />
-          }
-        />
-        <Route
-          path="/PencegahanPenyakit"
-          element={
-            <CegahSakit />
-          }
-        />
-        <Route
-          path="/kebersihandiri"
-          element={
-
-            <KebersihanDiri />
-          }
-        />
-        <Route
-          path="/polahidupsehat"
-          element={
-            <PolaHidupSehat />
-
-          }
-        /> */}
-        <Route
-          path="/artikel"
-          element={
-
-            <Article />
-
-          }
-        />
+        <Route path="/artikel" element={<Article />} />
         <Route
           path="/antrian"
           element={

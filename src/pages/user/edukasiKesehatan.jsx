@@ -354,7 +354,18 @@ function EdukasiKesehatan() {
                   </div>
                 ))
               ) : (
-                <p className="text-center text-gray-500 animate-slide-up">Tidak ada artikel yang ditemukan untuk kategori ini.</p>
+                <div className="text-center animate-slide-up">
+                  <p className="text-gray-500 mb-4">Tidak ada artikel yang ditemukan untuk kategori ini.</p>
+                  <button 
+                    onClick={() => navigate('/edukasikesehatan')} 
+                    className="back-button"
+                  >
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Kembali ke Edukasi Kesehatan
+                  </button>
+                </div>
               )}
             </div>
           </section>

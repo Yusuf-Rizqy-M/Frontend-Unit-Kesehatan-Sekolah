@@ -21,6 +21,7 @@ import InfoProfile from "./pages/user/info_profile";
 import EditProfile from "./pages/user/edit_profile";
 import AntreUser from "./pages/user/antre-user";
 import Antrian from "./pages/user/antrian";
+import ArticleDetail from "./pages/user/article_detail"; // Import the ArticleDetail component
 
 // Admin
 import Dashboard from "./pages/admin/dashboard";
@@ -90,6 +91,7 @@ function App() {
           path="/edukasi-kesehatan/:categoryId?"
           element={<EdukasiKesehatan />}
         />
+                <Route path="/edukasi-kesehatan/:categoryId/:articleId" element={<ArticleDetail />} />
         <Route path="/aboutus" element={<AboutUs />} />
         <Route
           path="/infoprofile"

@@ -18,7 +18,6 @@ function EdukasiKesehatan() {
   const { categoryId } = useParams();
   const navigate = useNavigate();
 
-  // Function to create a safe HTML excerpt from description
   const createExcerpt = (htmlContent, maxLength = 200) => {
     if (!htmlContent) return '';
     
@@ -40,7 +39,6 @@ function EdukasiKesehatan() {
     return DOMPurify.sanitize(`<p>${finalText}...</p>`);
   };
 
-  // Function to fetch article details
   const fetchArticleDetails = async (articleId) => {
     try {
       setLoading(true);
@@ -61,7 +59,6 @@ function EdukasiKesehatan() {
   };
 
   useEffect(() => {
-    // Set favicon and title
     document.title = categoryId ? 'Artikel Kesehatan' : 'Edukasi Kesehatan';
     
     const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
@@ -69,7 +66,6 @@ function EdukasiKesehatan() {
     favicon.href = UKS2Img;
     document.head.appendChild(favicon);
 
-    // Fetch categories
     fetch('https://api-uks.rplrus.com/api/categories')
       .then(response => response.json())
       .then(data => {
@@ -83,7 +79,6 @@ function EdukasiKesehatan() {
               setCategoryTitle(matchedCategory.title);
               setCategoryIcon(matchedCategory.image || Clean);
               
-              // Fetch articles for the selected category ID
               fetch(`https://api-uks.rplrus.com/api/categories/${categoryId}/articles`)
                 .then(response => response.json())
                 .then(articleData => {
@@ -116,6 +111,15 @@ function EdukasiKesehatan() {
         setLoading(false);
       });
   }, [categoryId]);
+
+  useEffect(() => {
+    if (categoryId && articles.length === 0 && !loading && !error) {
+      const timer = setTimeout(() => {
+        navigate('/edukasikesehatan');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [categoryId, articles, loading, error, navigate]);
 
   return (
     <Layout>
@@ -196,7 +200,7 @@ function EdukasiKesehatan() {
             padding: 2rem;
             border-radius: 1rem;
             max-width: 90%;
-            max-height: 90%;
+            max-height: 90vh;
             overflow-y: auto;
             position: relative;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -229,7 +233,9 @@ function EdukasiKesehatan() {
             padding: 0.75rem 1.5rem;
             border-radius: 0.5rem;
             font-weight: 500;
+            text-decoration: none;
             transition: all 0.3s ease;
+            cursor: pointer;
           }
           .back-button:hover {
             background: #005A79;
@@ -239,6 +245,14 @@ function EdukasiKesehatan() {
             width: 1.25rem;
             height: 1.25rem;
           }
+          .responsive-image {
+            max-width: 50%;
+            height: auto;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            margin-left: 0;
+            margin-right: auto;
+          }
           @media (max-width: 640px) {
             .back-button {
               padding: 0.5rem 1rem;
@@ -247,6 +261,22 @@ function EdukasiKesehatan() {
             .back-button svg {
               width: 1rem;
               height: 1rem;
+            }
+            .responsive-image {
+              max-width: 100%;
+              height: auto;
+            }
+          }
+          @media (min-width: 641px) and (max-width: 1024px) {
+            .responsive-image {
+              max-width: 80%;
+              height: auto;
+            }
+          }
+          @media (min-width: 1025px) {
+            .responsive-image {
+              max-width: 50%;
+              height: auto;
             }
           }
         `}
@@ -264,7 +294,6 @@ function EdukasiKesehatan() {
           <p className="text-center text-red-500 animate-slide-up">{error}</p>
         ) : !categoryId ? (
           <>
-            {/* RESPONSIVE HERO SECTION - Blue Rectangle */}
             <section className="relative w-full flex justify-center items-center bg-white mb-12 sm:mb-16 md:mb-20 min-h-[200px] sm:min-h-[250px] md:min-h-[300px] mt-[20px] sm:mt-[-50px] md:mt-[-150px] lg:mt-[-250px] animate-fade-in px-4 sm:px-6 lg:px-8">
               <div className="w-full max-w-sm sm:max-w-2xl md:max-w-4xl lg:max-w-6xl xl:w-[1200px]">
                 <div className="bg-[#75CCD1] rounded-[15px] sm:rounded-[18px] md:rounded-[20px] flex items-center shadow-md p-4 sm:p-6 md:p-8 lg:p-12 pt-3 sm:pt-4 md:pt-6 pl-6 sm:pl-8 md:pl-10 lg:pl-12 transform transition-all duration-500 hover:shadow-lg min-h-[120px] sm:min-h-[150px] md:min-h-[180px] lg:h-[200px]">
@@ -275,12 +304,10 @@ function EdukasiKesehatan() {
               </div>
             </section>
 
-            {/* RESPONSIVE TITLE */}
             <h2 className="-mt-2 sm:-mt-8 md:-mt-12 lg:-mt-17 text-xl sm:text-2xl md:text-3xl font-semibold text-[#2A8F9E] text-center animate-slide-up px-4">
               Apa yang ingin <span className="text-[#005A79]">dibaca?</span>
             </h2>
 
-            {/* RESPONSIVE CARDS CONTAINER */}
             <div className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-5 lg:gap-6 mt-6 sm:mt-8 md:mt-10 px-4">
               {categories.map(category => (
                 <Link key={category.id} to={`/edukasi-kesehatan/${category.id}`}>
@@ -322,7 +349,7 @@ function EdukasiKesehatan() {
                 articles.map((article, index) => (
                   <div
                     key={article.id}
-                    className="flex flex-col md:flex-row justify-between items-center md:items-start gap-6 border-b border-gray-200 pb-6 cursor-pointer hover:bg-gray-50 transition-all duration-300 p-4 rounded-lg animate-slide-up"
+                    className="flex flex-col md:flex-row justify-between items-start gap-6 border-b border-gray-200 pb-6 cursor-pointer hover:bg-gray-50 transition-all duration-300 p-4 rounded-lg animate-slide-up"
                     style={{ animationDelay: `${index * 0.1}s` }}
                   >
                     <div className="w-full md:w-3/5 text-left pl-4 md:pl-6">
@@ -343,7 +370,7 @@ function EdukasiKesehatan() {
                       />
                       <p 
                         className="text-xs text-[#2A8F9E] mt-3 font-medium transform transition-transform duration-200 hover:translate-x-1"
-                        onClick={() => fetchArticleDetails(article.id)}
+                        onClick={() => navigate(`/edukasi-kesehatan/${categoryId}/${article.id}`)}
                       >
                         Klik untuk baca selengkapnya →
                       </p>
@@ -352,7 +379,7 @@ function EdukasiKesehatan() {
                       <img
                         src={article.image}
                         alt={article.title}
-                        className="w-full h-auto object-cover rounded-xl shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105"
+                        className="w-full h-auto object-cover rounded-xl shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105 responsive-image"
                         onError={(e) => (e.target.src = Clean)}
                       />
                     </div>
@@ -360,7 +387,7 @@ function EdukasiKesehatan() {
                 ))
               ) : (
                 <div className="text-center animate-slide-up">
-                  <p className="text-gray-500 mb-4">Tidak ada artikel yang ditemukan untuk kategori ini.</p>
+                  <p className="text-gray-500 mb-4">Tidak ada artikel yang ditemukan untuk kategori ini. Anda akan diarahkan kembali dalam 5 detik...</p>
                   <button 
                     onClick={() => navigate('/edukasikesehatan')} 
                     className="back-button"
@@ -368,7 +395,7 @@ function EdukasiKesehatan() {
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
                     </svg>
-                    Kembali ke Edukasi Kesehatan
+                    Kembali
                   </button>
                 </div>
               )}
@@ -380,25 +407,42 @@ function EdukasiKesehatan() {
           <div className="modal">
             <div className="modal-content">
               <button className="modal-close" onClick={() => setIsModalOpen(false)}>×</button>
-              <h2 className="text-2xl font-semibold text-[#2A8F9E] mb-4">{selectedArticle.title}</h2>
-              <img
-                src={selectedArticle.image}
-                alt={selectedArticle.title}
-                className="w-full h-auto object-cover rounded-xl mb-4"
-                onError={(e) => (e.target.src = Clean)}
-              />
-              <div 
-                className="text-sm text-[#1C4245] prose prose-sm max-w-none
-                           prose-p:text-[#1C4245] prose-strong:text-[#1C4245] 
-                           prose-em:text-[#1C4245] prose-blockquote:text-[#1C4245]
-                           prose-blockquote:border-l-[#2A8F9E] prose-blockquote:pl-4
-                           prose-ul:text-[#1C4245] prose-ol:text-[#1C4245]
-                           prose-li:text-[#1C4245] prose-h1:text-[#1C4245]
-                           prose-h2:text-[#1C4245] prose-h3:text-[#1C4245]"
-                dangerouslySetInnerHTML={{ 
-                  __html: DOMPurify.sanitize(selectedArticle.description)
-                }}
-              />
+              <div className="text-center mb-6">
+                <button 
+                  onClick={() => navigate('/edukasikesehatan')} 
+                  className="back-button inline-flex items-center gap-2 bg-[#2A8F9E] text-white px-4 py-2 rounded-md hover:bg-[#005A79]"
+                >
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Kembali
+                </button>
+                <img
+                  src={require('../../assets/img/heart-icon.png')}
+                  alt="Heart Icon"
+                  className="mx-auto w-12 h-12 mb-2"
+                />
+                <h2 className="text-xl md:text-2xl font-semibold text-[#2A8F9E] mb-2">
+                  Artikel tentang <span className="text-[#2A8F9E]">{categoryTitle}</span>
+                </h2>
+                <p className="text-sm text-[#1C4245] max-w-lg mx-auto">
+                  Our Health Haven is equipped with essential medical facilities to ensure students receive the best care in a safe and comfortable environment.
+                </p>
+              </div>
+              {Array(3).fill().map((_, index) => (
+                <div key={index} className="mb-6">
+                  <h3 className="text-lg font-semibold text-[#2A8F9E] mb-2">Pemeriksaan Kesehatan</h3>
+                  <p className="text-sm text-[#1C4245] mb-4 max-w-lg mx-auto">
+                    Our Health Haven is equipped with essential medical facilities to ensure students receive the best care in a safe and comfortable environment.
+                  </p>
+                  <img
+                    src={selectedArticle.image}
+                    alt={selectedArticle.title}
+                    className="responsive-image image-left"
+                    onError={(e) => (e.target.src = Clean)}
+                  />
+                </div>
+              ))}
             </div>
           </div>
         )}

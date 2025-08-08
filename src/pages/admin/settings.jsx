@@ -174,7 +174,6 @@ const ProfileSettings = () => {
                 disabled
                 title="Name can only be changed by an admin"
               />
-              <p className="text-sm text-gray-500 mt-1">Contact an admin to change your name</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

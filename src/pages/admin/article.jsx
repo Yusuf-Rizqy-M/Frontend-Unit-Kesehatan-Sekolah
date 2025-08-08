@@ -6,7 +6,6 @@ import Header from "../../partials/Header";
 import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
 import DOMPurify from "dompurify";
 
-// Utility function to sanitize HTML content
 const sanitizeHTML = (html) => {
   return DOMPurify.sanitize(html, 
     { 
@@ -15,7 +14,7 @@ const sanitizeHTML = (html) => {
     });
 };
 
-// SearchBar component
+
 const SearchBar = ({
   searchQuery,
   onSearchChange,
@@ -212,6 +211,7 @@ ArticleTable.propTypes = {
       image: PropTypes.string,
     })
   ).isRequired,
+  indexOfFirstItem: PropTypes.number.isRequired,
   onView: PropTypes.func.isRequired,
   onEdit: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
@@ -366,6 +366,22 @@ const Article = () => {
 
   const API_URL = "https://api-uks.rplrus.com/api";
 
+  // Toast notification effect
+  useEffect(() => {
+    if (showToast) {
+      const timer = setTimeout(() => {
+        setShowToast(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showToast]);
+
+  const showToastMessage = (message, type = "success") => {
+    setToastMessage(message);
+    setToastType(type);
+    setShowToast(true);
+  };
+
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
     if (
@@ -390,11 +406,7 @@ const Article = () => {
         localStorage.getItem("token") || sessionStorage.getItem("token");
       if (!token) {
         setError("No authentication token found. Please log in.");
-        setToastMessage(
-          "No authentication token found. Please log in.",
-          "error"
-        );
-        setShowToast(true);
+        showToastMessage("No authentication token found. Please log in.", "error");
         return;
       }
       const response = await fetch(`${API_URL}/categories`, {
@@ -414,8 +426,7 @@ const Article = () => {
       console.error("Error fetching categories:", error);
       setError("Failed to load categories. Please try again.");
       setCategories([]);
-      setToastMessage("Error fetching categories.", "error");
-      setShowToast(true);
+      showToastMessage("Error fetching categories.", "error");
     } finally {
       setLoading(false);
     }
@@ -436,42 +447,60 @@ const Article = () => {
         localStorage.getItem("token") || sessionStorage.getItem("token");
       if (!token) {
         setError("No authentication token found. Please log in.");
-        setToastMessage(
-          "No authentication token found. Please log in.",
-          "error"
-        );
-        setShowToast(true);
+        showToastMessage("No authentication token found. Please log in.", "error");
         return;
       }
-      const url =
-        categoryId === "all"
-          ? `${API_URL}/articles`
-          : `${API_URL}/categories/${categoryId}/articles`;
-      const response = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) throw new Error("Failed to fetch articles");
-      const data = await response.json();
-      if (data.status) {
-        setArticles(
-          data.data.map((item) => ({
-            id: item.id,
-            title: item.title,
-            description: item.description,
-            image: item.image || "",
-            category_id: item.category_id,
-          }))
-        );
+      
+      let allArticles = [];
+      
+      if (categoryId === "all") {
+        // Fetch articles from all categories
+        for (const category of categories) {
+          try {
+            const response = await fetch(`${API_URL}/categories/${category.id}/articles`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+            if (response.ok) {
+              const data = await response.json();
+              if (data.status && Array.isArray(data.data)) {
+                allArticles = [...allArticles, ...data.data];
+              }
+            }
+          } catch (error) {
+            console.warn(`Failed to fetch articles from category ${category.id}:`, error);
+          }
+        }
       } else {
-        throw new Error(data.message || "Error fetching articles");
+        // Fetch articles from specific category
+        const response = await fetch(`${API_URL}/categories/${categoryId}/articles`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) throw new Error("Failed to fetch articles");
+        const data = await response.json();
+        if (data.status) {
+          allArticles = data.data;
+        } else {
+          throw new Error(data.message || "Error fetching articles");
+        }
       }
+
+      setArticles(
+        allArticles.map((item) => ({
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          image: item.image || "",
+          category_id: item.category_id,
+        }))
+      );
     } catch (error) {
       console.error("Error fetching articles:", error);
       setArticles([]);
-      setToastMessage("Error fetching articles. Please try again.", "error");
-      setShowToast(true);
+      showToastMessage("Error fetching articles. Please try again.", "error");
     } finally {
       setLoading(false);
     }
@@ -496,8 +525,7 @@ const Article = () => {
       localStorage.getItem("token") || sessionStorage.getItem("token");
     if (!token) {
       setError("No authentication token found. Please log in.");
-      setToastMessage("No authentication token found. Please log in.", "error");
-      setShowToast(true);
+      showToastMessage("No authentication token found. Please log in.", "error");
       setIsConfirmModalOpen(false);
       return;
     }
@@ -523,8 +551,7 @@ const Article = () => {
       if (data.status) {
         setArticles(articles.filter((article) => article.id !== deleteId));
         setIsConfirmModalOpen(false);
-        setToastMessage("Artikel berhasil dihapus", "success");
-        setShowToast(true);
+        showToastMessage("Artikel berhasil dihapus", "success");
       } else {
         throw new Error(data.message || "Deactivation failed");
       }
@@ -533,8 +560,7 @@ const Article = () => {
       setError(
         error.message || "Failed to deactivate article. Please try again."
       );
-      setToastMessage("Error deleting article. Please try again.", "error");
-      setShowToast(true);
+      showToastMessage("Error deleting article. Please try again.", "error");
     } finally {
       setDeleteId(null);
       setIsConfirmModalOpen(false);
@@ -586,8 +612,7 @@ const Article = () => {
       localStorage.getItem("token") || sessionStorage.getItem("token");
     if (!token) {
       setError("No authentication token found. Please log in.");
-      setToastMessage("No authentication token found. Please log in.", "error");
-      setShowToast(true);
+      showToastMessage("No authentication token found. Please log in.", "error");
       return;
     }
 
@@ -627,16 +652,14 @@ const Article = () => {
           )
         );
         closeEditModal();
-        setToastMessage("Artikel berhasil diedit", "success");
-        setShowToast(true);
+        showToastMessage("Artikel berhasil diedit", "success");
       } else {
         throw new Error(data.message || "Update failed");
       }
     } catch (err) {
       console.error("Error updating article:", err);
       setError(err.message || "Error updating article. Please try again.");
-      setToastMessage("Error updating article. Please try again.", "error");
-      setShowToast(true);
+      showToastMessage("Error updating article. Please try again.", "error");
     }
   };
 
@@ -645,58 +668,21 @@ const Article = () => {
     setSearchQuery(query);
     setCurrentPage(1);
 
-    if (query) {
-      setLoading(true);
-      setError(null);
-      try {
-        const token =
-          localStorage.getItem("token") || sessionStorage.getItem("token");
-        if (!token) {
-          setError("No authentication token found. Please log in.");
-          setToastMessage(
-            "No authentication token found. Please log in.",
-            "error"
-          );
-          setShowToast(true);
-          return;
-        }
-        const response = await fetch(
-          `${API_URL}/categories/${categoryId}/article/1/summary`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ search: query }),
-          }
-        );
-        if (!response.ok) throw new Error("Failed to search articles");
-        const data = await response.json();
-        if (data.status) {
-          setArticles([
-            {
-              id: data.data.id,
-              title: data.data.title,
-              description: data.data.description,
-              image: data.data.image || "",
-              category_id: data.data.category_id,
-            },
-          ]);
-        } else {
-          setArticles([]);
-        }
-      } catch (error) {
-        console.error("Error searching articles:", error);
-        setError("Failed to search articles. Please try again.");
-        setToastMessage("Error searching articles. Please try again.", "error");
-        setShowToast(true);
-        setArticles([]);
-      } finally {
-        setLoading(false);
-      }
-    } else {
+    if (!query.trim()) {
+      // If search is empty, fetch all articles for current category
       fetchArticles();
+      return;
+    }
+
+    // For search, we'll filter locally instead of using the API endpoint that's causing issues
+    const filteredResults = articles.filter(article =>
+      article.title.toLowerCase().includes(query.toLowerCase()) ||
+      article.description.toLowerCase().includes(query.toLowerCase())
+    );
+
+    // If we don't have articles loaded yet, try to fetch them first
+    if (articles.length === 0) {
+      await fetchArticles();
     }
   };
 
@@ -840,6 +826,7 @@ const Article = () => {
                 />
                 <ArticleTable
                   articles={currentArticles}
+                  indexOfFirstItem={indexOfFirstItem}
                   onView={handleView}
                   onEdit={handleEdit}
                   onDelete={handleDeleteConfirm}
@@ -854,54 +841,13 @@ const Article = () => {
                     itemsPerPage={itemsPerPage}
                   />
                 )}
-                <ArticleDetailModal
-                  isOpen={isDetailModalOpen}
-                  onClose={() => setIsDetailModalOpen(false)}
-                  article={selectedArticle}
-                />
-                <ArticleEditModal
-                  isOpen={isEditModalOpen}
-                  onClose={() => setIsEditModalOpen(false)}
-                  article={selectedArticle}
-                  onSave={handleSaveEdit}
-                />
-                {isConfirmModalOpen && (
-                  <div className="fixed inset-0 bg-opacity-40 flex items-center justify-center z-50">
-                    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-2xl relative animate-fade-in">
-                      <div className="p-6 text-center">
-                        <h3 className="text-xl font-bold text-red-600 dark:text-red-400 mb-2">
-                          Yakin ingin Menghapus Artikel?
-                        </h3>
-                        <p className="text-gray-600 dark:text-gray-300 mb-4">
-                          Fitur ini digunakan untuk menghapus artikel dari sistem secara aman. Seluruh data artikel akan dihapus. Pastikan untuk menyimpan progres Anda sebelum menghapus artikel.
-                        </p>
-                        <div className="flex justify-center gap-4">
-                          <button
-                            className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition duration-200"
-                            onClick={() => setIsConfirmModalOpen(false)}
-                            aria-label="Batal menghapus artikel"
-                          >
-                            Batal
-                          </button>
-                          <button
-                            className="px-6 py-2 bg-red-500 dark:bg-red-600 text-white rounded-lg hover:bg-red-600 dark:hover:bg-red-700 transition duration-200"
-                            onClick={handleDelete}
-                            aria-label="Lanjutkan menghapus artikel"
-                          >
-                            Lanjut Hapus
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </>
             )}
 
             {/* View Article Modal */}
             {isModalOpen && selectedArticle && (
               <div
-                className="fixed inset-0  bg-opacity-30 dark:bg-opacity-50 flex items-center justify-center z-50"
+                className="fixed inset-0 bg-opacity-30 dark:bg-opacity-50 flex items-center justify-center z-50"
                 role="dialog"
                 aria-modal="true"
               >
@@ -961,7 +907,6 @@ const Article = () => {
                       }}
                     />
                   </div>
-                  <div className="mb-4"></div>
                   <div className="mb-4">
                     <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
                       Gambar:
@@ -1028,7 +973,7 @@ const Article = () => {
                         name="title"
                         value={editArticle.title}
                         onChange={handleEditInputChange}
-                        className="input w-full rounded-lg bg-teal-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 placeholder-gray-500 dark:placeholder-gray-400"
+                        className="input w-full rounded-lg bg-teal-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 placeholder-gray-500 dark:placeholder-gray-400 p-3"
                         required
                         aria-required="true"
                         aria-label="Nama artikel"
@@ -1044,7 +989,8 @@ const Article = () => {
                         name="description"
                         value={editArticle.description}
                         onChange={handleEditInputChange}
-                        className="textarea w-full rounded-lg bg-teal-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 placeholder-gray-500 dark:placeholder-gray-400"
+                        className="textarea w-full rounded-lg bg-teal-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 placeholder-gray-500 dark:placeholder-gray-400 p-3"
+                        rows="4"
                         required
                         aria-required="true"
                         aria-label="Deskripsi artikel"
@@ -1102,7 +1048,7 @@ const Article = () => {
                     <div className="flex justify-end gap-2">
                       <button
                         type="button"
-                        className="btn bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
+                        className="btn bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 px-4 py-2"
                         onClick={closeEditModal}
                         aria-label="Batal mengedit artikel"
                       >
@@ -1110,7 +1056,7 @@ const Article = () => {
                       </button>
                       <button
                         type="submit"
-                        className="btn bg-teal-500 dark:bg-teal-600 text-white rounded-lg hover:bg-teal-600 dark:hover:bg-teal-700"
+                        className="btn bg-teal-500 dark:bg-teal-600 text-white rounded-lg hover:bg-teal-600 dark:hover:bg-teal-700 px-4 py-2"
                         aria-label="Simpan perubahan artikel"
                       >
                         Simpan
@@ -1124,7 +1070,7 @@ const Article = () => {
             {/* Delete Confirmation Modal */}
             {isConfirmModalOpen && (
               <div
-                className="fixed inset-0  bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50"
+                className="fixed inset-0 bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50"
                 role="dialog"
                 aria-modal="true"
               >
@@ -1160,7 +1106,9 @@ const Article = () => {
             )}
           </div>
         </main>
-        <style jsx>{`
+
+        {/* Styles */}
+        <style>{`
           .animate-scale-in {
             animation: scaleIn 0.2s ease-out;
           }
@@ -1175,20 +1123,24 @@ const Article = () => {
             }
           }
           .animate-fade-in-out {
-            animation: fadeInOut 3s ease-in-out;
+            animation: fadeInOut 3s ease-in-out forwards;
           }
           @keyframes fadeInOut {
             0% {
               opacity: 0;
+              transform: translateY(20px);
             }
             10% {
               opacity: 1;
+              transform: translateY(0);
             }
             90% {
               opacity: 1;
+              transform: translateY(0);
             }
             100% {
               opacity: 0;
+              transform: translateY(-20px);
             }
           }
           .double-spinner {
@@ -1229,16 +1181,6 @@ const Article = () => {
           }
         `}</style>
       </div>
-
-      <style jsx>{`
-        .animate-fade-in {
-          animation: fadeIn 0.3s ease-in;
-        }
-        @keyframes fadeIn {
-          0% { opacity: 0; }
-          100% { opacity: 1; }
-        }
-      `}</style>
     </div>
   );
 };

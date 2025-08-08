@@ -3,239 +3,26 @@ import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../../partials/Sidebar";
 import Header from "../../partials/Header";
-import { FaChevronRight, FaPlus, FaTrash, FaEdit } from "react-icons/fa";
+import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
 import DOMPurify from "dompurify";
 
 // Utility function to sanitize HTML content
 const sanitizeHTML = (html) => {
-  return DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
-};
-
-// Utility function to truncate text to a specified word count
-const truncateText = (text, maxWords) => {
-  if (!text) return "";
-  const plainText = text.replace(/<[^>]+>/g, "");
-  const words = plainText.trim().split(/\s+/);
-  if (words.length <= maxWords) return text;
-  const truncated = words.slice(0, maxWords).join(" ");
-  return `${truncated}...`;
-};
-
-// Modal component for viewing article details
-const ArticleDetailModal = ({ isOpen, onClose, article }) => {
-  if (!isOpen || !article) return null;
-
-  return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-40 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
-        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4">{article.title}</h3>
-        {article.image && (
-          <img
-            src={article.image}
-            alt={article.title}
-            className="w-full h-48 object-cover rounded mb-4"
-            onError={(e) => {
-              e.target.src = "https://via.placeholder.com/150";
-            }}
-          />
-        )}
-        <div
-          className="text-gray-700 dark:text-gray-200 mb-4"
-          dangerouslySetInnerHTML={{ __html: sanitizeHTML(article.description) }}
-        />
-        <button
-          onClick={onClose}
-          className="w-full px-4 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 focus:outline-none"
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  );
-};
-
-ArticleDetailModal.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  onClose: PropTypes.func.isRequired,
-  article: PropTypes.shape({
-    id: PropTypes.number,
-    title: PropTypes.string,
-    description: PropTypes.string,
-    image: PropTypes.string,
-  }),
-};
-
-// Modal component for editing article
-const ArticleEditModal = ({ isOpen, onClose, article, onSave }) => {
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    image: null,
-    category_id: "",
-    _method: "PUT",
-  });
-  const [previewImage, setPreviewImage] = useState(null);
-
-  useEffect(() => {
-    if (article) {
-      setFormData({
-        title: article.title || "",
-        description: article.description || "",
-        image: null,
-        category_id: article.category_id || "",
-        _method: "PUT",
-      });
-      setPreviewImage(article.image || null);
-    }
-  }, [article]);
-
-  const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    if (name === "image" && files[0]) {
-      setFormData((prev) => ({ ...prev, image: files[0] }));
-      setPreviewImage(URL.createObjectURL(files[0]));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-      if (!token) {
-        throw new Error("Authentication token not found. Please log in.");
-      }
-
-      const formDataToSend = new FormData();
-      formDataToSend.append("title", formData.title);
-      formDataToSend.append("description", formData.description);
-      if (formData.image) {
-        formDataToSend.append("image", formData.image);
-      }
-      formDataToSend.append("category_id", formData.category_id);
-      formDataToSend.append("_method", "PUT");
-
-      const response = await fetch(`https://api-uks.rplrus.com/api/articles/${article.id}`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formDataToSend,
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to update article");
-      }
-
-      if (data.status) {
-        onSave({
-          id: data.data.id,
-          title: data.data.title,
-          description: data.data.description,
-          image: data.data.image,
-          category_id: data.data.category_id,
-          status: data.data.status,
-          created_at: data.data.created_at,
-          updated_at: data.data.updated_at,
-        });
-        onClose();
-      } else {
-        throw new Error(data.message || "Update failed");
-      }
-    } catch (error) {
-      console.error("Error updating article:", error);
-      alert(error.message || "Failed to update article. Please try again.");
-    }
-  };
-
-  if (!isOpen || !article) return null;
-
-  return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-40 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
-        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4">Edit Article</h3>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-gray-700 dark:text-gray-200 mb-2">Title</label>
-            <input
-              type="text"
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-              className="w-full p-2 rounded bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-500"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 dark:text-gray-200 mb-2">Description</label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              className="w-full p-2 rounded bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-500"
-              rows="4"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 dark:text-gray-200 mb-2">Upload Image</label>
-            <input
-              type="file"
-              name="image"
-              accept="image/*"
-              onChange={handleChange}
-              className="w-full p-2 rounded bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-500"
-            />
-            {previewImage && (
-              <img
-                src={previewImage}
-                alt="Preview"
-                className="mt-2 w-full h-32 object-cover rounded"
-                onError={(e) => {
-                  e.target.src = "https://via.placeholder.com/150";
-                }}
-              />
-            )}
-          </div>
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-500 focus:outline-none"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 focus:outline-none"
-            >
-              Save
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
-
-ArticleEditModal.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  onClose: PropTypes.func.isRequired,
-  article: PropTypes.shape({
-    id: PropTypes.number,
-    title: PropTypes.string,
-    description: PropTypes.string,
-    image: PropTypes.string,
-    category_id: PropTypes.number,
-  }),
-  onSave: PropTypes.func.isRequired,
+  return DOMPurify.sanitize(html, 
+    { 
+    ALLOWED_TAGS: [],
+    ALLOWED_ATTR: [], 
+    });
 };
 
 // SearchBar component
-const SearchBar = ({ searchQuery, onSearchChange, onAddClick, categories, categoryId, onCategoryChange }) => (
+const SearchBar = ({
+  searchQuery,
+  onSearchChange,
+  categories,
+  categoryId,
+  onCategoryChange,
+}) => (
   <div className="flex items-center gap-4 mb-6 p-4 rounded-lg bg-[#9BC7B6] dark:bg-[#051D4E]">
     <div className="relative flex-1 min-w-0">
       <span className="absolute inset-y-0 left-3 flex items-center text-[#6D9C9D] dark:text-gray-400">
@@ -268,110 +55,152 @@ const SearchBar = ({ searchQuery, onSearchChange, onAddClick, categories, catego
       value={categoryId}
       onChange={(e) => onCategoryChange(e.target.value)}
     >
-      <option value="">Select Category</option>
-      {categories.map((category) => (
-        <option key={category.id} value={category.id}>
-          {category.title}
-        </option>
-      ))}
+      <option value="all">All Categories</option>
+      {categories.length > 0 ? (
+        categories.map((category) => (
+          <option key={category.id} value={category.id}>
+            {category.title}
+          </option>
+        ))
+      ) : (
+        <option disabled>No categories available</option>
+      )}
     </select>
-    <button
-      onClick={onAddClick}
-      className="flex items-center justify-center gap-2 w-[150px] px-4 py-2 rounded-lg bg-white dark:bg-gray-700 text-[#6D9C9D] dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition duration-300 focus:outline-none focus:ring-2 focus:ring-teal-500"
-    >
-      <span className="text-sm font-medium">Tambahkan</span>
-      <FaPlus className="w-4 h-4" />
-    </button>
   </div>
 );
 
 SearchBar.propTypes = {
   searchQuery: PropTypes.string.isRequired,
   onSearchChange: PropTypes.func.isRequired,
-  onAddClick: PropTypes.func.isRequired,
   categories: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.number.isRequired,
       title: PropTypes.string.isRequired,
     })
   ).isRequired,
-  categoryId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  categoryId: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+    .isRequired,
   onCategoryChange: PropTypes.func.isRequired,
 };
 
 // ArticleTable component
-const ArticleTable = ({ articles, onView, onEdit, onDelete }) => (
-  <table className="w-full text-sm bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden">
-    <thead>
-      <tr className="text-left text-gray-500 dark:text-gray-300 bg-gray-50 dark:bg-gray-700">
-        <th className="py-3 px-4 font-medium">No</th>
-        <th className="py-3 px-4 font-medium">Name</th>
-        <th className="py-3 px-4 font-medium">Gambar</th>
-        <th className="py-3 px-4 font-medium">Deskripsi</th>
-        <th className="py-3 px-4 font-medium text-center">Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      {articles.length === 0 ? (
-        <tr className="border-b border-gray-100 dark:border-gray-700">
-          <td className="py-3 px-4 text-center text-black dark:text-gray-200" colSpan="5">
-            Tidak ada artikel yang ditemukan.
-          </td>
+const ArticleTable = ({
+  articles,
+  indexOfFirstItem,
+  onView,
+  onEdit,
+  onDelete,
+}) => (
+  <div className="overflow-x-auto">
+    <table
+      className="w-full text-sm bg-white dark:bg-gray-800 shadow-sm rounded-[10px]"
+      role="grid"
+    >
+      <thead>
+        <tr className="text-left text-gray-500 dark:text-gray-300">
+          <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">
+            No
+          </th>
+          <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">
+            Name
+          </th>
+          <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium text-center">
+            Gambar
+          </th>
+          <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">
+            Deskripsi
+          </th>
+          <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium text-center">
+            Aksi
+          </th>
         </tr>
-      ) : (
-        articles.map((article) => (
-          <tr
-            key={article.id}
-            className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
-          >
-            <td className="py-3 px-4 text-gray-700 dark:text-gray-200">{article.id}</td>
-            <td className="py-3 px-4 text-gray-700 dark:text-gray-200">{article.title}</td>
-            <td className="py-3 px-4">
-              {article.image ? (
-                <img
-                  src={article.image}
-                  alt={article.title}
-                  className="w-16 h-16 object-cover rounded"
-                  onError={(e) => {
-                    e.target.src = "https://via.placeholder.com/64";
-                  }}
-                />
-              ) : (
-                <span className="text-gray-500 dark:text-gray-400">No Image</span>
-              )}
-            </td>
+      </thead>
+      <tbody>
+        {articles.length === 0 ? (
+          <tr className="border-b border-gray-100 dark:border-gray-700">
             <td
-              className="py-3 px-4 text-gray-700 dark:text-gray-200 italic"
-              dangerouslySetInnerHTML={{ __html: sanitizeHTML(truncateText(article.description, 25)) }}
-            />
-            <td className="py-3 px-4 text-center">
-              <button
-                className="text-gray-500 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 mr-2 focus:outline-none"
-                onClick={() => onView(article)}
-                aria-label={`View article ${article.title}`}
-              >
-                <FaChevronRight className="w-4 h-4" />
-              </button>
-              <button
-                className="text-yellow-500 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300 mr-2 focus:outline-none"
-                onClick={() => onEdit(article)}
-                aria-label={`Edit article ${article.title}`}
-              >
-                <FaEdit className="w-4 h-4" />
-              </button>
-              <button
-                className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 focus:outline-none"
-                onClick={() => onDelete(article.id)}
-                aria-label={`Delete article ${article.title}`}
-              >
-                <FaTrash className="w-4 h-4" />
-              </button>
+              className="py-3 px-4 text-center text-gray-700 dark:text-gray-200"
+              colSpan="5"
+            >
+              Tidak ada artikel yang ditemukan.
             </td>
           </tr>
-        ))
-      )}
-    </tbody>
-  </table>
+        ) : (
+          articles.map((article, index) => (
+            <tr
+              key={article.id}
+              className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+            >
+              <td className="py-3 px-4 text-gray-700 dark:text-gray-200">
+                {indexOfFirstItem + index + 1}
+              </td>
+              <td
+                className="py-3 px-4 text-gray-700 dark:text-gray-200"
+                dangerouslySetInnerHTML={{
+                  __html: sanitizeHTML(
+                    article.title.length > 60
+                      ? `${article.title.substring(0, 60)}....`
+                      : article.title
+                  ),
+                }}
+              />
+              <td className="py-3 px-4 text-center">
+                {article.image ? (
+                  <img
+                    src={article.image}
+                    alt={article.title}
+                    className="w-6 object-contain inline-block"
+                    onError={(e) => {
+                      e.target.src = "/placeholder.png";
+                    }}
+                  />
+                ) : (
+                  <span className="text-gray-500 dark:text-gray-400">
+                    No Image
+                  </span>
+                )}
+              </td>
+              <td
+                className="py-3 px-4 text-gray-700 dark:text-gray-200 italic"
+                dangerouslySetInnerHTML={{
+                  __html: sanitizeHTML(
+                    article.description.length > 60
+                      ? `${article.description.substring(0, 60)}....`
+                      : article.description
+                  ),
+                }}
+              />
+              <td className="py-3 px-4 text-center">
+                <div className="flex justify-center gap-2">
+                  <button
+                    className="text-gray-500 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400"
+                    onClick={() => onView(article)}
+                    aria-label={`Lihat detail artikel ${article.title}`}
+                  >
+                    <FaEye className="w-4 h-4" />
+                  </button>
+                  <button
+                    className="text-gray-500 dark:text-gray-300 hover:text-green-500 dark:hover:text-green-400"
+                    onClick={() => onEdit(article)}
+                    aria-label={`Edit artikel ${article.title}`}
+                  >
+                    <FaEdit className="w-4 h-4" />
+                  </button>
+                  <button
+                    className="text-gray-500 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400"
+                    onClick={() => onDelete(article.id)}
+                    aria-label={`Hapus artikel ${article.title}`}
+                  >
+                    <FaTrash className="w-4 h-4" />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))
+        )}
+      </tbody>
+    </table>
+  </div>
 );
 
 ArticleTable.propTypes = {
@@ -380,7 +209,6 @@ ArticleTable.propTypes = {
       id: PropTypes.number.isRequired,
       title: PropTypes.string.isRequired,
       description: PropTypes.string.isRequired,
-      jurusan: PropTypes.string,
       image: PropTypes.string,
     })
   ).isRequired,
@@ -390,7 +218,14 @@ ArticleTable.propTypes = {
 };
 
 // Pagination component
-const Pagination = ({ currentPage, totalPages, onPageChange, filteredArticles, indexOfFirstItem, itemsPerPage }) => {
+const Pagination = ({
+  currentPage,
+  totalPages,
+  onPageChange,
+  filteredArticles,
+  indexOfFirstItem,
+  itemsPerPage,
+}) => {
   const getPageNumbers = () => {
     const pageNumbers = [];
     const maxPagesToShow = 3;
@@ -412,7 +247,8 @@ const Pagination = ({ currentPage, totalPages, onPageChange, filteredArticles, i
     <div className="flex justify-between items-center mt-6 text-gray-500 dark:text-gray-300 text-sm">
       <span>
         Showing {indexOfFirstItem + 1}-
-        {Math.min(indexOfFirstItem + itemsPerPage, filteredArticles.length)} of {filteredArticles.length}
+        {Math.min(indexOfFirstItem + itemsPerPage, filteredArticles.length)} of{" "}
+        {filteredArticles.length}
       </span>
       <div className="flex space-x-1">
         <button
@@ -421,20 +257,32 @@ const Pagination = ({ currentPage, totalPages, onPageChange, filteredArticles, i
           }`}
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          aria-label="Previous page"
+          aria-label="Halaman sebelumnya"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
         </button>
         {getPageNumbers().map((pageNumber) => (
           <button
             key={pageNumber}
             className={`px-3 py-1 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none ${
-              currentPage === pageNumber ? "bg-teal-500 dark:bg-teal-600 text-white" : ""
+              currentPage === pageNumber
+                ? "bg-teal-500 dark:bg-teal-600 text-white"
+                : ""
             }`}
             onClick={() => onPageChange(pageNumber)}
-            aria-label={`Go to page ${pageNumber}`}
+            aria-label={`Pindah ke halaman ${pageNumber}`}
           >
             {pageNumber}
           </button>
@@ -448,7 +296,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange, filteredArticles, i
           <button
             className="px-3 py-1 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none"
             onClick={() => onPageChange(totalPages)}
-            aria-label={`Go to page ${totalPages}`}
+            aria-label={`Pindah ke halaman ${totalPages}`}
           >
             {totalPages}
           </button>
@@ -459,10 +307,20 @@ const Pagination = ({ currentPage, totalPages, onPageChange, filteredArticles, i
           }`}
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          aria-label="Next page"
+          aria-label="Halaman berikutnya"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M9 5l7 7-7 7"
+            />
           </svg>
         </button>
       </div>
@@ -491,15 +349,29 @@ const Article = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedArticle, setSelectedArticle] = useState(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editArticle, setEditArticle] = useState({
+    id: null,
+    title: "",
+    description: "",
+    image: null,
+  });
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState("success");
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const navigate = useNavigate();
 
+  const API_URL = "https://api-uks.rplrus.com/api";
+
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "dark" || (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+    if (
+      savedTheme === "dark" ||
+      (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches)
+    ) {
       setIsDarkMode(true);
       document.documentElement.classList.add("dark");
     } else {
@@ -510,33 +382,31 @@ const Article = () => {
     fetchCategories();
   }, []);
 
-  useEffect(() => {
-    if (categoryId) {
-      fetchArticles();
-    }
-  }, [categoryId]);
-
-  const toggleDarkMode = () => {
-    setIsDarkMode((prev) => {
-      const newMode = !prev;
-      document.documentElement.classList.toggle("dark", newMode);
-      localStorage.setItem("theme", newMode ? "dark" : "light");
-      return newMode;
-    });
-  };
-
   const fetchCategories = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("https://api-uks.rplrus.com/api/categories");
+      const token =
+        localStorage.getItem("token") || sessionStorage.getItem("token");
+      if (!token) {
+        setError("No authentication token found. Please log in.");
+        setToastMessage(
+          "No authentication token found. Please log in.",
+          "error"
+        );
+        setShowToast(true);
+        return;
+      }
+      const response = await fetch(`${API_URL}/categories`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       if (!response.ok) throw new Error("Failed to fetch categories");
       const data = await response.json();
       if (data.status) {
         setCategories(data.data);
-        if (!categoryId && data.data.length > 0) {
-          setCategoryId(data.data[0].id);
-        }
+        setCategoryId("all"); // Default to "All Categories"
       } else {
         throw new Error(data.message || "Error fetching categories");
       }
@@ -544,17 +414,44 @@ const Article = () => {
       console.error("Error fetching categories:", error);
       setError("Failed to load categories. Please try again.");
       setCategories([]);
+      setToastMessage("Error fetching categories.", "error");
+      setShowToast(true);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (categoryId) {
+      fetchArticles();
+    }
+  }, [categoryId]);
 
   const fetchArticles = async () => {
     if (!categoryId) return;
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`https://api-uks.rplrus.com/api/categories/${categoryId}/articles`);
+      const token =
+        localStorage.getItem("token") || sessionStorage.getItem("token");
+      if (!token) {
+        setError("No authentication token found. Please log in.");
+        setToastMessage(
+          "No authentication token found. Please log in.",
+          "error"
+        );
+        setShowToast(true);
+        return;
+      }
+      const url =
+        categoryId === "all"
+          ? `${API_URL}/articles`
+          : `${API_URL}/categories/${categoryId}/articles`;
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       if (!response.ok) throw new Error("Failed to fetch articles");
       const data = await response.json();
       if (data.status) {
@@ -563,7 +460,6 @@ const Article = () => {
             id: item.id,
             title: item.title,
             description: item.description,
-            jurusan: item.jurusan || "N/A",
             image: item.image || "",
             category_id: item.category_id,
           }))
@@ -574,88 +470,40 @@ const Article = () => {
     } catch (error) {
       console.error("Error fetching articles:", error);
       setArticles([]);
+      setToastMessage("Error fetching articles. Please try again.", "error");
+      setShowToast(true);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleView = async (article) => {
-    setLoading(true);
-    try {
-      const response = await fetch(`https://api-uks.rplrus.com/api/categories/${categoryId}/article/${article.id}`);
-      if (!response.ok) throw new Error("Failed to fetch article details");
-      const data = await response.json();
-      if (data.status) {
-        setSelectedArticle(data.data);
-        setIsDetailModalOpen(true);
-      } else {
-        throw new Error(data.message || "Error fetching article details");
-      }
-    } catch (error) {
-      console.error("Error fetching article details:", error);
-      setError("Failed to load article details. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+  const toggleDarkMode = () => {
+    setIsDarkMode((prev) => {
+      const newMode = !prev;
+      document.documentElement.classList.toggle("dark", newMode);
+      localStorage.setItem("theme", newMode ? "dark" : "light");
+      return newMode;
+    });
   };
 
-  const handleEdit = async (article) => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-      if (!token) {
-        throw new Error("Authentication token not found. Please log in.");
-      }
-
-      const response = await fetch(`https://api-uks.rplrus.com/api/categories/${categoryId}/article/${article.id}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch article details");
-      }
-
-      const data = await response.json();
-
-      if (data.status) {
-        setSelectedArticle(data.data);
-        setIsEditModalOpen(true);
-      } else {
-        throw new Error(data.message || "Error fetching article details");
-      }
-    } catch (error) {
-      console.error("Error fetching article details:", error);
-      setError("Failed to load article details. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSaveEdit = (updatedArticle) => {
-    setArticles((prevArticles) =>
-      prevArticles.map((article) =>
-        article.id === updatedArticle.id ? { ...article, ...updatedArticle } : article
-      )
-    );
-  };
-
-  const handleDeleteConfirm = (articleId) => {
-    setDeleteId(articleId);
+  const handleDeleteConfirm = (id) => {
+    setDeleteId(id);
     setIsConfirmModalOpen(true);
   };
 
   const handleDelete = async () => {
-    setError(null);
-    try {
-      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-      if (!token) {
-        throw new Error("Authentication token not found. Please log in.");
-      }
+    const token =
+      localStorage.getItem("token") || sessionStorage.getItem("token");
+    if (!token) {
+      setError("No authentication token found. Please log in.");
+      setToastMessage("No authentication token found. Please log in.", "error");
+      setShowToast(true);
+      setIsConfirmModalOpen(false);
+      return;
+    }
 
-      const response = await fetch(`https://api-uks.rplrus.com/api/articles/${deleteId}`, {
+    try {
+      const response = await fetch(`${API_URL}/articles/${deleteId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -664,24 +512,131 @@ const Article = () => {
 
       if (!response.ok) {
         if (response.status === 404) {
-          throw new Error("Article not found. It may have been already deleted.");
+          throw new Error(
+            "Article not found. It may have been already deleted."
+          );
         }
         throw new Error("Failed to deactivate article");
       }
 
       const data = await response.json();
-
       if (data.status) {
         setArticles(articles.filter((article) => article.id !== deleteId));
         setIsConfirmModalOpen(false);
+        setToastMessage("Artikel berhasil dihapus", "success");
+        setShowToast(true);
       } else {
         throw new Error(data.message || "Deactivation failed");
       }
     } catch (error) {
       console.error("Error deactivating article:", error);
-      setError(error.message || "Failed to deactivate article. Please try again.");
+      setError(
+        error.message || "Failed to deactivate article. Please try again."
+      );
+      setToastMessage("Error deleting article. Please try again.", "error");
+      setShowToast(true);
     } finally {
       setDeleteId(null);
+      setIsConfirmModalOpen(false);
+    }
+  };
+
+  const handleEdit = (article) => {
+    const sanitizedTitle = sanitizeHTML(article.title);
+    const sanitizedDescription = sanitizeHTML(article.description);
+    console.log("sanitized Title:" , sanitizedTitle);
+    console.log("sanitized desc:", sanitizedDescription);
+    setEditArticle({
+      id: article.id,
+      title: sanitizedTitle,
+      description: sanitizedDescription,
+      image: null,
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleView = (article) => {
+    setSelectedArticle(article);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedArticle(null);
+  };
+
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
+    setEditArticle({ id: null, title: "", description: "", image: null });
+    setError(null);
+  };
+
+  const handleEditInputChange = (e) => {
+    const { name, value, files } = e.target;
+    if (name === "image" && files) {
+      setEditArticle({ ...editArticle, [name]: files[0] });
+    } else {
+      setEditArticle({ ...editArticle, [name]: sanitizeHTML(value) });
+    }
+  };
+
+  const handleUpdateArticle = async (e) => {
+    e.preventDefault();
+    const token =
+      localStorage.getItem("token") || sessionStorage.getItem("token");
+    if (!token) {
+      setError("No authentication token found. Please log in.");
+      setToastMessage("No authentication token found. Please log in.", "error");
+      setShowToast(true);
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("title", editArticle.title);
+    formData.append("description", editArticle.description);
+    if (editArticle.image) {
+      formData.append("image", editArticle.image);
+    }
+    formData.append("_method", "PUT");
+
+    try {
+      const response = await fetch(`${API_URL}/articles/${editArticle.id}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update article");
+      }
+
+      const data = await response.json();
+      if (data.status) {
+        setArticles(
+          articles.map((art) =>
+            art.id === editArticle.id
+              ? {
+                  ...art,
+                  title: editArticle.title,
+                  description: editArticle.description,
+                  image: data.data.image || art.image,
+                }
+              : art
+          )
+        );
+        closeEditModal();
+        setToastMessage("Artikel berhasil diedit", "success");
+        setShowToast(true);
+      } else {
+        throw new Error(data.message || "Update failed");
+      }
+    } catch (err) {
+      console.error("Error updating article:", err);
+      setError(err.message || "Error updating article. Please try again.");
+      setToastMessage("Error updating article. Please try again.", "error");
+      setShowToast(true);
     }
   };
 
@@ -694,11 +649,28 @@ const Article = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`https://api-uks.rplrus.com/api/categories/${categoryId}/article/1/summary`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ search: query }),
-        });
+        const token =
+          localStorage.getItem("token") || sessionStorage.getItem("token");
+        if (!token) {
+          setError("No authentication token found. Please log in.");
+          setToastMessage(
+            "No authentication token found. Please log in.",
+            "error"
+          );
+          setShowToast(true);
+          return;
+        }
+        const response = await fetch(
+          `${API_URL}/categories/${categoryId}/article/1/summary`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ search: query }),
+          }
+        );
         if (!response.ok) throw new Error("Failed to search articles");
         const data = await response.json();
         if (data.status) {
@@ -707,7 +679,6 @@ const Article = () => {
               id: data.data.id,
               title: data.data.title,
               description: data.data.description,
-              jurusan: data.data.jurusan || "N/A",
               image: data.data.image || "",
               category_id: data.data.category_id,
             },
@@ -718,6 +689,8 @@ const Article = () => {
       } catch (error) {
         console.error("Error searching articles:", error);
         setError("Failed to search articles. Please try again.");
+        setToastMessage("Error searching articles. Please try again.", "error");
+        setShowToast(true);
         setArticles([]);
       } finally {
         setLoading(false);
@@ -736,7 +709,10 @@ const Article = () => {
   const totalPages = Math.ceil(filteredArticles.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentArticles = filteredArticles.slice(indexOfFirstItem, indexOfLastItem);
+  const currentArticles = filteredArticles.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
 
   const handlePageChange = (pageNumber) => {
     if (pageNumber >= 1 && pageNumber <= totalPages) {
@@ -755,52 +731,113 @@ const Article = () => {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
+    <div className="flex h-screen overflow-hidden font-sans bg-gray-50 dark:bg-gray-900">
       <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       <div className="relative flex flex-col flex-1 overflow-y-auto">
-        <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} toggleDarkMode={toggleDarkMode} />
+        <Header
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+          toggleDarkMode={toggleDarkMode}
+        />
         <main className="grow p-6">
-          <div className="w-full max-w-7xl mx-auto relative">
-            <h2 className="text-2xl text-gray-800 dark:text-gray-200 font-bold mb-6">Articles</h2>
-            <SearchBar
-              searchQuery={searchQuery}
-              onSearchChange={handleSearch}
-              onAddClick={handleAddClick}
-              categories={categories}
-              categoryId={categoryId}
-              onCategoryChange={handleCategoryChange}
-            />
+          <div className="w-full max-w-7xl mx-auto">
+            {/* Toast Notification */}
+            {showToast && (
+              <div
+                className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 ${
+                  toastType === "success"
+                    ? "bg-green-200 text-green-800"
+                    : "bg-red-200 text-red-800"
+                } px-4 py-2 rounded-lg shadow-md flex items-center gap-2 animate-fade-in-out z-50`}
+              >
+                <div
+                  className={`rounded-full p-1 ${
+                    toastType === "success" ? "bg-green-600" : "bg-red-600"
+                  }`}
+                >
+                  {toastType === "success" ? (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 text-white"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414L9 13.414l4.707-4.707z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 text-white"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  )}
+                </div>
+                <span className="font-medium text-sm">{toastMessage}</span>
+              </div>
+            )}
+
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl text-gray-800 dark:text-gray-200 font-bold">
+                Articles
+              </h2>
+              <button
+                className="flex items-center gap-2 bg-teal-500 dark:bg-teal-600 text-white px-4 py-2 rounded-full hover:bg-teal-600 dark:hover:bg-teal-700 transition-colors duration-200"
+                onClick={handleAddClick}
+                aria-label="Tambahkan artikel baru"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                <span>Tambahkan Artikel</span>
+              </button>
+            </div>
+
             {error && (
               <div className="mb-4 p-4 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 rounded-lg">
                 {error}
               </div>
             )}
             {loading ? (
-              <div className="text-center text-gray-500 dark:text-gray-400">
-                <svg
-                  className="animate-spin h-8 w-8 mx-auto text-teal-500"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v8h8a8 8 0 11-16 0z"
-                  ></path>
-                </svg>
-                Loading...
+              <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
+                <div className="double-spinner">
+                  <div className="spinner-ring outer"></div>
+                  <div className="spinner-ring inner"></div>
+                </div>
+                <p className="text-gray-500 dark:text-gray-400 mt-4">
+                  Memuat...
+                </p>
               </div>
             ) : (
               <>
+                <SearchBar
+                  searchQuery={searchQuery}
+                  onSearchChange={handleSearch}
+                  categories={categories}
+                  categoryId={categoryId}
+                  onCategoryChange={handleCategoryChange}
+                />
                 <ArticleTable
                   articles={currentArticles}
                   onView={handleView}
@@ -860,8 +897,337 @@ const Article = () => {
                 )}
               </>
             )}
+
+            {/* View Article Modal */}
+            {isModalOpen && selectedArticle && (
+              <div
+                className="fixed inset-0  bg-opacity-30 dark:bg-opacity-50 flex items-center justify-center z-50"
+                role="dialog"
+                aria-modal="true"
+              >
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md shadow-lg relative animate-scale-in">
+                  <button
+                    className="absolute top-4 right-4 text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100"
+                    onClick={closeModal}
+                    aria-label="Tutup modal detail artikel"
+                  >
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                  <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4">
+                    Detail Artikel
+                  </h3>
+                  <div className="mb-4">
+                    <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
+                      Nama Artikel
+                    </label>
+                    <div
+                      className="bg-green-100 dark:bg-green-900 p-3 rounded"
+                      dangerouslySetInnerHTML={{
+                        __html: sanitizeHTML(
+                          selectedArticle.title.length > 57
+                            ? `${selectedArticle.title.substring(0, 57)}....`
+                            : selectedArticle.title
+                        ),
+                      }}
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
+                      Deskripsi:
+                    </label>
+                    <div
+                      className="bg-blue-100 dark:bg-blue-900 p-3 rounded"
+                      dangerouslySetInnerHTML={{
+                        __html: sanitizeHTML(
+                          selectedArticle.description.length > 53
+                            ? `${selectedArticle.description.substring(
+                                0,
+                                53
+                              )}....`
+                            : selectedArticle.description
+                        ),
+                      }}
+                    />
+                  </div>
+                  <div className="mb-4"></div>
+                  <div className="mb-4">
+                    <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
+                      Gambar:
+                    </label>
+                    <img
+                      src={selectedArticle.image || "/placeholder.png"}
+                      alt={selectedArticle.title}
+                      className="w-full h-32 object-contain rounded"
+                      onError={(e) => (e.target.src = "/placeholder.png")}
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <button
+                      className="bg-gray-300 dark:bg-gray-700 text-teal-800 dark:text-gray-200 px-4 py-2 rounded hover:bg-gray-400 dark:hover:bg-gray-600"
+                      onClick={closeModal}
+                      aria-label="Kembali dari modal detail artikel"
+                    >
+                      Kembali
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Edit Article Modal */}
+            {isEditModalOpen && (
+              <div
+                className="fixed inset-0 bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50"
+                role="dialog"
+                aria-modal="true"
+              >
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-2xl relative animate-scale-in">
+                  <button
+                    className="absolute top-4 right-4 text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100"
+                    onClick={closeEditModal}
+                    aria-label="Tutup modal edit artikel"
+                  >
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                  <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4">
+                    Edit Artikel
+                  </h3>
+                  <form onSubmit={handleUpdateArticle} className="space-y-4">
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text font-medium text-gray-700 dark:text-gray-300">
+                          Nama Artikel:
+                        </span>
+                      </label>
+                      <input
+                        type="text"
+                        name="title"
+                        value={editArticle.title}
+                        onChange={handleEditInputChange}
+                        className="input w-full rounded-lg bg-teal-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 placeholder-gray-500 dark:placeholder-gray-400"
+                        required
+                        aria-required="true"
+                        aria-label="Nama artikel"
+                      />
+                    </div>
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text font-medium text-gray-700 dark:text-gray-300">
+                          Deskripsi:
+                        </span>
+                      </label>
+                      <textarea
+                        name="description"
+                        value={editArticle.description}
+                        onChange={handleEditInputChange}
+                        className="textarea w-full rounded-lg bg-teal-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 placeholder-gray-500 dark:placeholder-gray-400"
+                        required
+                        aria-required="true"
+                        aria-label="Deskripsi artikel"
+                      />
+                    </div>
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text font-medium text-gray-700 dark:text-gray-300">
+                          Tambah Gambar:
+                        </span>
+                      </label>
+                      <button
+                        type="button"
+                        className="flex items-center justify-center w-full rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 py-2 hover:bg-gray-300 dark:hover:bg-gray-600"
+                        onClick={() =>
+                          document.getElementById("file-input-edit").click()
+                        }
+                        aria-label="Pilih gambar untuk artikel"
+                      >
+                        <svg
+                          className="w-5 h-5 mr-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                        <span>
+                          {editArticle.image
+                            ? editArticle.image.name
+                            : "Tambah Gambar"}
+                        </span>
+                      </button>
+                      <input
+                        id="file-input-edit"
+                        type="file"
+                        name="image"
+                        onChange={handleEditInputChange}
+                        className="hidden"
+                        accept="image/*"
+                        aria-hidden="true"
+                      />
+                    </div>
+                    {error && (
+                      <p className="text-red-500 dark:text-red-400 text-sm">
+                        {error}
+                      </p>
+                    )}
+                    <div className="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        className="btn bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
+                        onClick={closeEditModal}
+                        aria-label="Batal mengedit artikel"
+                      >
+                        Batal
+                      </button>
+                      <button
+                        type="submit"
+                        className="btn bg-teal-500 dark:bg-teal-600 text-white rounded-lg hover:bg-teal-600 dark:hover:bg-teal-700"
+                        aria-label="Simpan perubahan artikel"
+                      >
+                        Simpan
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {isConfirmModalOpen && (
+              <div
+                className="fixed inset-0  bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50"
+                role="dialog"
+                aria-modal="true"
+              >
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-2xl relative animate-scale-in">
+                  <h3 className="text-xl font-bold text-red-600 dark:text-red-400 mb-2">
+                    Yakin ingin Menghapus Artikel?
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300 mb-4">
+                    Fitur ini digunakan untuk menghapus artikel dari sistem
+                    secara aman. Saat pengguna menekan tombol hapus, seluruh
+                    pengaturan dan data artikel yang belum tersimpan akan
+                    dihapus. Pastikan untuk menyimpan progres Anda sebelum
+                    menghapus artikel.
+                  </p>
+                  <div className="flex justify-center gap-4">
+                    <button
+                      className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition duration-200"
+                      onClick={() => setIsConfirmModalOpen(false)}
+                      aria-label="Batal menghapus artikel"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      className="px-6 py-2 bg-red-500 dark:bg-red-600 text-white rounded-lg hover:bg-red-600 dark:hover:bg-red-700 transition duration-200"
+                      onClick={handleDelete}
+                      aria-label="Konfirmasi menghapus artikel"
+                    >
+                      Lanjut Hapus
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </main>
+        <style jsx>{`
+          .animate-scale-in {
+            animation: scaleIn 0.2s ease-out;
+          }
+          @keyframes scaleIn {
+            from {
+              transform: scale(0.8);
+              opacity: 0;
+            }
+            to {
+              transform: scale(1);
+              opacity: 1;
+            }
+          }
+          .animate-fade-in-out {
+            animation: fadeInOut 3s ease-in-out;
+          }
+          @keyframes fadeInOut {
+            0% {
+              opacity: 0;
+            }
+            10% {
+              opacity: 1;
+            }
+            90% {
+              opacity: 1;
+            }
+            100% {
+              opacity: 0;
+            }
+          }
+          .double-spinner {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            margin: 0 auto;
+          }
+          .spinner-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 4px solid transparent;
+            border-radius: 50%;
+            animation: spin 1.5s linear infinite;
+          }
+          .spinner-ring.outer {
+            border-top-color: #4fb7bd;
+            border-bottom-color: #4fb7bd;
+            animation-direction: normal;
+          }
+          .spinner-ring.inner {
+            border-top-color: #93d3cc;
+            border-bottom-color: #93d3cc;
+            animation-direction: reverse;
+            width: 40px;
+            height: 40px;
+            top: 10px;
+            left: 10px;
+          }
+          @keyframes spin {
+            0% {
+              transform: rotate(0deg);
+            }
+            100% {
+              transform: rotate(360deg);
+            }
+          }
+        `}</style>
       </div>
 
       <style jsx>{`

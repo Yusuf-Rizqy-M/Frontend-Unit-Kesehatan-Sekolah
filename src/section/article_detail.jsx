@@ -7,11 +7,10 @@ function ArticleDetail() {
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { id } = useParams(); // Get article ID from URL
+  const { id } = useParams(); 
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Fetch single article by ID
     fetch(`https://api-uks.rplrus.com/api/articles/${id}`)
       .then(response => response.json())
       .then(data => {
@@ -28,7 +27,6 @@ function ArticleDetail() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  // Function to safely render HTML content
   const renderSafeHTML = (htmlContent) => {
     if (!htmlContent) return '';
     
@@ -37,8 +35,6 @@ function ArticleDetail() {
       ALLOWED_ATTR: []
     });
   };
-
-  // Format date
   const formatDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);

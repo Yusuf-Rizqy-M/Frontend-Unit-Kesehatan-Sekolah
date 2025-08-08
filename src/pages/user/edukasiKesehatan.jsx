@@ -137,7 +137,7 @@ function EdukasiKesehatan() {
           }
           .spinner-ring.outer {
             border-top-color: #4FB7BD;
-            border-bottom-color: #4FB7BD;
+            border-bottom-color: #93D3CC;
             animation-direction: normal;
           }
           .spinner-ring.inner {
@@ -264,19 +264,24 @@ function EdukasiKesehatan() {
           <p className="text-center text-red-500 animate-slide-up">{error}</p>
         ) : !categoryId ? (
           <>
-            <section className="relative w-full flex justify-center items-center bg-white mb-20 min-h-[300px] mt-[-250px] animate-fade-in">
-              <div className="w-[1200px] h-[200px] bg-[#75CCD1] rounded-[20px] flex items-center shadow-md pl-12 pt-6 transform transition-all duration-500 hover:shadow-lg">
-                <h2 className="text-4xl font-bold text-white text-left leading-tight animate-slide-up">
-                  Jelajahi <br /> berbagai <span className="text-[#005A79]">Edukasi kesehatan</span>
-                </h2>
+            {/* RESPONSIVE HERO SECTION - Blue Rectangle */}
+            <section className="relative w-full flex justify-center items-center bg-white mb-12 sm:mb-16 md:mb-20 min-h-[200px] sm:min-h-[250px] md:min-h-[300px] mt-[20px] sm:mt-[-50px] md:mt-[-150px] lg:mt-[-250px] animate-fade-in px-4 sm:px-6 lg:px-8">
+              <div className="w-full max-w-sm sm:max-w-2xl md:max-w-4xl lg:max-w-6xl xl:w-[1200px]">
+                <div className="bg-[#75CCD1] rounded-[15px] sm:rounded-[18px] md:rounded-[20px] flex items-center shadow-md p-4 sm:p-6 md:p-8 lg:p-12 pt-3 sm:pt-4 md:pt-6 pl-6 sm:pl-8 md:pl-10 lg:pl-12 transform transition-all duration-500 hover:shadow-lg min-h-[120px] sm:min-h-[150px] md:min-h-[180px] lg:h-[200px]">
+                  <h2 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white text-left leading-tight animate-slide-up">
+                    Jelajahi <br /> berbagai <span className="text-[#005A79]">Edukasi kesehatan</span>
+                  </h2>
+                </div>
               </div>
             </section>
 
-            <h2 className="-mt-17 text-3xl font-semibold text-[#2A8F9E] text-center animate-slide-up">
+            {/* RESPONSIVE TITLE */}
+            <h2 className="-mt-2 sm:-mt-8 md:-mt-12 lg:-mt-17 text-xl sm:text-2xl md:text-3xl font-semibold text-[#2A8F9E] text-center animate-slide-up px-4">
               Apa yang ingin <span className="text-[#005A79]">dibaca?</span>
             </h2>
 
-            <div className="flex flex-wrap justify-center gap-6 mt-10">
+            {/* RESPONSIVE CARDS CONTAINER */}
+            <div className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-5 lg:gap-6 mt-6 sm:mt-8 md:mt-10 px-4">
               {categories.map(category => (
                 <Link key={category.id} to={`/edukasi-kesehatan/${category.id}`}>
                   <div className="transform transition-all duration-300 hover:scale-105 hover:shadow-lg">

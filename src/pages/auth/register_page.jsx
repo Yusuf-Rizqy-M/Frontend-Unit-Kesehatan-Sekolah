@@ -48,7 +48,6 @@ const RegisterPage = () => {
       const response = await axios.get("https://api-uks.rplrus.com/api/departments", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      // Remove duplicates by creating a unique list based on department name
       const uniqueDepartments = Array.from(
         new Map(response.data.map((dept) => [dept.name, dept])).values()
       );

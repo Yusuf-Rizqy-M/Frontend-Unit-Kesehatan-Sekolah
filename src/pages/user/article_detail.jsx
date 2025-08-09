@@ -57,16 +57,18 @@ function ArticleDetail() {
   if (error) {
     return (
       <Layout>
-        <p className="text-center text-red-500 animate-slide-up">{error}</p>
-        <button 
-          onClick={() => navigate('/edukasikesehatan')} 
-          className="back-button mt-4"
-        >
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-          </svg>
-          Kembali ke Edukasi Kesehatan
-        </button>
+        <div className="container mx-auto px-4 py-8 text-center">
+          <p className="text-red-500 animate-slide-up mb-6">{error}</p>
+          <button 
+            onClick={() => navigate('/edukasikesehatan')} 
+            className="back-button"
+          >
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            Kembali ke Edukasi Kesehatan
+          </button>
+        </div>
       </Layout>
     );
   }
@@ -74,8 +76,8 @@ function ArticleDetail() {
   if (!article) {
     return (
       <Layout>
-        <div className="text-center animate-slide-up">
-          <p className="text-gray-500 mb-4">Artikel tidak ditemukan.</p>
+        <div className="container mx-auto px-4 py-8 text-center animate-slide-up">
+          <p className="text-gray-500 mb-6">Artikel tidak ditemukan.</p>
           <button 
             onClick={() => navigate('/edukasikesehatan')} 
             className="back-button"
@@ -106,7 +108,8 @@ function ArticleDetail() {
             text-decoration: none;
             transition: all 0.3s ease;
             cursor: pointer;
-            margin-left: 20px;
+            border: none;
+            font-size: 0.95rem;
           }
           .back-button:hover {
             background: #005A79;
@@ -116,45 +119,106 @@ function ArticleDetail() {
             width: 1.25rem;
             height: 1.25rem;
           }
-          .article-content {
-            max-width: 800px;
+          
+          .container {
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 2rem 20px;
+            padding-left: 1rem;
+            padding-right: 1rem;
           }
+          
+          .article-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+          }
+          
+          .article-content {
+            padding: 2rem;
+          }
+          
           .article-header {
             text-align: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
           }
+          
           .article-title {
             color: #2A8F9E;
-            font-size: 2rem;
+            font-size: 2.25rem;
             font-weight: 700;
-            margin-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            line-height: 1.3;
+            word-wrap: break-word;
+            hyphens: auto;
+            padding: 0 1rem;
           }
+          
           .article-subtitle {
             color: #666;
-            font-size: 1rem;
-            margin-bottom: 1rem;
-          }
-          .article-image {
-            width: 100%;
-            height: auto;
-            object-fit: cover;
-            margin-bottom: 1.5rem;
-            border-radius: 8px;
-          }
-          .article-text {
-            color: #333;
-            font-size: 1rem;
+            font-size: 1.1rem;
             line-height: 1.6;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0 1rem;
+          }
+          
+
+          
+          .article-image-container {
+            margin-bottom: 2rem;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #ffffffff;
+          }
+          
+          .article-image {
+            width: 70%;
+            max-width: 300px;
+            height: auto;
+            border-radius: 20px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+          }
+          
+          .article-text {
+            color: #0a414aff;
+            font-size: 1.1rem;
+            line-height: 1.8;
             text-align: justify;
           }
+          
+          .article-text p {
+            margin-bottom: 1.5rem;
+          }
+          
+          .article-text h1, .article-text h2, .article-text h3 {
+            color: #2A8F9E;
+            margin: 2rem 0 1rem 0;
+            font-weight: 600;
+          }
+          
+          .article-text ul, .article-text ol {
+            margin: 1rem 0;
+            padding-left: 2rem;
+          }
+          
+          .article-text li {
+            margin-bottom: 0.5rem;
+          }
+          
           .double-spinner {
             position: relative;
             width: 60px;
             height: 60px;
             margin: 0 auto;
           }
+          
           .spinner-ring {
             position: absolute;
             width: 100%;
@@ -163,11 +227,13 @@ function ArticleDetail() {
             border-radius: 50%;
             animation: spin 1.2s ease-in-out infinite;
           }
+          
           .spinner-ring.outer {
             border-top-color: #4FB7BD;
             border-bottom-color: #93D3CC;
             animation-direction: normal;
           }
+          
           .spinner-ring.inner {
             border-top-color: #93D3CC;
             border-bottom-color: #93D3CC;
@@ -177,24 +243,74 @@ function ArticleDetail() {
             top: 10px;
             left: 10px;
           }
+          
           @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
           }
+          
           @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
           }
+          
           .animate-fade-in {
-            animation: fadeIn 0.5s ease-in-out;
+            animation: fadeIn 0.6s ease-out;
+          }
+          
+          /* Responsive Design */
+          @media (max-width: 768px) {
+            .container {
+              padding-left: 0.75rem;
+              padding-right: 0.75rem;
+            }
+            
+            .article-content {
+              padding: 1.5rem 1rem;
+            }
+            
+            .article-title {
+              font-size: 1.75rem;
+            }
+            
+            .article-subtitle {
+              font-size: 1rem;
+            }
+            
+            .article-image {
+              width: 85%;
+              max-width: none;
+            }
+            
+            .article-text {
+              font-size: 1rem;
+              line-height: 1.7;
+            }
+            
+            .back-button {
+              padding: 0.5rem 1rem;
+              font-size: 0.9rem;
+            }
+          }
+          
+          @media (max-width: 480px) {
+            .article-title {
+              font-size: 1.5rem;
+              padding: 0 0.5rem;
+            }
+            
+            .article-content {
+              padding: 1rem 0.75rem;
+            }
           }
         `}
       </style>
-      <main className="animate-fade-in">
-        <div className="flex items-center justify-start mb-8">
+      
+      <div className="container">
+        <div className="py-6">
           <button 
             onClick={() => navigate(`/edukasi-kesehatan/${categoryId}`)} 
-            className="back-button"
+            className="back-button animate-fade-in"
           >
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
@@ -202,25 +318,31 @@ function ArticleDetail() {
             Kembali ke Artikel
           </button>
         </div>
-        <div className="article-content">
-          <div className="article-header">
-            <h1 className="article-title">{article.title}</h1>
-            <p className="article-subtitle">
-              Our Health Haven is equipped with essential medical facilities to ensure students receive the best care in a safe and comfortable environment.
-            </p>
+        
+        <main className="animate-fade-in pb-8">
+          <div className="article-container">
+            <div className="article-content">
+              <div className="article-header">
+                <h1 className="article-title">{article.title}</h1>
+              </div>
+              
+              <div className="article-image-container">
+                <img
+                  src={article.image}
+                  alt={article.title}
+                  className="article-image"
+                  onError={(e) => (e.target.src = Clean)}
+                />
+              </div>
+              
+              <div
+                className="article-text"
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(article.description) }}
+              />
+            </div>
           </div>
-          <img
-            src={article.image}
-            alt={article.title}
-            className="article-image"
-            onError={(e) => (e.target.src = Clean)}
-          />
-          <div
-            className="article-text"
-            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(article.description) }}
-          />
-        </div>
-      </main>
+        </main>
+      </div>
     </Layout>
   );
 }

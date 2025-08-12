@@ -41,23 +41,23 @@ export default function RekamAntrian() {
     setTimeout(() => setShowToast(false), 3000);
   };
 
-  // Fungsi untuk memetakan status API ke status UI
+  // Fungsi untuk memetakan status API ke status UI dalam bahasa Indonesia
   const mapStatusToUI = (apiStatus) => {
     switch (apiStatus.toLowerCase()) {
       case "done":
         return "Selesai";
       case "waiting":
-        return "Waiting";
+        return "Menunggu";
       case "processing":
-        return "Processing";
+        return "Sedang Diproses";
       case "skipped":
-        return "Skipped";
+        return "Dibatalkan";
       default:
-        return "Unknown";
+        return "Tidak Diketahui";
     }
   };
 
-  // Set tab title and favicon
+  // Set tab title dan favicon
   useEffect(() => {
     document.title = 'Rekam Antrian Siswa';
     const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
@@ -72,7 +72,7 @@ export default function RekamAntrian() {
         setLoading(true);
         const token = getToken();
         if (!token) {
-          throw new Error("No authentication token found. Please log in.");
+          throw new Error("Token autentikasi tidak ditemukan. Silakan masuk kembali.");
         }
         const config = {
           headers: {
@@ -103,10 +103,10 @@ export default function RekamAntrian() {
         setTotalProcessing(processingRes.data.data.total_processing || 0);
         setTotalSkipped(skippedRes.data.data.total_skipped || 0);
         setCurrentQueue(
-          currentQueueRes.data.data || { queue_number: "N/A", status: "Unknown", reason: "Unknown" }
+          currentQueueRes.data.data || { queue_number: "Tidak Ada", status: "Tidak Diketahui", reason: "Tidak Diketahui" }
         );
         setLatestQueue(
-          latestQueueRes.data.data || { queue_number: "N/A", status: "Unknown", reason: "Unknown" }
+          latestQueueRes.data.data || { queue_number: "Tidak Ada", status: "Tidak Diketahui", reason: "Tidak Diketahui" }
         );
 
         let queueDataArray = [];
@@ -121,20 +121,20 @@ export default function RekamAntrian() {
         }
 
         const formattedQueueData = queueDataArray.map((item) => ({
-          id: item.queue_number != null ? item.queue_number.toString().padStart(3, "0") : "N/A",
-          reason: item.reason || "Unknown",
-          status: mapStatusToUI(item.status || "Unknown"),
-          name: item.user?.name || "Unknown",
-          submit: item.created_at ? moment(item.created_at).fromNow(true) : "Unknown",
+          id: item.queue_number != null ? item.queue_number.toString().padStart(3, "0") : "Tidak Ada",
+          reason: item.reason || "Tidak Diketahui",
+          status: mapStatusToUI(item.status || "Tidak Diketahui"),
+          name: item.user?.name || "Tidak Diketahui",
+          submit: item.created_at ? moment(item.created_at).fromNow(true) : "Tidak Diketahui",
           rawId: item.id,
           userId: item.user?.id || null,
           student: {
             id: item.user?.id || null,
-            name: item.user?.name || "Unknown",
-            gender: item.user?.gender || "N/A",
-            class: item.user?.class || "N/A",
-            name_grades: item.user?.name_grades || "N/A",
-            name_department: item.user?.name_department || "N/A",
+            name: item.user?.name || "Tidak Diketahui",
+            gender: item.user?.gender || "Tidak Diketahui",
+            class: item.user?.class || "Tidak Diketahui",
+            name_grades: item.user?.name_grades || "Tidak Diketahui",
+            name_department: item.user?.name_department || "Tidak Diketahui",
             phone_number: item.user?.phone_number || null,
             name_parent: item.user?.name_parent || null,
             no_hp_parent: item.user?.no_hp_parent || null,
@@ -145,13 +145,13 @@ export default function RekamAntrian() {
       } catch (err) {
         const errorMessage =
           err.response?.status === 401
-            ? "Unauthorized access. Please log in again."
+            ? "Akses tidak diizinkan. Silakan masuk kembali."
             : err.response?.status === 404 && filterMode === "yesterday"
             ? "Data antrian kemarin tidak ditemukan."
-            : "Failed to fetch queue data. Please try again later.";
+            : "Gagal memuat data antrian. Silakan coba lagi nanti.";
         setError(errorMessage);
         showToastMessage(errorMessage, "error");
-        console.error("Fetch error:", err);
+        console.error("Kesalahan saat memuat data:", err);
       } finally {
         setLoading(false);
       }
@@ -167,7 +167,7 @@ export default function RekamAntrian() {
       setHistoryLoading(true);
       const token = getToken();
       if (!token) {
-        throw new Error("No authentication token found. Please log in.");
+        throw new Error("Token autentikasi tidak ditemukan. Silakan masuk kembali.");
       }
       const config = {
         headers: { Authorization: `Bearer ${token}` },
@@ -180,12 +180,12 @@ export default function RekamAntrian() {
           .filter((user) => user.status === "active")
           .map((user) => ({
             id: user.id,
-            name: user.name || "Unknown",
-            gender: user.gender || "N/A",
-            kelas: user.class || "N/A",
-            namaKelas: user.name_grades || "N/A",
-            department: user.name_department || "N/A",
-            role: user.role || "user",
+            name: user.name || "Tidak Diketahui",
+            gender: user.gender || "Tidak Diketahui",
+            kelas: user.class || "Tidak Diketahui",
+            namaKelas: user.name_grades || "Tidak Diketahui",
+            department: user.name_department || "Tidak Diketahui",
+            role: user.role || "pengguna",
             phone_number: user.phone_number || null,
             name_parent: user.name_parent || null,
             no_hp_parent: user.no_hp_parent || null,
@@ -193,16 +193,16 @@ export default function RekamAntrian() {
           }));
         setUserData(mappedUsers);
       } else {
-        throw new Error(response.data.message || "Invalid response format");
+        throw new Error(response.data.message || "Format respons tidak valid");
       }
     } catch (err) {
       const errorMessage =
         err.response?.status === 401
-          ? "Unauthorized: Invalid or expired token. Please log in again."
-          : "Failed to fetch user data: " + err.message;
+          ? "Akses tidak diizinkan. Silakan masuk kembali."
+          : "Gagal memuat data pengguna. Silakan coba lagi nanti.";
       setError(errorMessage);
       showToastMessage(errorMessage, "error");
-      console.error("Fetch user error:", err);
+      console.error("Kesalahan saat memuat data pengguna:", err);
     } finally {
       setHistoryLoading(false);
     }
@@ -216,7 +216,7 @@ export default function RekamAntrian() {
 
   const handleNavigateToDetails = (student) => {
     if (student?.id) {
-      const path = `/MedicalRecord/${student.id}`;
+      const path = `/RekamMedis/${student.id}`;
       navigate(path, { state: { student } });
     } else {
       showToastMessage("ID siswa tidak tersedia.", "error");
@@ -232,14 +232,14 @@ export default function RekamAntrian() {
       setUpdatingStatus((prev) => ({ ...prev, [queueId]: true }));
       const token = getToken();
       if (!token) {
-        throw new Error("No authentication token found. Please log in.");
+        throw new Error("Token autentikasi tidak ditemukan. Silakan masuk kembali.");
       }
       const config = {
         headers: { Authorization: `Bearer ${token}` },
       };
 
       let response;
-      if (newStatus === "Processing") {
+      if (newStatus === "Sedang Diproses") {
         try {
           response = await axios.post(`https://api-uks.rplrus.com/api/admin/queues/${rawId}/process`, {}, config);
         } catch (err) {
@@ -266,7 +266,7 @@ export default function RekamAntrian() {
             throw err;
           }
         }
-      } else if (newStatus === "Skipped") {
+      } else if (newStatus === "Dibatalkan") {
         try {
           response = await axios.post(`https://api-uks.rplrus.com/api/admin/queues/${rawId}/skip`, {}, config);
         } catch (err) {
@@ -276,8 +276,8 @@ export default function RekamAntrian() {
             throw err;
           }
         }
-      } else if (newStatus === "Waiting") {
-        // No API endpoint for "Waiting"; update locally
+      } else if (newStatus === "Menunggu") {
+        // Tidak ada endpoint API untuk "Menunggu"; perbarui secara lokal
       }
 
       setQueueData((prev) =>
@@ -286,33 +286,33 @@ export default function RekamAntrian() {
         )
       );
 
-      setTotalWaiting((prev) => (prevStatus === "Waiting" ? prev - 1 : prev) + (newStatus === "Waiting" ? 1 : 0));
-      setTotalProcessing((prev) => (prevStatus === "Processing" ? prev - 1 : prev) + (newStatus === "Processing" ? 1 : 0));
+      setTotalWaiting((prev) => (prevStatus === "Menunggu" ? prev - 1 : prev) + (newStatus === "Menunggu" ? 1 : 0));
+      setTotalProcessing((prev) => (prevStatus === "Sedang Diproses" ? prev - 1 : prev) + (newStatus === "Sedang Diproses" ? 1 : 0));
       setTotalCompleted((prev) => (prevStatus === "Selesai" ? prev - 1 : prev) + (newStatus === "Selesai" ? 1 : 0));
-      setTotalSkipped((prev) => (prevStatus === "Skipped" ? prev - 1 : prev) + (newStatus === "Skipped" ? 1 : 0));
+      setTotalSkipped((prev) => (prevStatus === "Dibatalkan" ? prev - 1 : prev) + (newStatus === "Dibatalkan" ? 1 : 0));
 
       if (response?.data?.message) {
         showToastMessage(response.data.message, "success");
       }
     } catch (err) {
-      const allowedMethods = err.response?.headers?.allow || "unknown";
+      const allowedMethods = err.response?.headers?.allow || "tidak diketahui";
       const errorMessage =
         err.response?.status === 401
-          ? "Unauthorized: Invalid or expired token. Please log in again."
+          ? "Akses tidak diizinkan. Silakan masuk kembali."
           : err.response?.status === 405
-          ? `Method not allowed for queue ${rawId}. Allowed methods: ${allowedMethods}.`
-          : err.response?.data?.message || "Failed to update status. Please try again.";
+          ? `Metode tidak diizinkan untuk antrian ${rawId}. Metode yang diizinkan: ${allowedMethods}.`
+          : err.response?.data?.message || "Gagal memperbarui status antrian. Silakan coba lagi.";
       setError(errorMessage);
       showToastMessage(errorMessage, "error");
-      console.error("Update status error:", err);
+      console.error("Kesalahan saat memperbarui status:", err);
     } finally {
       setUpdatingStatus((prev) => ({ ...prev, [queueId]: false }));
     }
   };
 
   const getNextStatus = (currentStatus) => {
-    if (currentStatus === "Waiting") return "Processing";
-    if (currentStatus === "Processing") return "Selesai";
+    if (currentStatus === "Menunggu") return "Sedang Diproses";
+    if (currentStatus === "Sedang Diproses") return "Selesai";
     return null;
   };
 
@@ -423,7 +423,7 @@ export default function RekamAntrian() {
                   onClick={handleRetry}
                   className="ml-4 px-4 py-1 bg-green-600 text-white rounded hover:bg-green-700"
                 >
-                  Retry
+                  Coba Lagi
                 </button>
               </div>
             )}
@@ -446,7 +446,7 @@ export default function RekamAntrian() {
                       </div>
                       <div>
                         <p className="text-sm text-[#1B4A4F] dark:text-white font-medium">
-                          Total Antrian Selesai hari ini
+                          Total Antrian Selesai
                         </p>
                         <p className="text-[20px] font-bold text-[#1B4A4F] dark:text-white leading-tight">
                           {totalCompleted}
@@ -472,7 +472,7 @@ export default function RekamAntrian() {
                       </div>
                       <div>
                         <p className="text-sm text-[#1B4A4F] dark:text-white font-medium">
-                          Total Antrian Diproses
+                          Total Antrian Sedang Diproses
                         </p>
                         <p className="text-[20px] font-bold text-[#1B4A4F] dark:text-white leading-tight">
                           {totalProcessing}
@@ -500,16 +500,16 @@ export default function RekamAntrian() {
                     <div className="col-span-12 sm:col-span-6">
                       <div className="bg-white dark:bg-[#051D4E] rounded-[20px] shadow p-6 text-center">
                         <h2 className="text-lg font-semibold text-[#93D3CC] dark:text-white mb-4">
-                          Antrian Sekarang
+                          Antrian Saat Ini
                         </h2>
                         <p className="text-[48px] font-bold text-[#93D3CC] dark:text-white mb-4">
-                          {currentQueue?.queue_number || "N/A"}
+                          {currentQueue?.queue_number || "Tidak Ada"}
                         </p>
                         <p className="text-sm text-[#93D3CC] dark:text-white">
-                          <span className="font-medium">Status:</span> {currentQueue?.status || "Unknown"}
+                          <span className="font-medium">Status:</span> {currentQueue?.status || "Tidak Diketahui"}
                         </p>
                         <p className="text-sm text-[#93D3CC] dark:text-white">
-                          <span className="font-medium">Reason:</span> {currentQueue?.reason || "Unknown"}
+                          <span className="font-medium">Alasan:</span> {currentQueue?.reason || "Tidak Diketahui"}
                         </p>
                       </div>
                     </div>
@@ -520,13 +520,13 @@ export default function RekamAntrian() {
                           Antrian Terakhir
                         </h2>
                         <p className="text-[48px] font-bold text-white dark:text-white mb-4">
-                          {latestQueue?.queue_number || "N/A"}
+                          {latestQueue?.queue_number || "Tidak Ada"}
                         </p>
                         <p className="text-sm text-white dark:text-white">
-                          <span className="font-medium">Status:</span> {latestQueue?.status || "Unknown"}
+                          <span className="font-medium">Status:</span> {latestQueue?.status || "Tidak Diketahui"}
                         </p>
                         <p className="text-sm text-white dark:text-white">
-                          <span className="font-medium">Reason:</span> {latestQueue?.reason || "Unknown"}
+                          <span className="font-medium">Alasan:</span> {latestQueue?.reason || "Tidak Diketahui"}
                         </p>
                       </div>
                     </div>
@@ -548,7 +548,7 @@ export default function RekamAntrian() {
                     }`}
                     onClick={() => handleFilterChange("all")}
                   >
-                    Semua Data
+                    Semua Antrian
                   </button>
                   <button
                     className={`px-6 py-3 rounded-md font-medium w-80 ${
@@ -564,7 +564,7 @@ export default function RekamAntrian() {
                     }`}
                     onClick={() => handleFilterChange("history")}
                   >
-                    History
+                    Riwayat Siswa
                   </button>
                 </div>
 
@@ -576,7 +576,7 @@ export default function RekamAntrian() {
                           <div className="spinner-ring outer"></div>
                           <div className="spinner-ring inner"></div>
                         </div>
-                        <p className="text-gray-500 mt-4">Memuat history...</p>
+                        <p className="text-gray-500 mt-4">Memuat riwayat...</p>
                       </div>
                     ) : (
                       <div className="overflow-x-auto">
@@ -587,7 +587,7 @@ export default function RekamAntrian() {
                               <th className="p-3 text-left">Jenis Kelamin</th>
                               <th className="p-3 text-left">Kelas</th>
                               <th className="p-3 text-left">Nama Kelas</th>
-                              <th className="p-3 text-left">Action</th>
+                              <th className="p-3 text-left">Aksi</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -615,7 +615,7 @@ export default function RekamAntrian() {
                             ) : (
                               <tr>
                                 <td colSpan="5" className="text-center p-4 text-gray-500 dark:text-gray-400">
-                                  Tidak ada data siswa.
+                                  Tidak ada data siswa ditemukan.
                                 </td>
                               </tr>
                             )}
@@ -630,11 +630,11 @@ export default function RekamAntrian() {
                       <table className="w-full border-collapse">
                         <thead>
                           <tr className="bg-gray-100 dark:bg-[#0A2F6A] text-[#1B4A4F] dark:text-white">
-                            <th className="p-3 text-left">Antrian</th>
-                            <th className="p-3 text-left">Reason</th>
+                            <th className="p-3 text-left">Nomor Antrian</th>
+                            <th className="p-3 text-left">Alasan</th>
                             <th className="p-3 text-left">Status</th>
                             <th className="p-3 text-left">Nama</th>
-                            <th className="p-3 text-left">Submit Sejak</th>
+                            <th className="p-3 text-left">Diajukan Sejak</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -651,7 +651,7 @@ export default function RekamAntrian() {
                                 <td className="p-3">{item.reason}</td>
                                 <td className="p-3 flex gap-2 items-center">
                                   {updatingStatus[item.id] ? (
-                                    <span className="text-gray-500 dark:text-gray-400">Updating...</span>
+                                    <span className="text-gray-500 dark:text-gray-400">Memperbarui...</span>
                                   ) : item.status === "Selesai" ? (
                                     <span className="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
                                       Selesai
@@ -660,11 +660,11 @@ export default function RekamAntrian() {
                                     <>
                                       <button
                                         className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                          item.status === "Waiting"
+                                          item.status === "Menunggu"
                                             ? "bg-yellow-100 text-yellow-800"
-                                            : item.status === "Processing"
+                                            : item.status === "Sedang Diproses"
                                             ? "bg-blue-100 text-blue-800"
-                                            : item.status === "Skipped"
+                                            : item.status === "Dibatalkan"
                                             ? "bg-red-100 text-red-800"
                                             : "bg-green-200 text-gray-800"
                                         } disabled:opacity-50`}
@@ -679,21 +679,21 @@ export default function RekamAntrian() {
                                           )
                                         }
                                       >
-                                        {item.status === "Waiting"
+                                        {item.status === "Menunggu"
                                           ? "Proses"
-                                          : item.status === "Processing"
+                                          : item.status === "Sedang Diproses"
                                           ? "Selesai"
                                           : item.status}
                                       </button>
-                                      {item.status === "Waiting" || item.status === "Processing" ? (
+                                      {item.status === "Menunggu" || item.status === "Sedang Diproses" ? (
                                         <button
                                           className="px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 disabled:opacity-50"
                                           disabled={filterMode !== "today"}
                                           onClick={() =>
-                                            handleStatusChange(item.id, item.rawId, "Skipped", item.status, item.student)
+                                            handleStatusChange(item.id, item.rawId, "Dibatalkan", item.status, item.student)
                                           }
                                         >
-                                          Tolak
+                                          Batalkan
                                         </button>
                                       ) : null}
                                     </>
@@ -706,7 +706,7 @@ export default function RekamAntrian() {
                           ) : (
                             <tr>
                               <td colSpan="5" className="text-center p-4 text-gray-500 dark:text-gray-400">
-                                Tidak ada data antrian.
+                                Tidak ada data antrian ditemukan.
                               </td>
                             </tr>
                           )}

@@ -121,6 +121,7 @@ function KalkulatorBmi() {
               onClick={() => setGender('woman')}
             >
               Perempuan
+              Perempuan
             </button>
           </div>
 

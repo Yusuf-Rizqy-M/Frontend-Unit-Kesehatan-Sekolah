@@ -3,37 +3,42 @@ import Sidebar from '../../partials/Sidebar';
 import Header from '../../partials/Header';
 import { FaTrash, FaEdit, FaPlus } from "react-icons/fa";
 import axios from 'axios';
-import UKS2Img from '../../assets/img/uks2.png'; // Favicon import
+import UKS2Img from '../../assets/img/uks2.png';
 
 const KelasPage = () => {
   const [grades, setGrades] = useState([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editGrade, setEditGrade] = useState(null);
-  const [formData, setFormData] = useState({ class: '', name: '', department_id: '' });
-  const [error, setError] = useState(null);
+  const [formData, setFormData] = useState({ gradeLevel: '', name: '', department_id: '' });
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState("success");
   const [departments, setDepartments] = useState([]);
-  const [successMessage, setSuccessMessage] = useState(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
 
-  const classOptions = ['10', '11', '12'];
+  const gradeLevelOptions = ['10', '11', '12'];
+
+  const showToastMessage = (message, type = "success") => {
+    setToastMessage(message);
+    setToastType(type);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
 
   useEffect(() => {
-    // Set document title
     document.title = 'Kelas';
-
-    // Set favicon
     const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
     favicon.rel = 'icon';
-    favicon.href = UKS2Img; // Use UKS2Img as favicon
+    favicon.href = UKS2Img;
     document.head.appendChild(favicon);
 
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         if (!token) {
-          throw new Error('Token tidak ditemukan. Silakan login.');
+          throw new Error('Token autentikasi tidak ditemukan. Silakan masuk kembali.');
         }
 
         const gradesResponse = await axios.get('https://api-uks.rplrus.com/api/grades', {
@@ -43,13 +48,10 @@ const KelasPage = () => {
           },
         });
         console.log('API Response (Grades):', gradesResponse.data);
-        const activeGrades = gradesResponse.data.filter(grade => {
-          console.log('Grade:', grade);
-          return grade.status === 'active';
-        });
+        const activeGrades = gradesResponse.data.filter(grade => grade.status === 'active');
         console.log('Filtered Active Grades:', activeGrades);
         if (activeGrades.length === 0) {
-          setError('Tidak ada kelas dengan status aktif ditemukan. Silakan periksa data di database atau coba tambah kelas baru.');
+          showToastMessage('Tidak ada kelas aktif yang ditemukan. Silakan tambahkan kelas baru.', 'error');
         }
         setGrades(activeGrades);
 
@@ -63,8 +65,12 @@ const KelasPage = () => {
         const activeDepartments = departmentsResponse.data.filter(dept => dept.status === 'active');
         setDepartments(activeDepartments);
       } catch (err) {
-        console.error('Error fetching data:', err.response || err.message);
-        setError(err.response?.data?.message || 'Gagal mengambil data.');
+        console.error('Kesalahan saat mengambil data:', err.response || err.message);
+        const errorMessage =
+          err.response?.status === 401
+            ? "Akses tidak diizinkan: Token tidak valid atau kadaluarsa. Silakan masuk kembali."
+            : err.response?.data?.message || 'Gagal memuat data kelas atau jurusan. Silakan coba lagi.';
+        showToastMessage(errorMessage, 'error');
       }
     };
 
@@ -77,46 +83,43 @@ const KelasPage = () => {
   };
 
   const openCreateModal = () => {
-    setFormData({ class: '', name: '', department_id: '' });
+    setFormData({ gradeLevel: '', name: '', department_id: '' });
     setIsCreateModalOpen(true);
-    setError(null);
   };
 
   const openEditModal = (grade) => {
     setEditGrade(grade);
     setFormData({
-      class: grade.class || '',
+      gradeLevel: grade.class || '',
       name: grade.name || '',
       department_id: departments.find((d) => d.name === grade.department_name)?.id || '',
     });
     setIsEditModalOpen(true);
-    setError(null);
   };
 
   const closeModals = () => {
     setIsCreateModalOpen(false);
     setIsEditModalOpen(false);
     setEditGrade(null);
-    setFormData({ class: '', name: '', department_id: '' });
-    setError(null);
+    setFormData({ gradeLevel: '', name: '', department_id: '' });
   };
 
   const handleCreate = async () => {
-    if (!formData.class || !formData.name || !formData.department_id) {
-      setError('Semua field harus diisi');
+    if (!formData.gradeLevel || !formData.name || !formData.department_id) {
+      showToastMessage('Semua kolom wajib diisi', 'error');
       return;
     }
 
     try {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       if (!token) {
-        throw new Error('Token tidak ditemukan. Silakan login.');
+        throw new Error('Token autentikasi tidak ditemukan. Silakan masuk kembali.');
       }
 
       const response = await axios.post(
         'https://api-uks.rplrus.com/api/grades',
         {
-          class: formData.class,
+          class: formData.gradeLevel,
           name: formData.name,
           department_id: parseInt(formData.department_id),
           status: 'active',
@@ -128,33 +131,36 @@ const KelasPage = () => {
 
       const newGrade = {
         ...response.data.data,
-        department_name: departments.find((d) => d.id === parseInt(formData.department_id))?.name || 'Unknown',
+        department_name: departments.find((d) => d.id === parseInt(formData.department_id))?.name || 'Tidak Diketahui',
       };
       setGrades([...grades, newGrade]);
       closeModals();
-      setSuccessMessage("Kelas berhasil ditambahkan");
-      setTimeout(() => setSuccessMessage(null), 3000);
+      showToastMessage("Kelas berhasil ditambahkan", "success");
     } catch (err) {
-      setError(err.response?.data?.message || 'Gagal membuat kelas');
+      const errorMessage =
+        err.response?.status === 401
+          ? "Akses tidak diizinkan: Token tidak valid atau kadaluarsa. Silakan masuk kembali."
+          : err.response?.data?.message || 'Gagal menambahkan kelas. Silakan coba lagi.';
+      showToastMessage(errorMessage, 'error');
     }
   };
 
   const handleEdit = async () => {
-    if (!formData.class || !formData.name || !formData.department_id) {
-      setError('Semua field harus diisi');
+    if (!formData.gradeLevel || !formData.name || !formData.department_id) {
+      showToastMessage('Semua kolom wajib diisi', 'error');
       return;
     }
 
     try {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       if (!token) {
-        throw new Error('Token tidak ditemukan. Silakan login.');
+        throw new Error('Token autentikasi tidak ditemukan. Silakan masuk kembali.');
       }
 
       const response = await axios.put(
         `https://api-uks.rplrus.com/api/grades/${editGrade.id}`,
         {
-          class: formData.class,
+          class: formData.gradeLevel,
           name: formData.name,
           department_id: parseInt(formData.department_id),
           status: 'active',
@@ -170,16 +176,19 @@ const KelasPage = () => {
             ? {
                 ...grade,
                 ...response.data.data,
-                department_name: departments.find((d) => d.id === parseInt(formData.department_id))?.name || 'Unknown',
+                department_name: departments.find((d) => d.id === parseInt(formData.department_id))?.name || 'Tidak Diketahui',
               }
             : grade
         )
       );
       closeModals();
-      setSuccessMessage("Kelas berhasil diedit");
-      setTimeout(() => setSuccessMessage(null), 3000);
+      showToastMessage("Kelas berhasil diperbarui", "success");
     } catch (err) {
-      setError(err.response?.data?.message || 'Gagal mengedit kelas');
+      const errorMessage =
+        err.response?.status === 401
+          ? "Akses tidak diizinkan: Token tidak valid atau kadaluarsa. Silakan masuk kembali."
+          : err.response?.data?.message || 'Gagal memperbarui kelas. Silakan coba lagi.';
+      showToastMessage(errorMessage, 'error');
     }
   };
 
@@ -189,29 +198,28 @@ const KelasPage = () => {
   };
 
   const handleDelete = async () => {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    if (!token) {
-      setError('Token tidak ditemukan. Silakan login.');
-      setIsConfirmModalOpen(false);
-      return;
-    }
-
     try {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      if (!token) {
+        throw new Error('Token autentikasi tidak ditemukan. Silakan masuk kembali.');
+      }
+
       await axios.delete(`https://api-uks.rplrus.com/api/grades/${deleteId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setGrades(grades.filter(grade => grade.id !== deleteId));
       setIsConfirmModalOpen(false);
-      setSuccessMessage("Kelas berhasil dihapus");
-      setTimeout(() => setSuccessMessage(null), 3000);
+      showToastMessage("Kelas berhasil dihapus", "success");
     } catch (err) {
-      setError('Error deleting grade: ' + (err.response?.data?.message || err.message));
+      const errorMessage =
+        err.response?.status === 401
+          ? "Akses tidak diizinkan: Token tidak valid atau kadaluarsa. Silakan masuk kembali."
+          : err.response?.data?.message || 'Gagal menghapus kelas. Silakan coba lagi.';
+      showToastMessage(errorMessage, 'error');
     } finally {
       setDeleteId(null);
     }
   };
-
-  const activeGrades = grades;
 
   return (
     <div className="flex h-screen overflow-hidden font-sans bg-gray-50 dark:bg-gray-900">
@@ -225,38 +233,55 @@ const KelasPage = () => {
               <button
                 onClick={openCreateModal}
                 className="flex items-center gap-2 bg-teal-500 dark:bg-teal-600 text-white px-4 py-2 rounded-full hover:bg-teal-600 dark:hover:bg-teal-700 transition-colors duration-200"
-                aria-label="Menambahkan kelas baru"
+                aria-label="Tambah kelas baru"
               >
                 <FaPlus className="w-5 h-5" />
-                <span>Menambahkan Kelas</span>
+                <span>Tambah Kelas</span>
               </button>
             </div>
 
-            {successMessage && (
+            {showToast && (
               <div
-                className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 px-4 py-2 rounded-lg shadow-md flex items-center gap-2 animate-fade-in-out z-50"
+                className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 ${
+                  toastType === "success"
+                    ? "bg-green-200 text-green-800"
+                    : "bg-red-200 text-red-800"
+                } px-4 py-2 rounded-lg shadow-md flex items-center gap-2 animate-fade-in-out z-50`}
               >
-                <div className="bg-green-600 dark:bg-green-500 rounded-full p-1">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4 text-white"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414L9 13.414l4.707-4.707z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                <div
+                  className={`rounded-full p-1 ${
+                    toastType === "success" ? "bg-green-600" : "bg-red-600"
+                  }`}
+                >
+                  {toastType === "success" ? (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 text-white"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414L9 13.414l4.707-4.707z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 text-white"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  )}
                 </div>
-                <span className="font-medium text-sm">{successMessage}</span>
-              </div>
-            )}
-
-            {error && (
-              <div className="text-red-500 dark:text-red-400 text-sm mb-4" role="alert">
-                {error}
+                <span className="font-medium text-sm">{toastMessage}</span>
               </div>
             )}
 
@@ -272,8 +297,8 @@ const KelasPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {activeGrades.length > 0 ? (
-                    activeGrades.map((grade, index) => (
+                  {grades.length > 0 ? (
+                    grades.map((grade, index) => (
                       <tr key={grade.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
                         <td className="py-3 px-4 text-gray-700 dark:text-gray-200">{index + 1}</td>
                         <td className="py-3 px-4 text-gray-700 dark:text-gray-200">{grade.name}</td>
@@ -310,54 +335,8 @@ const KelasPage = () => {
               </table>
             </div>
 
-            <div className="flex justify-between items-center mt-6 text-gray-500 dark:text-gray-300 text-sm">
-              <span>Showing {activeGrades.length > 0 ? `1-${activeGrades.length} of ${activeGrades.length}` : '0 of 0'}</span>
-              <div className="flex space-x-1">
-                <button
-                  className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-l hover:bg-gray-100 dark:hover:bg-gray-600 opacity-50 cursor-not-allowed"
-                  aria-label="Halaman sebelumnya"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M15 19l-7-7 7-7"
-                    />
-                  </svg>
-                </button>
-                <button
-                  className="px-3 py-1 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 bg-teal-500 dark:bg-teal-600 text-white"
-                  aria-label="Pindah ke halaman 1"
-                >
-                  1
-                </button>
-                <button
-                  className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-r hover:bg-gray-100 dark:hover:bg-gray-600 opacity-50 cursor-not-allowed"
-                  aria-label="Halaman berikutnya"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </button>
-              </div>
+            <div className="mt-6 text-gray-500 dark:text-gray-300 text-sm">
+              <span>Menampilkan {grades.length} kelas</span>
             </div>
 
             {isCreateModalOpen && (
@@ -368,14 +347,14 @@ const KelasPage = () => {
                     <div>
                       <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">Kelas</label>
                       <select
-                        name="class"
-                        value={formData.class}
+                        name="gradeLevel"
+                        value={formData.gradeLevel}
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 bg-teal-100 dark:bg-gray-700"
-                        aria-label="Pilih kelas"
+                        aria-label="Pilih tingkat kelas"
                       >
                         <option value="">Pilih Kelas</option>
-                        {classOptions.map((option) => (
+                        {gradeLevelOptions.map((option) => (
                           <option key={option} value={option}>
                             {option}
                           </option>
@@ -390,7 +369,7 @@ const KelasPage = () => {
                         value={formData.name}
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 bg-teal-100 dark:bg-gray-700"
-                        placeholder="Masukkan nama kelas (e.g., Elektro 1)"
+                        placeholder="Masukkan nama kelas"
                         aria-label="Nama kelas"
                       />
                     </div>
@@ -411,13 +390,12 @@ const KelasPage = () => {
                         ))}
                       </select>
                     </div>
-                    {error && <p className="text-red-500 dark:text-red-400 text-sm">{error}</p>}
                   </div>
                   <div className="flex justify-end gap-2 mt-6">
                     <button
                       onClick={closeModals}
                       className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600"
-                      aria-label="Batal"
+                      aria-label="Batal menambah kelas"
                     >
                       Batal
                     </button>
@@ -441,14 +419,14 @@ const KelasPage = () => {
                     <div>
                       <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">Kelas</label>
                       <select
-                        name="class"
-                        value={formData.class}
+                        name="gradeLevel"
+                        value={formData.gradeLevel}
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 bg-teal-100 dark:bg-gray-700"
-                        aria-label="Pilih kelas"
+                        aria-label="Pilih tingkat kelas"
                       >
                         <option value="">Pilih Kelas</option>
-                        {classOptions.map((option) => (
+                        {gradeLevelOptions.map((option) => (
                           <option key={option} value={option}>
                             {option}
                           </option>
@@ -463,7 +441,7 @@ const KelasPage = () => {
                         value={formData.name}
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 bg-teal-100 dark:bg-gray-700"
-                        placeholder="Masukkan nama kelas (e.g., Elektro 1)"
+                        placeholder="Masukkan nama kelas"
                         aria-label="Nama kelas"
                       />
                     </div>
@@ -484,13 +462,12 @@ const KelasPage = () => {
                         ))}
                       </select>
                     </div>
-                    {error && <p className="text-red-500 dark:text-red-400 text-sm">{error}</p>}
                   </div>
                   <div className="flex justify-end gap-2 mt-6">
                     <button
                       onClick={closeModals}
                       className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600"
-                      aria-label="Batal"
+                      aria-label="Batal mengedit kelas"
                     >
                       Batal
                     </button>
@@ -510,22 +487,24 @@ const KelasPage = () => {
               <div className="fixed inset-0 bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50">
                 <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-2xl relative animate-fade-in">
                   <div className="p-6 text-center">
-                    <h3 className="text-xl font-bold text-red-600 dark:text-red-400 mb-2">Yakin ingin Menghapus Kelas?</h3>
+                    <h3 className="text-xl font-bold text-red-600 dark:text-red-400 mb-2">Yakin Ingin Menghapus Kelas?</h3>
                     <p className="text-gray-600 dark:text-gray-300 mb-4">
-                      Fitur ini digunakan untuk menghapus kelas dari sistem secara aman. Seluruh data kelas akan dihapus. Pastikan untuk menyimpan progres Anda sebelum menghapus kelas.
+                      Tindakan ini akan menghapus data kelas dari sistem secara permanen. Pastikan Anda telah menyimpan data penting sebelum melanjutkan.
                     </p>
                     <div className="flex justify-center gap-4">
                       <button
                         className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition duration-200"
                         onClick={() => setIsConfirmModalOpen(false)}
+                        aria-label="Batal menghapus kelas"
                       >
                         Batal
                       </button>
                       <button
                         className="px-6 py-2 bg-red-500 dark:bg-red-600 text-white rounded-lg hover:bg-red-600 dark:hover:bg-red-700 transition duration-200"
                         onClick={handleDelete}
+                        aria-label="Hapus kelas"
                       >
-                        Lanjut Hapus
+                        Hapus
                       </button>
                     </div>
                   </div>
@@ -535,25 +514,6 @@ const KelasPage = () => {
           </div>
         </main>
       </div>
-
-      <style jsx>{`
-        .animate-fade-in-out {
-          animation: fadeInOut 3s ease-in-out;
-        }
-        @keyframes fadeInOut {
-          0% { opacity: 0; }
-          10% { opacity: 1; }
-          90% { opacity: 1; }
-          100% { opacity: 0; }
-        }
-        .animate-fade-in {
-          animation: fadeIn 0.3s ease-in;
-        }
-        @keyframes fadeIn {
-          0% { opacity: 0; }
-          100% { opacity: 1; }
-        }
-      `}</style>
     </div>
   );
 };

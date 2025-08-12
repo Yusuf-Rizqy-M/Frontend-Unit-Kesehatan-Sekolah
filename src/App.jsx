@@ -20,7 +20,7 @@ import AboutUs from "./pages/user/about_us";
 import InfoProfile from "./pages/user/info_profile";
 import EditProfile from "./pages/user/edit_profile";
 import AntreUser from "./pages/user/antre-user";
-import Antrian from "./pages/user/antrian";
+import Antrian from "./pages/user/riwayat-antre";
 import ArticleDetail from "./pages/user/article_detail"; // Import the ArticleDetail component
 
 // Admin

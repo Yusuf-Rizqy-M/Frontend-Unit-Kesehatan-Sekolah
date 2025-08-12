@@ -9,15 +9,15 @@ export default function Footer() {
     { name: "Kalkulator BMI", href: "/kalkulatorbmi" },
     { name: "Kondisi", href: "/kondisi" }, // Placeholder route
     { name: "Edukasi Kesehatan", href: "/edukasikesehatan" },
-    { name: "About us", href: "/aboutus" },
+    { name: "Tentang kami", href: "/aboutus" },
   ];
 
   const layananLinks = [
     { name: "Kalkulator BMI", href: "/kalkulatorbmi" },
-    { name: "Sehatbersama", href: "/sehatbersama" }, // Placeholder route
-    { name: "Tips Kesehatan", href: "/tips" }, // Placeholder route
-    { name: "Feature", href: "/feature" }, // Placeholder route
-    { name: "FAQ", href: "/faq" }, // Placeholder route
+    { name: "Sehatbersama", href: "/sehatbersama" }, 
+    { name: "Tips Kesehatan", href: "/tips" },
+    { name: "Fitur", href: "/feature" }, 
+    { name: "FAQ", href: "/faq" }, 
   ];
 
   return (

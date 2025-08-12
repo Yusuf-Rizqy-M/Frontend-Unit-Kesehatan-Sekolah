@@ -114,9 +114,9 @@ function Kondisi() {
           }
         `}
       </style>
-      <div className="container mx-auto px-4 py-6">
-        <h1 className="text-2xl md:text-3xl font-semibold text-center text-teal-700 mb-10">
-          History Kondisi Kamu
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-center text-teal-700 mb-10">
+          Riwayat Medis kamu
         </h1>
 
         {loading ? (
@@ -138,7 +138,7 @@ function Kondisi() {
             {historyData.map((item, index) => (
               <div
                 key={index}
-                className="border-2 border-teal-300 rounded-xl p-4 shadow-sm bg-white"
+                className="border-2 border-teal-500 rounded-xl p-4 shadow-sm bg-white"
               >
                 {/* Tanggal */}
                 <div className="text-sm font-bold text-black mb-3 border-b border-gray-300 pb-1">
@@ -159,7 +159,7 @@ function Kondisi() {
                   <span>Berat badan = {item.weight} kg</span>
                   <div>Tinggi badan = {item.height} cm</div>
                   <div>Tensi = {item.tension}</div>
-                  <div>Temperature = {item.temperature} °C</div>
+                  <div>Temperatur Tubuh = {item.temperature} °C</div>
                   <div>SpO2 = {item.spo2}%</div>
                   <span>Nadi = {item.pulse} bpm</span>
                 </div>
@@ -168,13 +168,13 @@ function Kondisi() {
                 <div className="mt-4 space-y-3">
                   <div>
                     <p className="text-sm font-medium text-gray-800 mb-1">Anamnesa</p>
-                    <div className="bg-green-100 h-16 rounded-md p-2 text-sm text-gray-700">
+                    <div className="bg-teal-100 h-16 rounded-md p-2 text-sm text-gray-700">
                       {item.anamnesis}
                     </div>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-800 mb-1">Terapi</p>
-                    <div className="bg-green-100 h-16 rounded-md p-2 text-sm text-gray-700">
+                    <div className="bg-teal-100 h-16 rounded-md p-2 text-sm text-gray-700">
                       {item.therapy}
                     </div>
                   </div>

@@ -12,7 +12,7 @@ const InfoProfile = () => {
 
  useEffect(() => {
       // Mengatur judul tab
-      document.title = 'Info Profile';
+      document.title = 'Info Profil';
       
       // Mengatur favicon
       const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
@@ -31,7 +31,7 @@ const InfoProfile = () => {
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
       if (!token) {
-        setError("Please log in to continue");
+        setError("Silakan masuk untuk melanjutkan");
         navigate("/login");
         return;
       }
@@ -58,7 +58,7 @@ const InfoProfile = () => {
         // Cache the data in localStorage
         localStorage.setItem("profileData", JSON.stringify(data));
       } else {
-        throw new Error(result.message || "Invalid response format");
+        throw new Error(result.message || "Format respons tidak valid");
       }
     } catch (err) {
       console.error("Fetch error:", err);
@@ -68,7 +68,7 @@ const InfoProfile = () => {
         setProfileData(JSON.parse(cachedData));
         setError(null);
       } else {
-        setError(err.message === "Please log in to continue" ? err.message : "Tidak dapat terhubung ke server. Silakan coba lagi nanti.");
+        setError(err.message === "Silakan masuk untuk melanjutkan" ? err.message : "Tidak dapat terhubung ke server. Silakan coba lagi nanti.");
       }
     } finally {
       setLoading(false);
@@ -88,7 +88,7 @@ const InfoProfile = () => {
 
   // Default form fields
   const defaultFormFields = [
-    { label: "Name", key: "name" },
+    { label: "Nama", key: "name" },
     { label: "Email", key: "email" },
     { label: "Nomor Telepon", key: "phone_number" },
     { label: "Jenis Kelamin", key: "gender" },
@@ -97,17 +97,17 @@ const InfoProfile = () => {
     { label: "Nama Orang Tua", key: "name_parent" },
     { label: "Nomor Telepon Orang Tua", key: "no_hp_parent" },
     { label: "Nama Walikelas", key: "name_walikelas" },
-    { label: "Absent", key: "absent" },
+    { label: "Absen", key: "absent" },
   ];
 
   // Function to select icon and text based on gender
   const getGenderInfo = (gender) => {
     if (gender === "male") {
-      return { icon: MaleIcon, text: "Male" };
+      return { icon: MaleIcon, text: "Laki- laki" };
     } else if (gender === "female") {
-      return { icon: FemaleIcon, text: "Female" };
+      return { icon: FemaleIcon, text: "Perempuan" };
     }
-    return { icon: NeutralIcon, text: "No Gender" };
+    return { icon: NeutralIcon, text: "Belum ada data" };
   };
 
   return (
@@ -151,7 +151,7 @@ const InfoProfile = () => {
       <div className="bg-[#E3F7F6]">
         <main className="bg-[#F9FCFD] min-h-screen overflow-y-auto pt-10 px-6 lg:px-16 py-10">
           <h2 className="text-xl font-semibold border-b-2 border-gray-400 pb-2 text-[#303030] text-left w-[80%]">
-            Info Profile
+            Info Profil
           </h2>
 
           {loading ? (

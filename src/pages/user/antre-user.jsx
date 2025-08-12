@@ -1,43 +1,119 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import Layout from '../../components/user/layout';
-import UKS2Img from '../../assets/img/uks2.png'; // Impor gambar UKS2Img untuk favicon, sesuaikan path
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import Layout from "../../components/user/layout";
+import UKS2Img from "../../assets/img/uks2.png"; // Impor gambar UKS2Img untuk favicon, sesuaikan path
 
+// Toast Notification Component
+const Toast = ({ message, type, isVisible, onClose }) => {
+  useEffect(() => {
+    if (isVisible) {
+      console.log("Toast is visible:", message); // Debug log
+      const timer = setTimeout(() => {
+        onClose();
+      }, 4000); // Auto close after 4 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [isVisible, onClose]);
+
+  if (!isVisible) return null;
+
+  const bgColor =
+    type === "success"
+      ? "bg-green-500"
+      : type === "error"
+      ? "bg-red-500"
+      : "bg-blue-500";
+  const icon = type === "success" ? "✓" : type === "error" ? "✕" : "ℹ";
+
+  return (
+    <div
+      className={`fixed top-4 right-4 ${bgColor} text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-72 max-w-96 animate-slide-in`}
+      style={{ zIndex: 9999 }} // Ensure it appears above everything
+    >
+      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white bg-opacity-20">
+        <span className="text-sm font-bold">{icon}</span>
+      </div>
+      <span className="flex-1 text-sm">{message}</span>
+      <button
+        onClick={onClose}
+        className="ml-2 hover:bg-white hover:bg-opacity-20 rounded p-1 transition-colors"
+        aria-label="Close notification"
+      >
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path
+            fillRule="evenodd"
+            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+            clipRule="evenodd"
+          />
+        </svg>
+      </button>
+    </div>
+  );
+};
 
 function AntreUser() {
-  const [reason, setReason] = useState('');
-  const [currentQueue, setCurrentQueue] = useState('01');
+  const [reason, setReason] = useState("");
+  const [currentQueue, setCurrentQueue] = useState("01");
   const [userQueue, setUserQueue] = useState(null);
   const [hasActiveQueue, setHasActiveQueue] = useState(null);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(true);
   const [showNotification, setShowNotification] = useState(false);
   const [latestQueueNumber, setLatestQueueNumber] = useState(null);
+
+  // Toast notification state
+  const [toast, setToast] = useState({
+    isVisible: false,
+    message: "",
+    type: "info", // 'success', 'error', 'info'
+  });
+
   const navigate = useNavigate();
 
-  const apiUrl = 'https://api-uks.rplrus.com/api';
-  const token = localStorage.getItem('token');
+  const apiUrl = "https://api-uks.rplrus.com/api";
+  const token = localStorage.getItem("token");
+
+  // Function to show toast notification
+  const showToast = (message, type = "info") => {
+    setToast({
+      isVisible: true,
+      message,
+      type,
+    });
+    console.log("Toast shown:", message, type); // Debug log
+  };
+
+  // Function to close toast notification
+  const closeToast = () => {
+    setToast((prev) => ({ ...prev, isVisible: false }));
+    console.log("Toast closed"); // Debug log
+  };
 
   // Check for token and redirect to login if missing
   useEffect(() => {
     if (!token) {
-      setError('Please log in to continue');
-      navigate('/login');
+      showToast("Silakan masuk untuk melanjutkan", "error");
+      navigate("/login");
     }
   }, [token, navigate]);
 
-    useEffect(() => {
-      // Mengatur judul tab
-      document.title = 'Antrian Pasien';
-      
-      // Mengatur favicon
-      const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
-      favicon.rel = 'icon';
-      favicon.href = UKS2Img; // Menggunakan UKS2Img sebagai favicon
-      document.head.appendChild(favicon);
-    }, []); // Efek hanya dijalankan sekali saat komponen dimuat
+  useEffect(() => {
+    // Mengatur judul tab
+    document.title = "Antrian Pasien";
+
+    // Mengatur favicon
+    const favicon =
+      document.querySelector("link[rel='icon']") ||
+      document.createElement("link");
+    favicon.rel = "icon";
+    favicon.href = UKS2Img; // Menggunakan UKS2Img sebagai favicon
+    document.head.appendChild(favicon);
+
+    // Test toast on component mount
+    setTimeout(() => {
+      showToast("Sistem antrian siap digunakan", "info");
+    }, 1000);
+  }, []); // Efek hanya dijalankan sekali saat komponen dimuat
 
   // Check queue status
   const checkQueueStatus = async () => {
@@ -48,7 +124,7 @@ function AntreUser() {
       });
       setHasActiveQueue(response.data.hasActiveQueue);
     } catch (err) {
-      setError('Failed to check queue status');
+      showToast("Gagal memeriksa status antrean", "error");
       console.error(err);
     } finally {
       setLoading(false);
@@ -62,9 +138,9 @@ function AntreUser() {
       const response = await axios.get(`${apiUrl}/queue/current-active`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setCurrentQueue(response.data.data?.queue_number || '01');
+      setCurrentQueue(response.data.data?.queue_number || "KOSONG");
     } catch (err) {
-      setError('Failed to fetch current active queue');
+      showToast("Gagal mengambil antrean aktif saat ini", "error");
       console.error(err);
     } finally {
       setLoading(false);
@@ -85,7 +161,7 @@ function AntreUser() {
         setUserQueue(null);
       }
     } catch (err) {
-      setError('Failed to fetch your queue');
+      showToast("Gagal mengambil antrean Anda", "error");
       setUserQueue(null);
       console.error(err);
     } finally {
@@ -102,7 +178,7 @@ function AntreUser() {
       });
       setLatestQueueNumber(response.data.data?.queue_number || 0);
     } catch (err) {
-      setError('Failed to fetch latest queue number');
+      showToast("Gagal mengambil nomor antrean terbaru", "error");
       console.error(err);
       setLatestQueueNumber(0);
     } finally {
@@ -113,7 +189,7 @@ function AntreUser() {
   // Create a new queue
   const handleCreateQueue = async () => {
     if (!reason.trim()) {
-      setError('Please provide a reason');
+      showToast("Harap mengisi alasan", "error");
       return;
     }
 
@@ -124,13 +200,16 @@ function AntreUser() {
         { reason },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setSuccess(response.data.message);
-      setReason('');
+      showToast("Antrian berhasil dibuat!", "success");
+      setReason("");
       setHasActiveQueue(true);
       await fetchUserQueue();
       await fetchLatestQueueNumber();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create queue');
+      showToast(
+        err.response?.data?.message || "Gagal membuat antrean",
+        "error"
+      );
       console.error(err);
     } finally {
       setLoading(false);
@@ -146,14 +225,17 @@ function AntreUser() {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setSuccess('Antrian berhasil dibatalkan');
+      showToast("Antrian berhasil dibatalkan!", "success");
       setUserQueue(null);
       setHasActiveQueue(false);
       setShowNotification(false);
       await fetchCurrentActiveQueue();
       await fetchLatestQueueNumber();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to cancel queue');
+      showToast(
+        err.response?.data?.message || "Gagal membatalkan antrean",
+        "error"
+      );
       console.error(err);
     } finally {
       setLoading(false);
@@ -194,9 +276,31 @@ function AntreUser() {
 
   // Calculate next queue number based on latest queue number
   const getNextQueueNumber = () => {
-    if (latestQueueNumber === null) return '01';
+    if (latestQueueNumber === null) return "01";
     const nextNumber = parseInt(latestQueueNumber, 10) + 1;
-    return isNaN(nextNumber) ? '01' : nextNumber.toString().padStart(2, '0');
+    return isNaN(nextNumber) ? "01" : nextNumber.toString().padStart(2, "0");
+  };
+
+  // Function to get display text for current queue
+  const getCurrentQueueDisplay = () => {
+    if (!currentQueue || currentQueue === "KOSONG") {
+      return "KOSONG";
+    }
+    return currentQueue;
+  };
+
+  // Function to get display text and style for user queue
+  const getUserQueueDisplay = () => {
+    if (!userQueue || !userQueue.queue_number) {
+      return {
+        text: "MENUNGGU",
+        fontSize: "text-5xl", // Smaller font for longer text
+      };
+    }
+    return {
+      text: userQueue.queue_number,
+      fontSize: "text-9xl", // Original large font for numbers
+    };
   };
 
   return (
@@ -273,6 +377,20 @@ function AntreUser() {
           .notification-popup button:hover {
             background: #3a8f94;
           }
+          .animate-slide-in {
+            animation: slideInRight 0.3s ease-out;
+          }
+          
+          @keyframes slideInRight {
+            from {
+              transform: translateX(100%);
+              opacity: 0;
+            }
+            to {
+              transform: translateX(0);
+              opacity: 1;
+            }
+          }
         `}
       </style>
       <section className="bg-white w-full min-h-screen py-20 relative overflow-hidden">
@@ -299,7 +417,10 @@ function AntreUser() {
         {showNotification && (
           <div className="notification-popup">
             <h3>Sekarang Giliranmu!</h3>
-            <p>Nomor antrian kamu ({userQueue?.queue_number}) sedang dipanggil. Silakan menuju UKS.</p>
+            <p>
+              Nomor antrian kamu ({userQueue?.queue_number}) sedang dipanggil.
+              Silakan menuju UKS.
+            </p>
             <button onClick={() => setShowNotification(false)}>Tutup</button>
           </div>
         )}
@@ -310,35 +431,45 @@ function AntreUser() {
             {/* Header Section */}
             <div className="w-full h-[100px] bg-[#4FB7BD] flex items-center justify-center shadow-md p-6 z-10 relative -mt-20">
               <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white text-center">
-                {hasActiveQueue ? 'Mohon Menunggu hingga antrean kamu' : 'Dapatkan antrean'}
+                {hasActiveQueue
+                  ? "Mohon Menunggu hingga antrean kamu"
+                  : "Dapatkan antrean"}
               </h2>
             </div>
-
-            {/* Error/Success Messages */}
-            {error && <p className="text-red-500 text-center mt-4">{error}</p>}
-            {success && <p className="text-green-500 text-center mt-4">{success}</p>}
-
             {hasActiveQueue ? (
               <>
                 <h3 className="mt-10 text-1xl font-medium text-[#1C4245] text-center z-10 relative">
                   Kamu akan diberi notifikasi jika sudah antrian kamu <br />
-                  Kamu bisa izin ke guru kamu dengan cara menunjukan web ini <br />
+                  Kamu bisa izin ke guru kamu dengan cara menunjukan web ini{" "}
+                  <br />
                   Atau menunggu hingga istirahat tiba
                 </h3>
 
-                <div className="flex flex-wrap justify-center gap-6 mt-10 z-10 relative">                  {/* Antrean sekarang */}
+                <div className="flex flex-wrap justify-center gap-6 mt-10 z-10 relative">
                   <div className="flex flex-col items-center w-full sm:w-[400px]">
-                    <h2 className="text-2xl font-semibold text-[#1C4245] mb-2">Antrean sekarang</h2>
+                    <h2 className="text-2xl font-semibold text-[#1C4245] mb-2">
+                      Antrean sekarang
+                    </h2>
                     <div className="w-[400px] h-[250px] bg-[#93D3CC] rounded-xl shadow-lg flex items-center justify-center">
-                      <h1 className="text-white text-7xl font-bold">{currentQueue}</h1>
+                      <h1 className="text-white text-7xl font-bold">
+                        {getCurrentQueueDisplay()}
+                      </h1>
                     </div>
                   </div>
 
                   {/* Antrean kamu */}
                   <div className="flex flex-col items-center w-full sm:w-[400px]">
-                    <h2 className="text-2xl font-semibold text-[#1C4245] mb-2">Antrean kamu</h2>
+                    <h2 className="text-2xl font-semibold text-[#1C4245] mb-2">
+                      Antrean kamu
+                    </h2>
                     <div className="w-[400px] h-[250px] bg-[#93D3CC] rounded-xl shadow-lg flex items-center justify-center">
-                      <h1 className="text-white text-9xl font-bold">{userQueue?.queue_number || 'N/A'}</h1>
+                      <h1
+                        className={`text-white ${
+                          getUserQueueDisplay().fontSize
+                        } font-bold`}
+                      >
+                        {getUserQueueDisplay().text}
+                      </h1>
                     </div>
                     {userQueue && (
                       <div className="text-[#1C4245] mt-2 text-center">
@@ -367,9 +498,10 @@ function AntreUser() {
                   Antrean sekarang
                 </h2>
 
-                {/* Kotak Rectangle */}
-                <div className="w-[350px] h-[200px] bg-[#93D3CC] mx-auto mt-6 rounded-xl shadow-lg z-10 relative flex items-center justify-center">
-                  <h1 className="text-[#FFFFFF] text-7xl font-bold">{currentQueue}</h1>
+                <div className="w-[350px] max-w-[90vw] h-[200px] bg-[#93D3CC] mx-auto mt-6 mb-8 rounded-xl shadow-lg z-10 relative flex items-center justify-center px-4">
+                  <h1 className="text-[#FFFFFF] text-5xl sm:text-6xl md:text-7xl font-bold text-center break-words">
+                    {getCurrentQueueDisplay()}
+                  </h1>
                 </div>
 
                 {/* Kotak Putih Bawah */}
@@ -377,7 +509,9 @@ function AntreUser() {
                   {/* Kiri - Form */}
                   <div className="w-full md:w-1/2 p-6 flex flex-col justify-between">
                     <div>
-                      <h3 className="text-xl font-semibold text-black mb-2">Tujuan ke UKS :</h3>
+                      <h3 className="text-xl font-semibold text-black mb-2">
+                        Tujuan ke UKS :
+                      </h3>
                       <textarea
                         className="w-full h-24 bg-green-100 rounded-lg p-3 text-gray-700 resize-none"
                         placeholder="Tulis tujuanmu ke UKS..."
@@ -400,7 +534,9 @@ function AntreUser() {
 
                   {/* Kanan - Nomor Antrian */}
                   <div className="w-full md:w-1/2 flex flex-col items-center justify-center p-6">
-                    <h3 className="text-lg font-semibold text-[#1C4245] mb-4">Nomor antrian anda</h3>
+                    <h3 className="text-lg font-semibold text-[#1C4245] mb-4">
+                      Nomor antrian anda
+                    </h3>
                     <div className="bg-[#93D3CC] w-full h-55 flex items-center justify-center rounded-xl">
                       <span className="text-white text-7xl font-bold">
                         <h1>{getNextQueueNumber()}</h1>
@@ -412,6 +548,14 @@ function AntreUser() {
             )}
           </>
         )}
+
+        {/* Toast Notification */}
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          isVisible={toast.isVisible}
+          onClose={closeToast}
+        />
       </section>
     </Layout>
   );

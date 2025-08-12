@@ -9,7 +9,7 @@ import UKS2Img from '../../images/uks2.png'; // Impor gambar UKS2Img, sesuaikan 
 const EditProfile = () => {
   useEffect(() => {
     // Mengatur judul tab
-    document.title = 'Edit Profile';
+    document.title = 'Edit Profil';
     
     // Mengatur favicon
     const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
@@ -154,27 +154,27 @@ const EditProfile = () => {
     try {
       // Client-side validation
       if (!formData.name) {
-        throw new Error("Name is required.");
+        throw new Error("Nama wajib diisi");
       }
       if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-        throw new Error("A valid email is required.");
+        throw new Error("Diperlukan email yang valid.");
       }
       if (!formData.phone_number || formData.phone_number.length < 10) {
-        throw new Error("Phone number must be at least 10 digits.");
+        throw new Error("Nomor telepon harus minimal 10 digit.");
       }
       if (!formData.name_parent) {
-        throw new Error("Parent name is required.");
+        throw new Error("Nama Orang Tua wajib diisi.");
       }
       if (!formData.no_hp_parent || formData.no_hp_parent.length < 10) {
-        throw new Error("Parent phone number must be at least 10 digits.");
+        throw new Error("Nomor telepon Orang tua harus minimal 10 digit.");
       }
       if (!formData.name_walikelas) {
-        throw new Error("Class teacher name is required.");
+        throw new Error("Nama Wali kelas wajib diisi");
       }
 
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
       if (!token) {
-        throw new Error("No token found, please login again.");
+        throw new Error("Token tidak ditemukan, silakan masuk lagi.");
       }
 
       const payload = {
@@ -202,14 +202,14 @@ const EditProfile = () => {
 
       const result = await response.json();
       if (result.status) {
-        setSuccess("Profile updated successfully!");
-        setToastMessage("Profile updated successfully!");
+        setSuccess("Profil berhasil diperbarui!");
+        setToastMessage("Profil berhasil diperbarui!");
         setShowToast(true);
         setTimeout(() => setShowToast(false), 2000);
       } else {
         const errorMessages = result.errors
           ? Object.values(result.errors).flat().join(", ")
-          : result.message || "Failed to update profile";
+          : result.message || "Gagal memperbarui profil.";
         throw new Error(errorMessages);
       }
     } catch (err) {
@@ -258,7 +258,7 @@ const EditProfile = () => {
         )}
 
         <h2 className="text-xl font-semibold border-b-2 border-gray-400 pb-2 text-[#303030] mb-6">
-          Edit Profile
+          Edit Profil
         </h2>
 
         {loading && <p className="text-gray-600">Saving...</p>}
@@ -266,7 +266,7 @@ const EditProfile = () => {
         <div className="flex flex-col lg:flex-row gap-12">
           <div className="lg:w-2/3 space-y-4">
             <InputField
-              label="Name"
+              label="Nama"
               name="name"
               value={formData.name}
               onChange={handleChange}
@@ -367,7 +367,7 @@ const EditProfile = () => {
               onChange={handleChange}
             />
             <InputField
-              label="Absent"
+              label="Absen"
               name="absent"
               value={formData.absent}
               onChange={handleChange}
@@ -381,10 +381,10 @@ const EditProfile = () => {
                 onClick={handleSubmit}
                 disabled={loading}
                 className={`px-6 py-2 text-white rounded-lg ${
-                  loading ? "bg-blue-300 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
+                  loading ? "bg-teal-300 cursor-not-allowed" : "bg-teal-500 hover:bg-teal-600"
                 }`}
               >
-                {loading ? "Saving..." : "Save"}
+                {loading ? "Saving..." : "Simpan"}
               </button>
             </div>
           </div>

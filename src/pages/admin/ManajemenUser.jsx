@@ -64,7 +64,7 @@ export default function ManajemenUser() {
 
     const token = getToken();
     if (!token) {
-      setError('No admin token found. Please log in as an admin.');
+      setError('Token admin tidak ditemukan. Silakan masuk sebagai admin.');
       setLoading(false);
       return;
     }
@@ -82,13 +82,13 @@ export default function ManajemenUser() {
         setTotalStudents(activeUsers.filter(user => user.role === 'user').length);
         setTotalAdmins(activeUsers.filter(user => user.role === 'admin').length);
       } else {
-        setError('Failed to retrieve users: ' + response.data.message);
+        setError('Gagal mengambil data pengguna:' + response.data.message);
       }
     } catch (err) {
       if (err.response?.status === 401) {
-        setError('Unauthorized: Invalid or expired admin token. Please log in again.');
+        setError('Unauthorized:Token admin tidak valid atau kedaluwarsa. Silakan masuk lagi.');
       } else {
-        setError('Error fetching users: ' + (err.response?.data?.message || err.message));
+        setError('Terjadi kesalahan saat mengambil data pengguna: ' + (err.response?.data?.message || err.message));
       }
     } finally {
       setLoading(false);
@@ -98,7 +98,7 @@ export default function ManajemenUser() {
   const fetchDepartments = async () => {
     const token = getToken();
     if (!token) {
-      setError('No admin token found. Please log in as an admin.');
+      setError('Token admin tidak ditemukan. Silakan masuk sebagai admin.');
       return;
     }
 
@@ -112,9 +112,9 @@ export default function ManajemenUser() {
       setDepartments(uniqueDepartments);
     } catch (err) {
       if (err.response?.status === 401) {
-        setError('Unauthorized: Invalid or expired admin token. Please log in again.');
+        setError('Unauthorized:Token admin tidak valid atau kedaluwarsa. Silakan masuk lagi.');
       } else {
-        setError('Error fetching departments: ' + (err.response?.data?.message || err.message));
+        setError('Terjadi kesalahan saat mengambil departemen: ' + (err.response?.data?.message || err.message));
       }
     }
   };
@@ -122,7 +122,7 @@ export default function ManajemenUser() {
   const fetchGrades = async () => {
     const token = getToken();
     if (!token) {
-      setError('No admin token found. Please log in as an admin.');
+      setError('Token admin tidak ditemukan. Silakan masuk sebagai admin.');
       return;
     }
 
@@ -136,9 +136,9 @@ export default function ManajemenUser() {
       setGrades(uniqueGrades);
     } catch (err) {
       if (err.response?.status === 401) {
-        setError('Unauthorized: Invalid or expired admin token. Please log in again.');
+        setError('Unauthorized:Token admin tidak valid atau kedaluwarsa. Silakan masuk lagi.');
       } else {
-        setError('Error fetching grades: ' + (err.response?.data?.message || err.message));
+        setError('Terjadi kesalahan saat mengambil data kelas: ' + (err.response?.data?.message || err.message));
       }
     }
   };
@@ -162,14 +162,14 @@ export default function ManajemenUser() {
         });
         return response.data.data;
       } else {
-        setModalError('Failed to retrieve user details: ' + response.data.message);
+        setModalError('Gagal mengambil detail pengguna: ' + response.data.message);
         return null;
       }
     } catch (err) {
       if (err.response?.status === 401) {
-        setModalError('Unauthorized: Invalid or expired admin token. Please log in again.');
+        setModalError('Unauthorized: Token admin tidak valid atau kedaluwarsa. Silakan masuk lagi.');
       } else {
-        setModalError('Error fetching user details: ' + (err.response?.data?.message || err.message));
+        setModalError('kesalahan saat mengambil detail pengguna:' + (err.response?.data?.message || err.message));
       }
       return null;
     } finally {
@@ -196,15 +196,15 @@ export default function ManajemenUser() {
         setShowEditModal(false);
         setSelectedUser(null);
         setEditForm({ name_department: "", class: "", name_grades: "" });
-        showToastMessage("User updated successfully");
+        showToastMessage("Pengguna berhasil diperbarui");
       } else {
-        setModalError('Failed to update user: ' + response.data.message);
+        setModalError('Gagal memperbarui pengguna:' + response.data.message);
       }
     } catch (err) {
       if (err.response?.status === 401) {
-        setModalError('Unauthorized: Invalid or expired admin token. Please log in again.');
+        setModalError('Unauthorized: Token admin tidak valid atau kedaluwarsa. Silakan masuk lagi.');
       } else {
-        setModalError('Error updating user: ' + (err.response?.data?.message || err.message));
+        setModalError('Kesalahan saat memperbarui pengguna: ' + (err.response?.data?.message || err.message));
       }
     } finally {
       setModalLoading(false);
@@ -214,7 +214,7 @@ export default function ManajemenUser() {
   const softDeleteUser = async (id) => {
     const token = getToken();
     if (!token) {
-      showToastMessage('No admin token found. Please log in as an admin.', 'error');
+      showToastMessage('Token admin tidak ditemukan. Silakan masuk sebagai admin.', 'error');
       return;
     }
 
@@ -229,13 +229,13 @@ export default function ManajemenUser() {
         setShowDeleteConfirm(false);
         setUserToDelete(null);
       } else {
-        showToastMessage('Failed to delete user: ' + response.data.message, 'error');
+        showToastMessage('Gagal menghapus pengguna: ' + response.data.message, 'error');
       }
     } catch (err) {
       if (err.response?.status === 401) {
-        showToastMessage('Unauthorized: Invalid or expired admin token. Please log in again.', 'error');
+        showToastMessage('Unauthorized: Token admin tidak valid atau kedaluwarsa. Silakan masuk lagi.', 'error');
       } else {
-        showToastMessage('Error deleting user: ' + (err.response?.data?.message || err.message), 'error');
+        showToastMessage('Terjadi kesalahan saat menghapus pengguna: ' + (err.response?.data?.message || err.message), 'error');
       }
     }
   };
@@ -422,7 +422,7 @@ export default function ManajemenUser() {
                   className="ml-4 px-4 py-1 bg-green-600 text-white rounded hover:bg-green-700"
                   aria-label="Coba lagi untuk mengambil data pengguna"
                 >
-                  Retry
+                  Mencoba kembali
                 </button>
               </div>
             </div>
@@ -517,7 +517,7 @@ export default function ManajemenUser() {
                 </span>
                 <input
                   type="text"
-                  placeholder="Search"
+                  placeholder="Cari"
                   value={searchQuery}
                   onChange={handleSearchChange}
                   className="
@@ -573,7 +573,7 @@ export default function ManajemenUser() {
                 className="w-[120px] rounded-[10px] bg-white dark:bg-gray-700 text-[#6D9C9D] dark:text-gray-200 text-left pl-5 py-2 focus:outline-none appearance-none"
                 aria-label="Filter berdasarkan peran"
               >
-                <option value="">Role</option>
+                <option value="">Peran</option>
                 <option value="user">User</option>
                 <option value="admin">Admin</option>
               </select>
@@ -584,9 +584,10 @@ export default function ManajemenUser() {
                 <thead className="text-teal-600 uppercase text-xs border-b border-[#CDDDFF]">
                   <tr>
                     <th className="px-4 py-3">No</th>
-                    <th className="px-4 py-3">Name</th>
+                    <th className="px-4 py-3">Nama</th>
                     <th className="px-4 py-3">Kelas</th>
                     <th className="px-4 py-3">Nama Kelas</th>
+                    <th className="px-4 py-3">Jenis Kelamin</th>
                     <th className="px-4 py-3">Jenis Kelamin</th>
                     <th className="px-4 py-3">No HP</th>
                     <th className="px-4 py-3"></th>
@@ -649,8 +650,8 @@ export default function ManajemenUser() {
                     onClick={() => handlePageChange(page)}
                     className={`px-3 py-1 border rounded ${
                       currentPage === page
-                        ? 'bg-green-600 dark:bg-[#204ECF] text-white'
-                        : 'text-gray-600 dark:text-gray-300'
+                        ? 'bg-teal-500 dark:bg-[#204ECF] text-white'
+                        : 'text-gray-400 dark:text-gray-300'
                     }`}
                     aria-label={`Pindah ke halaman ${page}`}
                   >
@@ -833,14 +834,14 @@ export default function ManajemenUser() {
                             setSelectedUser(null);
                             setEditForm({ name_department: "", class: "", name_grades: "" });
                           }}
-                          className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600"
+                          className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500 dark:bg-gray-700 dark:hover:bg-gray-600"
                           aria-label="Batal mengedit pengguna"
                         >
                           Batal
                         </button>
                         <button
                           onClick={handleEditSubmit}
-                          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                          className="px-4 py-2 bg-teal-400 text-white rounded hover:bg-teal-500"
                           aria-label="Simpan perubahan pengguna"
                         >
                           Simpan

@@ -41,10 +41,6 @@ export default function Footer() {
             <FaEnvelope className="text-[#30456A]" />
             adminukssmkrus@gmail.com
           </p>
-          <p className="flex items-center gap-2 text-gray-800 text-sm justify-center md:justify-start">
-            <FaWhatsapp className="text-[#30456A]" />
-            +6285786673009
-          </p>
         </div>
 
         {/* Right Section - Links */}

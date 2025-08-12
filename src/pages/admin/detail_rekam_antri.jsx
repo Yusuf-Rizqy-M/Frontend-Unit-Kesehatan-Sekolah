@@ -7,7 +7,7 @@ import "moment/locale/id";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import UKS2Img from '../../assets/img/uks2.png'; // Favicon import
 
-export default function DetailRekamAntri() {
+export default function DetailRekamAntrian() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [queueData, setQueueData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,9 +22,9 @@ export default function DetailRekamAntri() {
 
   moment.locale("id");
 
-  // Set document title and favicon
+  // Set document title dan favicon
   useEffect(() => {
-    document.title = 'Detail Rekam Antri';
+    document.title = 'Detail Rekam Antrian';
     const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
     favicon.rel = 'icon';
     favicon.href = UKS2Img;
@@ -42,19 +42,35 @@ export default function DetailRekamAntri() {
     setTimeout(() => setShowToast(false), 3000);
   };
 
+  // Fungsi untuk memetakan status API ke status UI dalam bahasa Indonesia
+  const mapStatusToUI = (apiStatus) => {
+    switch (apiStatus.toLowerCase()) {
+      case "done":
+        return "Selesai";
+      case "waiting":
+        return "Menunggu";
+      case "processing":
+        return "Sedang Diproses";
+      case "skipped":
+        return "Dibatalkan";
+      default:
+        return "Tidak Diketahui";
+    }
+  };
+
   useEffect(() => {
     const fetchQueueHistory = async () => {
       try {
         setLoading(true);
         const token = getToken();
         if (!token) {
-          throw new Error("No authentication token found. Please log in.");
+          throw new Error("Token autentikasi tidak ditemukan. Silakan masuk kembali.");
         }
         const config = {
           headers: { Authorization: `Bearer ${token}` },
         };
 
-        // Fetch user queue history using the correct endpoint
+        // Mengambil riwayat antrian pengguna
         const response = await axios.get(
           `https://api-uks.rplrus.com/api/admin/queue/history/user/${userId}`,
           config
@@ -63,45 +79,39 @@ export default function DetailRekamAntri() {
           ? response.data.data
           : [];
         if (queueDataArray.length === 0) {
-          setError("No queue history found for this user.");
-          showToastMessage("No queue history found for this user.", "info");
+          setError("Tidak ada riwayat antrian untuk siswa ini.");
+          showToastMessage("Tidak ada riwayat antrian untuk siswa ini.", "error");
         }
         const formattedQueueData = queueDataArray.map((item) => ({
           id:
             item.queue_number != null
               ? item.queue_number.toString().padStart(3, "0")
-              : "N/A",
-          reason: item.reason || "Unknown",
-          status: item.status
-            ? item.status.charAt(0).toUpperCase() + item.status.slice(1)
-            : "Unknown",
+              : "Tidak Ada",
+          reason: item.reason || "Tidak Diketahui",
+          status: mapStatusToUI(item.status || "Tidak Diketahui"),
           submit: item.created_at
             ? moment(item.created_at).fromNow(true)
-            : "Unknown",
+            : "Tidak Diketahui",
           rawId: item.id,
-          queueDate: item.queue_date || "Unknown",
+          queueDate: item.queue_date
+            ? moment(item.queue_date).format("DD MMMM YYYY")
+            : "Tidak Diketahui",
         }));
         setQueueData(formattedQueueData);
       } catch (err) {
-        console.error("Fetch queue history error:", err);
+        console.error("Kesalahan saat memuat riwayat antrian:", err);
         if (err.response?.status === 404) {
-          setError("No queue history found for this user.");
-          showToastMessage("No queue history found for this user.", "info");
+          setError("Tidak ada riwayat antrian untuk siswa ini.");
+          showToastMessage("Tidak ada riwayat antrian untuk siswa ini.", "error");
         } else if (err.response?.status === 401) {
-          setError("Unauthorized access. Please log in again.");
-          showToastMessage(
-            "Unauthorized access. Please log in again.",
-            "error"
-          );
+          setError("Akses tidak diizinkan. Silakan masuk kembali.");
+          showToastMessage("Akses tidak diizinkan. Silakan masuk kembali.", "error");
         } else {
           setError(
-            "Failed to fetch queue history: " +
+            "Gagal memuat riwayat antrian: " +
               (err.response?.data?.message || err.message)
           );
-          showToastMessage(
-            "Failed to fetch queue history. Please try again later.",
-            "error"
-          );
+          showToastMessage("Gagal memuat riwayat antrian. Silakan coba lagi nanti.", "error");
         }
       } finally {
         setLoading(false);
@@ -111,8 +121,8 @@ export default function DetailRekamAntri() {
     if (userId) {
       fetchQueueHistory();
     } else {
-      setError("Invalid user ID.");
-      showToastMessage("Invalid user ID.", "error");
+      setError("ID siswa tidak valid.");
+      showToastMessage("ID siswa tidak valid.", "error");
       setLoading(false);
     }
   }, [userId]);
@@ -179,24 +189,16 @@ export default function DetailRekamAntri() {
             `}
           </style>
           <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto">
-            {/* Toast Notification */}
+            {/* Notifikasi Toast */}
             {showToast && (
               <div
                 className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 ${
-                  toastType === "success"
-                    ? "bg-green-200 text-green-800"
-                    : toastType === "info"
-                    ? "bg-blue-200 text-blue-800"
-                    : "bg-red-200 text-red-800"
+                  toastType === "success" ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
                 } px-4 py-2 rounded-lg shadow-md flex items-center gap-2 animate-fade-in-out z-50`}
               >
                 <div
                   className={`rounded-full p-1 ${
-                    toastType === "success"
-                      ? "bg-green-600"
-                      : toastType === "info"
-                      ? "bg-blue-600"
-                      : "bg-red-600"
+                    toastType === "success" ? "bg-green-600" : "bg-red-600"
                   }`}
                 >
                   {toastType === "error" ? (
@@ -235,7 +237,7 @@ export default function DetailRekamAntri() {
               <button
                 onClick={handleBack}
                 className="mr-2 text-teal-800 hover:text-teal-600 transition-colors"
-                aria-label="Kembali ke halaman rekam antri"
+                aria-label="Kembali ke halaman rekam antrian"
               >
                 <svg
                   className="w-6 h-6"
@@ -253,11 +255,11 @@ export default function DetailRekamAntri() {
                 </svg>
               </button>
               <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-                Detail Rekam Antri
+                Detail Rekam Antrian
               </h2>
             </div>
 
-            {/* Student Details */}
+            {/* Informasi Siswa */}
             <div className="bg-white dark:bg-[#051D4E] rounded-[20px] shadow p-6 mb-6">
               <h2 className="text-lg font-semibold text-[#93D3CC] dark:text-white mb-4">
                 Informasi Siswa
@@ -266,29 +268,29 @@ export default function DetailRekamAntri() {
                 <div>
                   <p className="text-sm text-[#1B4A4F] dark:text-white">
                     <span className="font-medium">Nama:</span>{" "}
-                    {student.name || "N/A"}
+                    {student.name || "Tidak Diketahui"}
                   </p>
                   <p className="text-sm text-[#1B4A4F] dark:text-white">
                     <span className="font-medium">Jenis Kelamin:</span>{" "}
-                    {student.gender || "N/A"}
+                    {student.gender || "Tidak Diketahui"}
                   </p>
                   <p className="text-sm text-[#1B4A4F] dark:text-white">
                     <span className="font-medium">Kelas:</span>{" "}
-                    {student.kelas || "N/A"}
+                    {student.kelas || "Tidak Diketahui"}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-[#1B4A4F] dark:text-white">
                     <span className="font-medium">Nama Kelas:</span>{" "}
-                    {student.namaKelas || "N/A"}
+                    {student.namaKelas || "Tidak Diketahui"}
                   </p>
                   <p className="text-sm text-[#1B4A4F] dark:text-white">
                     <span className="font-medium">Jurusan:</span>{" "}
-                    {student.department || "N/A"}
+                    {student.department || "Tidak Diketahui"}
                   </p>
                   <p className="text-sm text-[#1B4A4F] dark:text-white">
                     <span className="font-medium">Nomor Telepon:</span>{" "}
-                    {student.phone_number || "N/A"}
+                    {student.phone_number || "Tidak Diketahui"}
                   </p>
                 </div>
               </div>
@@ -301,9 +303,9 @@ export default function DetailRekamAntri() {
                 <button
                   onClick={handleRetry}
                   className="ml-4 px-4 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-                  aria-label="Coba lagi untuk mengambil riwayat antrian"
+                  aria-label="Coba lagi untuk memuat riwayat antrian"
                 >
-                  Retry
+                  Coba Lagi
                 </button>
               </div>
             )}
@@ -323,12 +325,12 @@ export default function DetailRekamAntri() {
                   <table className="w-full border-collapse" role="grid">
                     <thead>
                       <tr className="bg-gray-100 dark:bg-[#0A2F6A] text-[#1B4A4F] dark:text-white">
-                        <th className="p-3 text-left">Id</th>
-                        <th className="p-3 text-left">Antrian</th>
-                        <th className="p-3 text-left">Reason</th>
+                        <th className="p-3 text-left">ID</th>
+                        <th className="p-3 text-left">Nomor Antrian</th>
+                        <th className="p-3 text-left">Alasan</th>
                         <th className="p-3 text-left">Status</th>
                         <th className="p-3 text-left">Tanggal Antrian</th>
-                        <th className="p-3 text-left">Submit Sejak</th>
+                        <th className="p-3 text-left">Diajukan Sejak</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -349,11 +351,11 @@ export default function DetailRekamAntri() {
                                 className={`px-2 py-1 rounded-full text-sm font-medium ${
                                   item.status === "Selesai"
                                     ? "bg-green-100 text-green-800"
-                                    : item.status === "Waiting"
+                                    : item.status === "Menunggu"
                                     ? "bg-yellow-100 text-yellow-800"
-                                    : item.status === "Processing"
+                                    : item.status === "Sedang Diproses"
                                     ? "bg-blue-100 text-blue-800"
-                                    : item.status === "Skipped"
+                                    : item.status === "Dibatalkan"
                                     ? "bg-red-100 text-red-800"
                                     : "bg-gray-100 text-gray-800"
                                 }`}

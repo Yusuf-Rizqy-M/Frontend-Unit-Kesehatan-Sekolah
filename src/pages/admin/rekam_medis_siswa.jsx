@@ -82,7 +82,7 @@ const RekamMedisSiswa = () => {
 
     const token = getToken();
     if (!token) {
-      setError('No authentication token found. Please log in.');
+      setError('Token autentikasi tidak ditemukan. Silakan Login.');
       setLoading(false);
       return;
     }
@@ -111,9 +111,9 @@ const RekamMedisSiswa = () => {
       }
     } catch (err) {
       if (err.response && err.response.status === 401) {
-        setError('Unauthorized: Invalid or expired token. Please log in again.');
+        setError('Unauthorized: Token tidak valid atau kedaluwarsa. Silakan Login lagi.');
       } else {
-        setError('Error fetching students: ' + err.message);
+        setError('Terjadi kesalahan saat mengambil siswa: ' + err.message);
       }
       setStudents([]);
     } finally {
@@ -125,7 +125,7 @@ const RekamMedisSiswa = () => {
   const fetchDepartments = async () => {
     const token = getToken();
     if (!token) {
-      setError('No authentication token found. Please log in.');
+      setError('Token autentikasi tidak ditemukan. Silakan Login.');
       return;
     }
 
@@ -139,9 +139,9 @@ const RekamMedisSiswa = () => {
       setDepartments(uniqueDepartments);
     } catch (err) {
       if (err.response && err.response.status === 401) {
-        setError('Unauthorized: Invalid or expired token. Please log in again.');
+        setError('Unauthorized: Token tidak valid atau kedaluwarsa. Silakan Login Kembali.');
       } else {
-        setError('Error fetching departments: ' + err.message);
+        setError('Terjadi kesalahan saat mengambil departemen:' + err.message);
       }
     }
   };
@@ -150,7 +150,7 @@ const RekamMedisSiswa = () => {
   const fetchGrades = async () => {
     const token = getToken();
     if (!token) {
-      setError('No authentication token found. Please log in.');
+      setError('Token autentikasi tidak ditemukan. Silakan Login.');
       return;
     }
 
@@ -164,7 +164,7 @@ const RekamMedisSiswa = () => {
       setGrades(uniqueGrades);
     } catch (err) {
       if (err.response && err.response.status === 401) {
-        setError('Unauthorized: Invalid or expired token. Please log in again.');
+        setError('Unauthorized: Token tidak valid atau kedaluwarsa. Silakan Login Kembali');
       } else {
         setError('Error fetching grades: ' + err.message);
       }
@@ -306,7 +306,7 @@ const RekamMedisSiswa = () => {
                 </span>
                 <input
                   type="text"
-                  placeholder="Search"
+                  placeholder="Cari"
                   value={searchQuery}
                   onChange={handleSearchChange}
                   className="w-full pl-10 pr-4 py-2 rounded-[10px] bg-white dark:bg-gray-800 text-[#6D9C9D] dark:text-gray-200 placeholder-[#6D9C9D] dark:placeholder-gray-400 focus:outline-none"
@@ -357,7 +357,7 @@ const RekamMedisSiswa = () => {
                 onChange={handleRoleChange}
                 className="w-[120px] rounded-[10px] bg-white dark:bg-gray-800 text-[#6D9C9D] dark:text-gray-200 text-left pl-5 py-2 focus:outline-none appearance-none"
               >
-                <option value="">Role</option>
+                <option value="">Peran</option>
                 <option value="user">User</option>
                 <option value="admin">Admin</option>
               </select>

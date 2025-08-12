@@ -42,7 +42,7 @@ const SearchBar = ({
       </span>
       <input
         type="text"
-        placeholder="Search"
+        placeholder="Cari"
         value={searchQuery}
         onChange={onSearchChange}
         onKeyPress={(e) => e.key === "Enter" && onSearchChange(e)}
@@ -54,7 +54,7 @@ const SearchBar = ({
       value={categoryId}
       onChange={(e) => onCategoryChange(e.target.value)}
     >
-      <option value="all">All Categories</option>
+      <option value="all">Semua Kategori</option>
       {categories.length > 0 ? (
         categories.map((category) => (
           <option key={category.id} value={category.id}>
@@ -246,8 +246,8 @@ const Pagination = ({
   return (
     <div className="flex justify-between items-center mt-6 text-gray-500 dark:text-gray-300 text-sm">
       <span>
-        Showing {indexOfFirstItem + 1}-
-        {Math.min(indexOfFirstItem + itemsPerPage, filteredArticles.length)} of{" "}
+        Melihatkan {indexOfFirstItem + 1}-
+        {Math.min(indexOfFirstItem + itemsPerPage, filteredArticles.length)} dari{" "}
         {filteredArticles.length}
       </span>
       <div className="flex space-x-1">
@@ -376,7 +376,7 @@ const Article = () => {
     }
   }, [showToast]);
 
-  const showToastMessage = (message, type = "success") => {
+const showToastMessage = (message, type = "success") => {
     setToastMessage(message);
     setToastType(type);
     setShowToast(true);
@@ -405,8 +405,8 @@ const Article = () => {
       const token =
         localStorage.getItem("token") || sessionStorage.getItem("token");
       if (!token) {
-        setError("No authentication token found. Please log in.");
-        showToastMessage("No authentication token found. Please log in.", "error");
+        setError("Token autentikasi tidak ditemukan. Silakan login.");
+        showToastMessage("Token autentikasi tidak ditemukan. Silakan login.", "error");
         return;
       }
       const response = await fetch(`${API_URL}/categories`, {
@@ -414,19 +414,19 @@ const Article = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-      if (!response.ok) throw new Error("Failed to fetch categories");
+      if (!response.ok) throw new Error("Gagal mengambil data kategori");
       const data = await response.json();
       if (data.status) {
         setCategories(data.data);
-        setCategoryId("all"); // Default to "All Categories"
+        setCategoryId("all"); 
       } else {
-        throw new Error(data.message || "Error fetching categories");
+        throw new Error(data.message || "Gagal mengambil data kategori");
       }
     } catch (error) {
-      console.error("Error fetching categories:", error);
-      setError("Failed to load categories. Please try again.");
+      console.error("Kesalahan saat mengambil kategori:", error);
+      setError("Gagal memuat kategori. Silakan coba lagi.");
       setCategories([]);
-      showToastMessage("Error fetching categories.", "error");
+      showToastMessage("Gagal memuat kategori. Silakan coba lagi.", "error");
     } finally {
       setLoading(false);
     }
@@ -446,8 +446,8 @@ const Article = () => {
       const token =
         localStorage.getItem("token") || sessionStorage.getItem("token");
       if (!token) {
-        setError("No authentication token found. Please log in.");
-        showToastMessage("No authentication token found. Please log in.", "error");
+        setError("Token autentikasi tidak ditemukan. Silakan login.");
+        showToastMessage("Token autentikasi tidak ditemukan. Silakan login.", "error");
         return;
       }
       
@@ -469,7 +469,7 @@ const Article = () => {
               }
             }
           } catch (error) {
-            console.warn(`Failed to fetch articles from category ${category.id}:`, error);
+            console.warn(`Gagal mengambil artikel dari kategori ${category.id}:`, error);
           }
         }
       } else {
@@ -479,12 +479,12 @@ const Article = () => {
             Authorization: `Bearer ${token}`,
           },
         });
-        if (!response.ok) throw new Error("Failed to fetch articles");
+        if (!response.ok) throw new Error("Gagal mengambil artikel");
         const data = await response.json();
         if (data.status) {
           allArticles = data.data;
         } else {
-          throw new Error(data.message || "Error fetching articles");
+          throw new Error(data.message || "Gagal mengambil artikel");
         }
       }
 
@@ -498,9 +498,9 @@ const Article = () => {
         }))
       );
     } catch (error) {
-      console.error("Error fetching articles:", error);
+      console.error("Kesalahan saat mengambil artikel:", error);
       setArticles([]);
-      showToastMessage("Error fetching articles. Please try again.", "error");
+      showToastMessage("Gagal memuat artikel. Silakan coba lagi.", "error");
     } finally {
       setLoading(false);
     }
@@ -524,8 +524,8 @@ const Article = () => {
     const token =
       localStorage.getItem("token") || sessionStorage.getItem("token");
     if (!token) {
-      setError("No authentication token found. Please log in.");
-      showToastMessage("No authentication token found. Please log in.", "error");
+      setError("Token autentikasi tidak ditemukan. Silakan login.");
+      showToastMessage("Token autentikasi tidak ditemukan. Silakan login.", "error");
       setIsConfirmModalOpen(false);
       return;
     }
@@ -540,11 +540,9 @@ const Article = () => {
 
       if (!response.ok) {
         if (response.status === 404) {
-          throw new Error(
-            "Article not found. It may have been already deleted."
-          );
+          throw new Error("Artikel tidak ditemukan. Mungkin sudah dihapus.");
         }
-        throw new Error("Failed to deactivate article");
+        throw new Error("Gagal menonaktifkan artikel");
       }
 
       const data = await response.json();
@@ -553,14 +551,12 @@ const Article = () => {
         setIsConfirmModalOpen(false);
         showToastMessage("Artikel berhasil dihapus", "success");
       } else {
-        throw new Error(data.message || "Deactivation failed");
+        throw new Error(data.message || "Penonaktifan gagal");
       }
     } catch (error) {
-      console.error("Error deactivating article:", error);
-      setError(
-        error.message || "Failed to deactivate article. Please try again."
-      );
-      showToastMessage("Error deleting article. Please try again.", "error");
+      console.error("Kesalahan saat menonaktifkan artikel:", error);
+      setError(error.message || "Gagal menonaktifkan artikel. Silakan coba lagi.");
+      showToastMessage("Gagal menghapus artikel. Silakan coba lagi.", "error");
     } finally {
       setDeleteId(null);
       setIsConfirmModalOpen(false);
@@ -611,8 +607,8 @@ const Article = () => {
     const token =
       localStorage.getItem("token") || sessionStorage.getItem("token");
     if (!token) {
-      setError("No authentication token found. Please log in.");
-      showToastMessage("No authentication token found. Please log in.", "error");
+      setError("Token autentikasi tidak ditemukan. Silakan login.");
+      showToastMessage("Token autentikasi tidak ditemukan. Silakan login.", "error");
       return;
     }
 
@@ -634,7 +630,7 @@ const Article = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to update article");
+        throw new Error("Gagal memperbarui artikel");
       }
 
       const data = await response.json();
@@ -652,14 +648,14 @@ const Article = () => {
           )
         );
         closeEditModal();
-        showToastMessage("Artikel berhasil diedit", "success");
+        showToastMessage("Artikel berhasil diperbarui", "success");
       } else {
-        throw new Error(data.message || "Update failed");
+        throw new Error(data.message || "Pembaruan gagal");
       }
     } catch (err) {
-      console.error("Error updating article:", err);
-      setError(err.message || "Error updating article. Please try again.");
-      showToastMessage("Error updating article. Please try again.", "error");
+      console.error("Kesalahan saat memperbarui artikel:", err);
+      setError(err.message || "Gagal memperbarui artikel. Silakan coba lagi.");
+      showToastMessage("Gagal memperbarui artikel. Silakan coba lagi.", "error");
     }
   };
 
@@ -920,7 +916,7 @@ const Article = () => {
                   </div>
                   <div className="flex justify-end gap-2">
                     <button
-                      className="bg-gray-300 dark:bg-gray-700 text-teal-800 dark:text-gray-200 px-4 py-2 rounded hover:bg-gray-400 dark:hover:bg-gray-600"
+                      className="bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-4 py-2 rounded hover:bg-gray-400 dark:hover:bg-gray-600"
                       onClick={closeModal}
                       aria-label="Kembali dari modal detail artikel"
                     >

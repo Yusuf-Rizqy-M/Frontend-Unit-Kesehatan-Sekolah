@@ -71,7 +71,7 @@ const FeaturePage = () => {
             href="/KalkulatorBmi"
             className="mt-4 inline-block bg-[#2A8F9E] text-white px-4 py-2 rounded-lg transition duration-300 hover:bg-[#237987]"
           >
-            Explore Kalkulator BMI →
+            Jelajahi Kalkulator BMI →
           </a>
         </div>
       </motion.div>
@@ -106,7 +106,7 @@ const FeaturePage = () => {
             href="#"
             className="mt-4 inline-block bg-[#2A8F9E] text-white px-4 py-2 rounded-lg transition duration-300 hover:bg-[#237987]"
           >
-            Explore Rekap Medis →
+            Jelajahi Rekap Medis →
           </a>
         </div>
       </motion.div>

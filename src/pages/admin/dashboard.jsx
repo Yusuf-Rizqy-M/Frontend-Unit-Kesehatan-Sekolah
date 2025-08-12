@@ -74,7 +74,7 @@ function Dashboard() {
           remember: true,
         }),
       });
-      if (!response.ok) throw new Error('Login failed');
+      if (!response.ok) throw new Error('Gagal Login');
       const data = await response.json();
       if (data.status) {
         const newToken = data.data.token;
@@ -82,11 +82,11 @@ function Dashboard() {
         setToken(newToken);
         return newToken;
       } else {
-        throw new Error(data.message || 'Login unsuccessful');
+        throw new Error(data.message || 'Login berhasil');
       }
     } catch (err) {
       console.error('Login Error:', err);
-      setError('Failed to log in. Check credentials or server.');
+      setError('Gagal masuk. Periksa kredensial atau server.');
       return null;
     }
   };
@@ -152,15 +152,15 @@ function Dashboard() {
           'Authorization': `Bearer ${currentToken}`,
         },
       });
-      if (!response.ok) throw new Error(`Failed to fetch total users: ${response.status}`);
+      if (!response.ok) throw new Error(`Gagal mengambil total pengguna: ${response.status}`);
       const data = await response.json();
       if (data.status) {
         return data.total || 0;
       } else {
-        throw new Error(data.message || 'Failed to retrieve total users');
+        throw new Error(data.message || 'Gagal mengambil total pengguna');
       }
     } catch (err) {
-      console.error('Total Users Fetch Error:', err);
+      console.error('Kesalahan Pengambilan Total Pengguna:', err);
       throw err;
     }
   };
@@ -175,7 +175,7 @@ function Dashboard() {
           'Authorization': `Bearer ${currentToken}`,
         },
       });
-      if (!response.ok) throw new Error(`Failed to fetch today's queue: ${response.status} ${response.statusText}`);
+      if (!response.ok) throw new Error(`Gagal mengambil antrean hari ini: ${response.status} ${response.statusText}`);
       const data = await response.json();
       return data.data || [];
     } catch (err) {
@@ -192,7 +192,7 @@ function Dashboard() {
       let currentToken = token;
       if (!currentToken) {
         currentToken = await loginAndGetToken();
-        if (!currentToken) throw new Error('No valid token available');
+        if (!currentToken) throw new Error('Tidak ada token valid yang tersedia');
       }
 
       // Fetch all APIs concurrently
@@ -208,7 +208,7 @@ function Dashboard() {
         .sort((a, b) => a.queue_number - b.queue_number)
         .map(entry => ({
           queueNumber: `Q${entry.queue_number.toString().padStart(3, '0')}`,
-          status: entry.status === 'waiting' ? 'Mengantri' : 'Done',
+          status: entry.status === 'Menunggu' ? 'Mengantri' : 'Selesai',
           studentName: entry.user.name || 'Unknown',
           submittedSince: new Date(entry.created_at).toLocaleString('en-GB', {
             year: 'numeric',
@@ -250,7 +250,7 @@ function Dashboard() {
       setTodayQueue(selectedQueue);
     } catch (err) {
       console.error('Fetch Error:', err);
-      setError(err.message || 'Failed to fetch data');
+      setError(err.message || 'Gagal mengambil data');
       setQueueStats({
         today: 10,
         yesterday: 15,
@@ -263,9 +263,9 @@ function Dashboard() {
       });
       setTodayQueue([
         { queueNumber: 'Q001', status: 'Mengantri', studentName: 'John Doe', submittedSince: '2025-07-22 08:00' },
-        { queueNumber: 'Q002', status: 'Done', studentName: 'Jane Smith', submittedSince: '2025-07-22 07:30' },
+        { queueNumber: 'Q002', status: 'Selesai', studentName: 'Jane Smith', submittedSince: '2025-07-22 07:30' },
         { queueNumber: 'Q003', status: 'Mengantri', studentName: 'Ahmad Yani', submittedSince: '2025-07-22 08:15' },
-        { queueNumber: 'Q004', status: 'Done', studentName: 'Siti Nurhaliza', submittedSince: '2025-07-21 16:45' },
+        { queueNumber: 'Q004', status: 'Selesai', studentName: 'Siti Nurhaliza', submittedSince: '2025-07-21 16:45' },
         { queueNumber: 'Q005', status: 'Mengantri', studentName: 'Budi Santoso', submittedSince: '2025-07-22 08:30' },
       ]);
     } finally {
@@ -300,7 +300,7 @@ function Dashboard() {
       tooltip: { mode: 'index', intersect: false },
       title: {
         display: true,
-        text: 'Yearly Queue Statistics',
+        text: 'Statistik antrian bulanan',
         font: { size: 18 },
       },
     },
@@ -348,7 +348,7 @@ function Dashboard() {
                   <Users className="text-[#1B4A4F] dark:text-white w-6 h-6" />
                 </div>
                 <div>
-                  <p className="text-sm text-[#1B4A4F] dark:text-white font-medium">Total Users</p>
+                  <p className="text-sm text-[#1B4A4F] dark:text-white font-medium">Total Pengguna</p>
                   <p className="text-[20px] font-bold text-[#1B4A4F] dark:text-white leading-tight">
                     {loading ? <span className="inline-block animate-pulse bg-gray-200 h-6 w-20 rounded" /> : error ? '-' : queueStats.totalUsers}
                   </p>
@@ -370,7 +370,7 @@ function Dashboard() {
             {/* Line Chart */}
             <div className="bg-white dark:bg-[#051D4E] rounded-[20px] shadow p-6 mb-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl text-gray-800 dark:text-gray-100 font-bold">Statistik Siswa</h2>
+                <h2 className="text-xl text-gray-800 dark:text-gray-100 font-bold">Statistik Antrean</h2>
               </div>
               <div className="h-64">
                 <Line data={chartData} options={chartOptions} ref={chartRef} />

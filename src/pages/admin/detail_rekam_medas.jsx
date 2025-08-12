@@ -41,7 +41,7 @@ const DetailRekamMedisSiswa = () => {
       try {
         const token = getToken();
         if (!token) {
-          throw new Error('No authentication token found');
+          throw new Error('Token autentikasi tidak ditemukan');
         }
 
         const response = await fetch(`https://api-uks.rplrus.com/api/users/${id}`, {
@@ -53,17 +53,17 @@ const DetailRekamMedisSiswa = () => {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to fetch user details');
+          throw new Error('Gagal mengambil detail pengguna');
         }
 
         const data = await response.json();
         if (data.status && data.data) {
           setUserData(data.data);
         } else {
-          throw new Error('Invalid response structure');
+          throw new Error('Struktur respons tidak valid');
         }
       } catch (error) {
-        console.error('Error fetching user details:', error);
+        console.error('Error mengambil detail pengguna:', error);
         setUserData(null); // Set null jika gagal untuk menampilkan pesan fallback
       }
     };
@@ -74,7 +74,7 @@ const DetailRekamMedisSiswa = () => {
   // Fetch medical records untuk pengguna
   useEffect(() => {
     if (!userData?.id) {
-      console.error('User ID is missing');
+      console.error('ID pengguna tidak ditemukan');
       return;
     }
 
@@ -82,7 +82,7 @@ const DetailRekamMedisSiswa = () => {
       try {
         const token = getToken();
         if (!token) {
-          throw new Error('No authentication token found');
+          throw new Error('Token autentikasi tidak ditemukan');
         }
 
         const response = await fetch(`https://api-uks.rplrus.com/api/healthcondition/${userData.id}`, {
@@ -94,17 +94,17 @@ const DetailRekamMedisSiswa = () => {
         });
 
         if (!response.ok) {
-          throw new Error(`Failed to fetch medical records: ${response.statusText}`);
+          throw new Error(`Gagal mengambil rekam medis: ${response.statusText}`);
         }
 
         const data = await response.json();
         if (data.status && data.data) {
           setMedicalRecords(data.data.filter(record => record.status === 'active') || []);
         } else {
-          throw new Error('Invalid response structure');
+          throw new Error('Struktur respons tidak valid');
         }
       } catch (error) {
-        console.error('Error fetching medical records:', error);
+        console.error('Error mengambil rekam medis:', error);
         setMedicalRecords([]); // Set empty array on error to avoid undefined issues
       }
     };
@@ -137,7 +137,7 @@ const DetailRekamMedisSiswa = () => {
       try {
         const token = getToken();
         if (!token) {
-          throw new Error('No authentication token found');
+          throw new Error('Token autentikasi tidak ditemukan');
         }
 
         const response = await fetch(
@@ -152,12 +152,12 @@ const DetailRekamMedisSiswa = () => {
         );
 
         if (!response.ok) {
-          throw new Error('Failed to mark health condition as inactive');
+          throw new Error('Gagal menandai rekam medis sebagai tidak aktif');
         }
 
         setMedicalRecords(medicalRecords.filter((record) => record.id_user_condition !== recordId));
       } catch (error) {
-        console.error('Error marking record as inactive:', error);
+        console.error('Error menandai rekam medis sebagai tidak aktif:', error);
       }
     }
   };
@@ -221,7 +221,7 @@ const DetailRekamMedisSiswa = () => {
       try {
         const token = getToken();
         if (!token) {
-          throw new Error('No authentication token found');
+          throw new Error('Token autentikasi tidak ditemukan');
         }
 
         const response = await fetch('https://api-uks.rplrus.com/api/health-conditions', {
@@ -246,7 +246,7 @@ const DetailRekamMedisSiswa = () => {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to create health condition');
+          throw new Error('Gagal membuat rekam medis');
         }
 
         const newRecord = await response.json();
@@ -254,7 +254,7 @@ const DetailRekamMedisSiswa = () => {
         setShowAddForm(false);
       } catch (error) {
         setError(error.message);
-        console.error('Error creating health condition:', error);
+        console.error('Error membuat rekam medis:', error);
       }
     };
 
@@ -340,7 +340,7 @@ const DetailRekamMedisSiswa = () => {
                 onClick={handleCancel}
                 className="px-4 py-2 bg-[#B3E5FC] text-teal-800 rounded-lg hover:bg-[#81D4FA] transition-colors font-semibold"
               >
-                Batalkan
+                Batal
               </button>
               <button
                 onClick={handleSave}
@@ -393,7 +393,7 @@ const DetailRekamMedisSiswa = () => {
       try {
         const token = getToken();
         if (!token) {
-          throw new Error('No authentication token found');
+          throw new Error('Token autentikasi tidak ditemukan');
         }
 
         const response = await fetch(
@@ -418,7 +418,7 @@ const DetailRekamMedisSiswa = () => {
         );
 
         if (!response.ok) {
-          throw new Error('Failed to update health condition');
+          throw new Error('Gagal memperbarui rekam medis');
         }
 
         const updatedRecord = await response.json();
@@ -428,7 +428,7 @@ const DetailRekamMedisSiswa = () => {
         setShowEditForm(false);
       } catch (error) {
         setError(error.message);
-        console.error('Error updating health condition:', error);
+        console.error('Error memperbarui rekam medis:', error);
       }
     };
 
@@ -514,7 +514,7 @@ const DetailRekamMedisSiswa = () => {
                 onClick={handleCancel}
                 className="px-4 py-2 bg-[#B3E5FC] text-teal-800 rounded-lg hover:bg-[#81D4FA] transition-colors font-semibold"
               >
-                Batalkan
+                Batal
               </button>
               <button
                 onClick={handleSave}
@@ -665,7 +665,7 @@ const DetailRekamMedisSiswa = () => {
                       <strong className="font-medium">Nama:</strong> {userData.name || '-'}
                     </p>
                     <p className="text-sm text-gray-600 dark:text-gray-300">
-                      <strong className="font-medium">Gender:</strong> {userData.gender || '-'}
+                      <strong className="font-medium">Jenis Kelamin:</strong> {userData.gender || '-'}
                     </p>
                     <p className="text-sm text-gray-600 dark:text-gray-300">
                       <strong className="font-medium">Nomor HP:</strong> {userData.phone_number || '-'}
@@ -718,7 +718,7 @@ const DetailRekamMedisSiswa = () => {
                 </span>
                 <input
                   type="text"
-                  placeholder="Search"
+                  placeholder="Cari"
                   value={searchQuery}
                   onChange={handleSearchChange}
                   className="
@@ -824,9 +824,9 @@ const DetailRekamMedisSiswa = () => {
               )}
               <div className="flex justify-between items-center mt-6 text-sm dark:text-gray-300">
                 <p>
-                  Showing{' '}
+                  Menampilkan{' '}
                   {filteredMedicalRecords.length === 0 ? 0 : indexOfFirstRecord + 1}–
-                  {Math.min(indexOfLastRecord, filteredMedicalRecords.length)} of{' '}
+                  {Math.min(indexOfLastRecord, filteredMedicalRecords.length)} dari{' '}
                   {filteredMedicalRecords.length}
                 </p>
                 <div className="flex gap-1">

@@ -204,7 +204,7 @@ export default function Navigation() {
               to="/login"
               className="px-4 py-2 rounded-full border border-[#82AAAA] text-[#545657] font-semibold bg-white transition-colors duration-300 hover:bg-[#2A8F9E] hover:text-white"
             >
-              Log In
+              Masuk
             </Link>
           )}
         </div>
@@ -218,11 +218,11 @@ export default function Navigation() {
               <img src={warning} alt="Warning" className="w-10 h-10" />
             </div>
             <h2 className="text-xl font-bold text-red-600 mb-2">
-              Yakin ingin Logout Akun?
+              Yakin ingin Keluar Akun?
             </h2>
             <p className="text-sm text-gray-500 mb-6">
-              Saat kamu logout, semua data yang belum disimpan akan hilang.
-              Simpan terlebih dahulu kalau diperlukan.
+              Saat kamu Keluar, semua data yang belum disimpan akan hilang.
+              Simpan terlebih dahulu Jika diperlukan.
             </p>
             <div className="flex justify-center gap-4">
               <button
@@ -300,7 +300,7 @@ export default function Navigation() {
                     className="flex items-center gap-2 text-base text-gray-800 hover:text-[#2A8F9E]"
                   >
                     <i className="fas fa-user-cog text-cyan-700 w-5 text-center" />
-                    Edit Profile
+                    Edit Profil
                   </Link>
                   {role === "admin" && (
                     <Link

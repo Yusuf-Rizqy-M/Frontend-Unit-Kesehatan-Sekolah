@@ -484,8 +484,8 @@ const KategoriPage = () => {
             {categories.length > 0 && (
               <div className="flex justify-between items-center mt-6 text-gray-500 dark:text-gray-300 text-sm">
                 <span>
-                  Showing {categories.length === 0 ? 0 : indexOfFirstItem + 1}-
-                  {Math.min(indexOfLastItem, categories.length)} of {categories.length}
+                  Melihatkan {categories.length === 0 ? 0 : indexOfFirstItem + 1}-
+                  {Math.min(indexOfLastItem, categories.length)} dari {categories.length}
                 </span>
                 <div className="flex space-x-1">
                   <button
@@ -797,7 +797,7 @@ const KategoriPage = () => {
               </div>
               <div className="flex justify-end gap-2">
                 <button
-                  className="bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-2 rounded hover:bg-gray-400 dark:hover:bg-gray-600"
+                  className="bg-gray-300 dark:bg-gray-700 text-gray-100 dark:text-gray-200 px-4 py-2 rounded hover:bg-gray-400 dark:hover:bg-gray-600"
                   onClick={closeModal}
                   aria-label="Kembali dari modal detail kategori"
                 >
@@ -813,7 +813,7 @@ const KategoriPage = () => {
           <div className="fixed inset-0 flex items-center justify-center z-50" role="dialog" aria-modal="true">
             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-2xl relative animate-scale-in">
               <h3 className="text-xl font-bold text-red-600 dark:text-red-400 mb-2">Yakin ingin Menghapus Kategori?</h3>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
+              <p className="text-gray-600 dark:text-gray-300 mb-4">k
                 Fitur ini digunakan untuk menghapus kategori dari sistem secara aman. Saat pengguna menekan tombol hapus, seluruh pengaturan dan data kategori yang belum tersimpan akan dihapus. Pastikan untuk menyimpan progres Anda sebelum menghapus kategori.
               </p>
               <div className="flex justify-center gap-4">

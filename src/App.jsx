@@ -37,6 +37,7 @@ import Article from "./pages/admin/article";
 import KelasPage from "./pages/admin/kelas";
 import Jurusanpage from "./pages/admin/jurusan";
 import Settingpage from "./pages/admin/settings";
+import RegisterExcel from "./pages/admin/registerexcel";
 
 // Routes
 import ProtectedRoute from "./routes/protectedRoute";
@@ -221,6 +222,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <Article />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/registerexcel"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <RegisterExcel />
             </ProtectedRoute>
           }
         />

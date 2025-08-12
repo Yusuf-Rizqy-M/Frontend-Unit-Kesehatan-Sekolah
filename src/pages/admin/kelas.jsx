@@ -10,15 +10,13 @@ const KelasPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editGrade, setEditGrade] = useState(null);
-  const [formData, setFormData] = useState({ gradeLevel: '', name: '', department_id: '' });
+  const [formData, setFormData] = useState({ name: '', department_id: '' });
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState("success");
   const [departments, setDepartments] = useState([]);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
-
-  const gradeLevelOptions = ['10', '11', '12'];
 
   const showToastMessage = (message, type = "success") => {
     setToastMessage(message);
@@ -83,14 +81,13 @@ const KelasPage = () => {
   };
 
   const openCreateModal = () => {
-    setFormData({ gradeLevel: '', name: '', department_id: '' });
+    setFormData({ name: '', department_id: '' });
     setIsCreateModalOpen(true);
   };
 
   const openEditModal = (grade) => {
     setEditGrade(grade);
     setFormData({
-      gradeLevel: grade.class || '',
       name: grade.name || '',
       department_id: departments.find((d) => d.name === grade.department_name)?.id || '',
     });
@@ -101,11 +98,11 @@ const KelasPage = () => {
     setIsCreateModalOpen(false);
     setIsEditModalOpen(false);
     setEditGrade(null);
-    setFormData({ gradeLevel: '', name: '', department_id: '' });
+    setFormData({ name: '', department_id: '' });
   };
 
   const handleCreate = async () => {
-    if (!formData.gradeLevel || !formData.name || !formData.department_id) {
+    if (!formData.name || !formData.department_id) {
       showToastMessage('Semua kolom wajib diisi', 'error');
       return;
     }
@@ -119,7 +116,6 @@ const KelasPage = () => {
       const response = await axios.post(
         'https://api-uks.rplrus.com/api/grades',
         {
-          class: formData.gradeLevel,
           name: formData.name,
           department_id: parseInt(formData.department_id),
           status: 'active',
@@ -146,7 +142,7 @@ const KelasPage = () => {
   };
 
   const handleEdit = async () => {
-    if (!formData.gradeLevel || !formData.name || !formData.department_id) {
+    if (!formData.name || !formData.department_id) {
       showToastMessage('Semua kolom wajib diisi', 'error');
       return;
     }
@@ -160,7 +156,6 @@ const KelasPage = () => {
       const response = await axios.put(
         `https://api-uks.rplrus.com/api/grades/${editGrade.id}`,
         {
-          class: formData.gradeLevel,
           name: formData.name,
           department_id: parseInt(formData.department_id),
           status: 'active',
@@ -291,7 +286,6 @@ const KelasPage = () => {
                   <tr className="text-left text-gray-500 dark:text-gray-300">
                     <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">No</th>
                     <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">Nama</th>
-                    <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">Kelas</th>
                     <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">Jurusan</th>
                     <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium text-center"></th>
                   </tr>
@@ -302,7 +296,6 @@ const KelasPage = () => {
                       <tr key={grade.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
                         <td className="py-3 px-4 text-gray-700 dark:text-gray-200">{index + 1}</td>
                         <td className="py-3 px-4 text-gray-700 dark:text-gray-200">{grade.name}</td>
-                        <td className="py-3 px-4 text-gray-700 dark:text-gray-200">{grade.class}</td>
                         <td className="py-3 px-4 text-gray-700 dark:text-gray-200">{grade.department_name}</td>
                         <td className="py-3 px-4 text-center">
                           <div className="flex justify-center gap-2">
@@ -326,7 +319,7 @@ const KelasPage = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="5" className="py-3 px-4 text-gray-700 dark:text-gray-200 text-center">
+                      <td colSpan="4" className="py-3 px-4 text-gray-700 dark:text-gray-200 text-center">
                         Tidak ada data kelas aktif
                       </td>
                     </tr>
@@ -344,23 +337,6 @@ const KelasPage = () => {
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
                   <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4">Tambah Kelas</h3>
                   <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">Kelas</label>
-                      <select
-                        name="gradeLevel"
-                        value={formData.gradeLevel}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 bg-teal-100 dark:bg-gray-700"
-                        aria-label="Pilih tingkat kelas"
-                      >
-                        <option value="">Pilih Kelas</option>
-                        {gradeLevelOptions.map((option) => (
-                          <option key={option} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
                     <div>
                       <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">Nama</label>
                       <input
@@ -416,23 +392,6 @@ const KelasPage = () => {
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
                   <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4">Edit Kelas</h3>
                   <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">Kelas</label>
-                      <select
-                        name="gradeLevel"
-                        value={formData.gradeLevel}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 bg-teal-100 dark:bg-gray-700"
-                        aria-label="Pilih tingkat kelas"
-                      >
-                        <option value="">Pilih Kelas</option>
-                        {gradeLevelOptions.map((option) => (
-                          <option key={option} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
                     <div>
                       <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">Nama</label>
                       <input

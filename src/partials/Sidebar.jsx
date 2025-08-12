@@ -123,8 +123,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                       <a
                         href="#0"
                         className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${pathname === "/" || pathname.includes("dashboard")
-                            ? ""
-                            : "hover:text-gray-900 dark:hover:text-white"
+                          ? ""
+                          : "hover:text-gray-900 dark:hover:text-white"
                           }`}
                         onClick={(e) => {
                           e.preventDefault();
@@ -136,8 +136,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                           <div className="flex items-center">
                             <svg
                               className={`shrink-0 fill-current ${pathname === "/" || pathname.includes("dashboard")
-                                  ? "text-violet-500"
-                                  : "text-gray-400 dark:text-gray-500"
+                                ? "text-violet-500"
+                                : "text-gray-400 dark:text-gray-500"
                                 }`}
                               xmlns="http://www.w3.org/2000/svg"
                               width="16"
@@ -203,10 +203,10 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                       <a
                         href="#0"
                         className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${pathname.includes("rekammedis") ||
-                            pathname.includes("rekamantri") ||
-                            pathname.includes("MedicalRecord")
-                            ? ""
-                            : "hover:text-gray-900 dark:hover:text-white"
+                          pathname.includes("rekamantri") ||
+                          pathname.includes("MedicalRecord")
+                          ? ""
+                          : "hover:text-gray-900 dark:hover:text-white"
                           }`}
                         onClick={(e) => {
                           e.preventDefault();
@@ -218,10 +218,10 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                           <div className="flex items-center">
                             <svg
                               className={`shrink-0 fill-current ${pathname.includes("rekammedis") ||
-                                  pathname.includes("rekamantri") ||
-                                  pathname.includes("MedicalRecord")
-                                  ? "text-violet-500"
-                                  : "text-gray-400 dark:text-gray-500"
+                                pathname.includes("rekamantri") ||
+                                pathname.includes("MedicalRecord")
+                                ? "text-violet-500"
+                                : "text-gray-400 dark:text-gray-500"
                                 }`}
                               xmlns="http://www.w3.org/2000/svg"
                               width="16"
@@ -232,7 +232,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                               <path d="M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2ZM4 8a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z" />
                             </svg>
                             <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                              Rekap data medis 
+                              Rekap data medis
                             </span>
                           </div>
                           <div className="flex shrink-0 ml-2">
@@ -297,8 +297,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                       <a
                         href="#0"
                         className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${pathname.includes("manajemenuser")
-                            ? ""
-                            : "hover:text-gray-900 dark:hover:text-white"
+                          ? ""
+                          : "hover:text-gray-900 dark:hover:text-white"
                           }`}
                         onClick={(e) => {
                           e.preventDefault();
@@ -310,8 +310,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                           <div className="flex items-center">
                             <svg
                               className={`shrink-0 fill-current ${pathname.includes("manajemenuser")
-                                  ? "text-violet-500"
-                                  : "text-gray-400 dark:text-gray-500"
+                                ? "text-violet-500"
+                                : "text-gray-400 dark:text-gray-500"
                                 }`}
                               xmlns="http://www.w3.org/2000/svg"
                               width="16"
@@ -372,8 +372,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                       <a
                         href="#0"
                         className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${pathname.includes("kategori") || pathname.includes("article")
-                            ? ""
-                            : "hover:text-gray-900 dark:hover:text-white"
+                          ? ""
+                          : "hover:text-gray-900 dark:hover:text-white"
                           }`}
                         onClick={(e) => {
                           e.preventDefault();
@@ -385,8 +385,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                           <div className="flex items-center">
                             <svg
                               className={`shrink-0 fill-current ${pathname.includes("kategori") || pathname.includes("article")
-                                  ? "text-violet-500"
-                                  : "text-gray-400 dark:text-gray-500"
+                                ? "text-violet-500"
+                                : "text-gray-400 dark:text-gray-500"
                                 }`}
                               xmlns="http://www.w3.org/2000/svg"
                               width="16"
@@ -464,8 +464,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                       <a
                         href="#0"
                         className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${pathname.includes("department") || pathname.includes("kelas")
-                            ? ""
-                            : "hover:text-gray-900 dark:hover:text-white"
+                          ? ""
+                          : "hover:text-gray-900 dark:hover:text-white"
                           }`}
                         onClick={(e) => {
                           e.preventDefault();
@@ -477,8 +477,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                           <div className="flex items-center">
                             <svg
                               className={`shrink-0 fill-current ${pathname.includes("department") || pathname.includes("kelas")
-                                  ? "text-violet-500"
-                                  : "text-gray-400 dark:text-gray-500"
+                                ? "text-violet-500"
+                                : "text-gray-400 dark:text-gray-500"
                                 }`}
                               xmlns="http://www.w3.org/2000/svg"
                               width="16"
@@ -554,8 +554,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                       <a
                         href="#0"
                         className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${pathname.includes("staff_admin")
-                            ? ""
-                            : "hover:text-gray-900 dark:hover:text-white"
+                          ? ""
+                          : "hover:text-gray-900 dark:hover:text-white"
                           }`}
                         onClick={(e) => {
                           e.preventDefault();
@@ -567,8 +567,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                           <div className="flex items-center">
                             <svg
                               className={`shrink-0 fill-current ${pathname.includes("staff_admin")
-                                  ? "text-violet-500"
-                                  : "text-gray-400 dark:text-gray-500"
+                                ? "text-violet-500"
+                                : "text-gray-400 dark:text-gray-500"
                                 }`}
                               xmlns="http://www.w3.org/2000/svg"
                               width="16"
@@ -634,10 +634,10 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                       <a
                         href="#0"
                         className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${pathname.includes("settings") ||
-                            pathname.includes("account") ||
-                            pathname.includes("profile")
-                            ? ""
-                            : "hover:text-gray-900 dark:hover:text-white"
+                          pathname.includes("account") ||
+                          pathname.includes("profile")
+                          ? ""
+                          : "hover:text-gray-900 dark:hover:text-white"
                           }`}
                         onClick={(e) => {
                           e.preventDefault();
@@ -649,10 +649,10 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                           <div className="flex items-center">
                             <svg
                               className={`shrink-0 fill-current ${pathname.includes("settings") ||
-                                  pathname.includes("account") ||
-                                  pathname.includes("profile")
-                                  ? "text-violet-500"
-                                  : "text-gray-400 dark:text-gray-500"
+                                pathname.includes("account") ||
+                                pathname.includes("profile")
+                                ? "text-violet-500"
+                                : "text-gray-400 dark:text-gray-500"
                                 }`}
                               xmlns="http://www.w3.org/2000/svg"
                               width="16"
@@ -700,7 +700,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                               </span>
                             </NavLink>
                           </li>
-                         
+
                         </ul>
                       </div>
                     </React.Fragment>
@@ -735,8 +735,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                       <a
                         href="#0"
                         className={`block text-gray-800 dark:text-gray-100 truncate transition duration-150 ${pathname.includes("register") || pathname.includes("forgot-password")
-                            ? ""
-                            : "hover:text-gray-900 dark:hover:text-white"
+                          ? ""
+                          : "hover:text-gray-900 dark:hover:text-white"
                           }`}
                         onClick={(e) => {
                           e.preventDefault();
@@ -748,8 +748,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                           <div className="flex items-center">
                             <svg
                               className={`shrink-0 fill-current ${pathname.includes("register") || pathname.includes("forgot-password")
-                                  ? "text-violet-500"
-                                  : "text-gray-400 dark:text-gray-500"
+                                ? "text-violet-500"
+                                : "text-gray-400 dark:text-gray-500"
                                 }`}
                               xmlns="http://www.w3.org/2000/svg"
                               width="16"
@@ -759,7 +759,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                               <path d="M11.442 4.576a1 1 0 1 0-1.634-1.152L4.22 11.35 1.773 8.366A1 1 0 1 0 .227 9.634l3.281 4a1 1 0 0 0 1.59-.058l6.344-9ZM15.817 4.576a1 1 0 1 0-1.634-1.152l-5.609 7.957a1 1 0 0 0-1.347 1.453l.656.8a1 1 0 0 0 1.59-.058l6.344-9Z" />
                             </svg>
                             <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                              Autentikasi 
+                              Autentikasi
                             </span>
                           </div>
                           <div className="flex shrink-0 ml-2">
@@ -791,6 +791,22 @@ function Sidebar({ sidebarOpen, setSidebarOpen, variant = "default" }) {
                             >
                               <span className="text-sm font-medium lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
                                 Buat Akun
+                              </span>
+                            </NavLink>
+                          </li>
+                          <li className="mb-1 last:mb-0">
+                            <NavLink
+                              end
+                              to="/registerexcel"
+                              className={({ isActive }) =>
+                                "block transition duration-150 truncate " +
+                                (isActive
+                                  ? "text-violet-500"
+                                  : "text-gray-500/90 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200")
+                              }
+                            >
+                              <span className="text-sm font-medium lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                                Daftarkan via excel
                               </span>
                             </NavLink>
                           </li>

@@ -15,8 +15,8 @@ const RegisterPage = () => {
     confirm_password: "",
     role: "user",
     class: "",
-    name_department: "",
-    name_grades: "",
+    department_id: "",
+    grade_id: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -47,13 +47,11 @@ const RegisterPage = () => {
       const response = await axios.get("https://api-uks.rplrus.com/api/departments", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const uniqueDepartments = Array.from(
-        new Map(response.data.map((dept) => [dept.name, dept])).values()
-      );
-      setDepartments(uniqueDepartments);
+      const activeDepartments = response.data.filter((dept) => dept.status === "active");
+      setDepartments(activeDepartments);
     } catch (err) {
       if (err.response && err.response.status === 401) {
-        setFetchError("Tidak diizinkan: Token tidak valid atau kadaluarsa. Menggunakan opsi default.");
+        setFetchError("Tidak diizinkan: Token tidak valid atau kadaluarsa.");
       } else {
         setFetchError("Gagal mengambil data jurusan: " + err.message);
       }
@@ -77,13 +75,11 @@ const RegisterPage = () => {
       const response = await axios.get("https://api-uks.rplrus.com/api/grades", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const uniqueGrades = Array.from(
-        new Map(response.data.map((grade) => [grade.name, grade])).values()
-      );
-      setGrades(uniqueGrades);
+      const activeGrades = response.data.filter((grade) => grade.status === "active");
+      setGrades(activeGrades);
     } catch (err) {
       if (err.response && err.response.status === 401) {
-        setFetchError("Tidak diizinkan: Token tidak valid atau kadaluarsa. Menggunakan opsi default.");
+        setFetchError("Tidak diizinkan: Token tidak valid atau kadaluarsa.");
       } else {
         setFetchError("Gagal mengambil data kelas: " + err.message);
       }
@@ -94,32 +90,13 @@ const RegisterPage = () => {
   };
 
   useEffect(() => {
-    document.title = 'Daftar';
-    
-    const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
-    favicon.rel = 'icon';
+    document.title = "Daftar";
+
+    const favicon = document.querySelector("link[rel='icon']") || document.createElement("link");
+    favicon.rel = "icon";
     favicon.href = UKS2Img;
     document.head.appendChild(favicon);
 
-    console.log("Komponen RegisterPage dimuat");
-    console.log("Judul dokumen awal:", document.title);
-    console.log("Path import UKS2Img:", UKS2Img);
-    console.log("Favicon awal:", favicon ? favicon.href : "Favicon tidak ditemukan");
-    console.log("Mengatur favicon ke:", favicon.href);
-
-    const timeout = setTimeout(() => {
-      console.log("Judul dokumen setelah render:", document.title);
-      const updatedFavicon = document.querySelector("link[rel='icon']");
-      console.log("Favicon setelah render:", updatedFavicon ? updatedFavicon.href : "Favicon tidak ditemukan");
-    }, 1000);
-
-    return () => {
-      clearTimeout(timeout);
-      console.log("Komponen RegisterPage dilepas");
-    };
-  }, []);
-
-  useEffect(() => {
     const fetchData = async () => {
       await Promise.all([fetchDepartments(), fetchGrades()]);
     };
@@ -133,14 +110,14 @@ const RegisterPage = () => {
         ...prev,
         [name]: value,
         class: value === "admin" ? "" : prev.class,
-        name_department: value === "admin" ? "" : prev.name_department,
-        name_grades: value === "admin" ? "" : prev.name_grades,
+        department_id: value === "admin" ? "" : prev.department_id,
+        grade_id: value === "admin" ? "" : prev.grade_id,
       }));
-    } else if (name === "name_department") {
+    } else if (name === "department_id") {
       setFormData((prev) => ({
         ...prev,
         [name]: value,
-        name_grades: "",
+        grade_id: "", // Reset grade_id saat department_id berubah
       }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
@@ -168,9 +145,30 @@ const RegisterPage = () => {
       return;
     }
 
+    if (formData.role === "user" && (!formData.department_id || !formData.grade_id || !formData.class)) {
+      setError("Semua field wajib diisi untuk pengguna.");
+      setToastMessage("Semua field wajib diisi untuk pengguna.");
+      setIsSuccess(false);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+      return;
+    }
+
     try {
-      const token = localStorage.getItem("token");
-      await AuthService.register(formData, token);
+      const token = getToken();
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        confirm_password: formData.confirm_password,
+        role: formData.role,
+        ...(formData.role === "user" && {
+          department_id: parseInt(formData.department_id),
+          grade_id: parseInt(formData.grade_id),
+          class: formData.class,
+        }),
+      };
+      await AuthService.register(payload, token);
       setToastMessage("Pendaftaran Berhasil");
       setIsSuccess(true);
       setShowToast(true);
@@ -179,7 +177,12 @@ const RegisterPage = () => {
         navigate("/dashboard");
       }, 2000);
     } catch (err) {
-      setToastMessage("Pendaftaran gagal. Silakan periksa data yang dimasukkan atau coba lagi nanti.");
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data?.data ||
+        "Pendaftaran gagal. Silakan periksa data yang dimasukkan atau coba lagi nanti.";
+      setError(errorMessage);
+      setToastMessage(errorMessage);
       setIsSuccess(false);
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
@@ -407,6 +410,7 @@ const RegisterPage = () => {
                   name="class"
                   value={formData.class}
                   onChange={handleChange}
+                  required={formData.role === "user"}
                   className="flex-1 px-4 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm text-black focus:outline-none focus:ring-2 focus:ring-cyan-400"
                 >
                   <option value="">Kelas</option>
@@ -416,32 +420,34 @@ const RegisterPage = () => {
                 </select>
 
                 <select
-                  name="name_department"
-                  value={formData.name_department}
+                  name="department_id"
+                  value={formData.department_id}
                   onChange={handleChange}
+                  required={formData.role === "user"}
                   className="flex-1 px-4 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm text-black focus:outline-none focus:ring-2 focus:ring-cyan-400"
                 >
                   <option value="">Jurusan</option>
                   {departments.map((dept) => (
-                    <option key={dept.id} value={dept.name}>
+                    <option key={dept.id} value={dept.id}>
                       {dept.name}
                     </option>
                   ))}
                 </select>
 
                 <select
-                  name="name_grades"
-                  value={formData.name_grades}
+                  name="grade_id"
+                  value={formData.grade_id}
                   onChange={handleChange}
-                  disabled={!formData.name_department}
+                  disabled={!formData.department_id}
+                  required={formData.role === "user"}
                   className="flex-1 px-4 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm text-black focus:outline-none focus:ring-2 focus:ring-cyan-400"
                 >
                   <option value="">No. Kelas</option>
-                  {formData.name_department &&
+                  {formData.department_id &&
                     grades
-                      .filter((grade) => grade.department_name === formData.name_department)
+                      .filter((grade) => grade.department_id === parseInt(formData.department_id))
                       .map((grade) => (
-                        <option key={grade.id} value={grade.name}>
+                        <option key={grade.id} value={grade.id}>
                           {grade.name}
                         </option>
                       ))}

@@ -112,7 +112,7 @@ function KalkulatorBmi() {
               }`}
               onClick={() => setGender('man')}
             >
-              Man
+              Laki-Laki
             </button>
             <button
               className={`flex-1 font-semibold transition-all duration-300 transform hover:scale-105 ${
@@ -120,7 +120,7 @@ function KalkulatorBmi() {
               }`}
               onClick={() => setGender('woman')}
             >
-              Woman
+              Perempuan
             </button>
           </div>
 

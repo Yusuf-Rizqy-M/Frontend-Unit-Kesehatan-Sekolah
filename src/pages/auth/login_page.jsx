@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react'; // Added useEffect import
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import useLogin from '../../hooks/useLogin';
 import UksImg2 from '../../assets/img/doctor_img_rounded.png';
 import LogoImg from '../../assets/img/UKS2.png';
-import UKS2Img from '../../assets/img/uks2.png'; // Favicon import
+import UKS2Img from '../../assets/img/uks2.png';
 
 const LoginPage = () => {
   const { login, loading, error } = useLogin();
@@ -11,36 +11,49 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [isSuccess, setIsSuccess] = useState(false);
   const navigate = useNavigate();
 
-  // Set favicon and debug
-  useEffect(() => {
-    console.log('LoginPage component mounted');
-    console.log('Initial document title:', document.title);
-    console.log('UKS2Img import path:', UKS2Img); // Log the resolved favicon path
-    let favicon = document.querySelector("link[rel='icon']");
-    console.log('Initial favicon href:', favicon ? favicon.href : 'No favicon found');
+  // Fungsi untuk menerjemahkan pesan error
+  const translateError = (error) => {
+    const errorMap = {
+      'Invalid credentials': 'Kredensial tidak valid',
+      'Failed to login': 'Gagal masuk',
+      'Network error': 'Kesalahan jaringan',
+    };
+    return errorMap[error] || error; // Kembalikan error asli jika tidak ada terjemahan
+  };
 
-    // Set favicon using DOM manipulation
+  // Set favicon dan debug
+  useEffect(() => {
+    console.log('Komponen LoginPage dimuat');
+    console.log('Judul dokumen awal:', document.title);
+    console.log('UKS2Img import path:', UKS2Img);
+    let favicon = document.querySelector("link[rel='icon']");
+    console.log('Favicon awal:', favicon ? favicon.href : 'Favicon tidak ditemukan');
+
+    // Set favicon menggunakan DOM manipulation
     favicon = favicon || document.createElement('link');
     favicon.rel = 'icon';
-    favicon.href = `${UKS2Img}?v=${Date.now()}`; // Add cache-busting
+    favicon.href = `${UKS2Img}?v=${Date.now()}`;
     document.head.appendChild(favicon);
-    console.log('Set favicon href to:', favicon.href);
+    console.log('Setel href favicon ke:', favicon.href);
 
-    // Set document title
-    document.title = 'Login';
+    // Set judul dokumen
+    document.title = 'Masuk';
 
-    // Check title and favicon after rendering
+    // Periksa judul dan favicon setelah rendering
     const timeout = setTimeout(() => {
-      console.log('Document title after render:', document.title);
+      console.log('Judul dokumen setelah render:', document.title);
       const updatedFavicon = document.querySelector('link[rel="icon"]');
-      console.log('Favicon after render:', updatedFavicon ? updatedFavicon.href : 'No favicon found');
+      console.log('Favicon setelah render:', updatedFavicon ? updatedFavicon.href : 'Favicon tidak ditemukan');
     }, 1000);
 
     return () => {
       clearTimeout(timeout);
-      console.log('LoginPage component unmounted');
+      console.log('Komponen LoginPage dilepas');
     };
   }, []);
 
@@ -49,12 +62,23 @@ const LoginPage = () => {
 
     const data = await login(email, password, remember);
     if (data) {
-      const role = data.user.role;
-      if (role === 'admin') {
-        navigate('/dashboard');
-      } else {
-        navigate('/');
-      }
+      setToastMessage('Login Berhasil');
+      setIsSuccess(true);
+      setShowToast(true);
+      setTimeout(() => {
+        setShowToast(false);
+        const role = data.user.role;
+        if (role === 'admin') {
+          navigate('/dashboard');
+        } else {
+          navigate('/');
+        }
+      }, 2000);
+    } else {
+      setToastMessage(translateError(error));
+      setIsSuccess(false);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
     }
   };
 
@@ -64,6 +88,40 @@ const LoginPage = () => {
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen font-poppins bg-white">
+      {showToast && (
+        <div
+          className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg shadow-md flex items-center gap-2 animate-fade-in-out z-50 ${
+            isSuccess ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
+          }`}
+        >
+          <div
+            className={`rounded-full p-1 ${isSuccess ? "bg-green-600" : "bg-red-600"}`}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4 text-white"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              {isSuccess ? (
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414L9 13.414l4.707-4.707z"
+                  clipRule="evenodd"
+                />
+              ) : (
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  clipRule="evenodd"
+                />
+              )}
+            </svg>
+          </div>
+          <span className="font-medium text-sm">{toastMessage}</span>
+        </div>
+      )}
+
       {/* Left Side */}
       <div className="w-full lg:w-1/2 bg-[#DDF6FF] flex flex-col justify-center items-center p-8 lg:p-12 relative">
         <div className="absolute top-0 left-0 w-32 h-32 bg-cyan-500 rounded-full opacity-40 -translate-x-1/2 -translate-y-1/2" />
@@ -72,7 +130,7 @@ const LoginPage = () => {
         <h1 className="text-3xl font-bold text-gray-800 text-center mb-6 leading-tight">
           Halo<br />Selamat datang!
         </h1>
-        <img src={UksImg2} alt="Doctor" className="w-48 h-48 sm:w-56 sm:h-56 mb-6" />
+        <img src={UksImg2} alt="Dokter" className="w-48 h-48 sm:w-56 sm:h-56 mb-6" />
         <hr className="w-20 border-[1.5px] border-gray-400 mb-4" />
         <div className="text-center px-4">
           <h2 className="text-lg font-bold text-gray-800 mb-2">UKS SMK RUS</h2>
@@ -87,7 +145,7 @@ const LoginPage = () => {
         <div className="w-full max-w-sm flex flex-col items-start mb-8">
           <img src={LogoImg} alt="Logo" className="w-14 h-14 mb-4 object-contain" />
           <h2 className="text-2xl font-bold text-gray-800">
-            Sign in ke <span className="text-cyan-500">UKS</span>
+            Masuk ke <span className="text-cyan-500">UKS</span>
           </h2>
         </div>
 
@@ -104,7 +162,7 @@ const LoginPage = () => {
           </div>
 
           <div className="mb-5 relative">
-            <label className="block text-xs font-semibold mb-1 text-black">Password</label>
+            <label className="block text-xs font-semibold mb-1 text-black">Kata Sandi</label>
             <input
               type={showPassword ? 'text' : 'password'}
               required
@@ -116,7 +174,7 @@ const LoginPage = () => {
               type="button"
               onClick={toggleShowPassword}
               className="absolute inset-y-0 right-0 flex items-center pr-3 mt-6 text-gray-500 hover:text-cyan-500 focus:outline-none"
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
             >
               {showPassword ? (
                 <svg
@@ -169,18 +227,12 @@ const LoginPage = () => {
             <label htmlFor="remember" className="text-sm text-gray-700">Ingat saya</label>
           </div>
 
-          {error && (
-            <div className="mb-4 text-sm text-red-500 bg-red-100 p-2 rounded">
-              {error}
-            </div>
-          )}
-
           <button
             type="submit"
             disabled={loading}
             className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-2 rounded-full text-sm transition"
           >
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? 'Sedang masuk...' : 'Masuk'}
           </button>
 
           <div className="text-center mt-4">

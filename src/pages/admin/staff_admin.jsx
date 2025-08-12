@@ -371,10 +371,10 @@ const StaffPage = () => {
                   <tr className="text-left text-gray-500 dark:text-gray-300">
                     <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">No</th>
                     <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">Name</th>
-                    <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">Role</th>
+                    <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">Tugas</th>
                     <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">WA</th>
                     <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium text-center">Image</th>
-                    <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium text-center">Action</th>
+                    <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium text-center"></th>
                   </tr>
                 </thead>
                 <tbody>

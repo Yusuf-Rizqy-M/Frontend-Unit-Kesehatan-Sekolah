@@ -587,9 +587,9 @@ export default function ManajemenUser() {
                     <th className="px-4 py-3">Name</th>
                     <th className="px-4 py-3">Kelas</th>
                     <th className="px-4 py-3">Nama Kelas</th>
-                    <th className="px-4 py-3">Gender</th>
+                    <th className="px-4 py-3">Jenis Kelamin</th>
                     <th className="px-4 py-3">No HP</th>
-                    <th className="px-4 py-3">Action</th>
+                    <th className="px-4 py-3"></th>
                   </tr>
                 </thead>
                 <tbody>

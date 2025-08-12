@@ -291,9 +291,9 @@ const EditProfile = () => {
               <label className="block text-sm font-medium text-gray-800 mb-1">Jenis Kelamin</label>
               <div className="flex gap-6">
                 {[
-                  { value: "male", text: "Male" },
-                  { value: "female", text: "Female" },
-                  { value: "", text: "No Gender" },
+                  { value: "male", text: "Laki-Laki" },
+                  { value: "female", text: "Permpuan" },
+                  { value: "", text: "Belum Dipilih" },
                 ].map(({ value, text }) => (
                   <div key={value} className="flex flex-col items-center">
                     <img

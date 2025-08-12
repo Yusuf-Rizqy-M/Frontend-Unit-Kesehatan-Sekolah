@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthService from "../../services/authService";
 import UksImg from "../../assets/img/doctor_img_rounded.png";
-import LogoImg from "../../images/uks2.png"; // Updated to match Edit Profile path
+import LogoImg from "../../images/uks2.png";
 import axios from "axios";
-import UKS2Img from "../../images/uks2.png"; // Updated to match Edit Profile path
+import UKS2Img from "../../images/uks2.png";
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -37,9 +37,8 @@ const RegisterPage = () => {
     setLoading(true);
     setFetchError(null);
     const token = getToken();
-    // Skip fetching if no token (public registration page)
     if (!token) {
-      setDepartments([]); // Set empty array to avoid breaking the UI
+      setDepartments([]);
       setLoading(false);
       return;
     }
@@ -54,11 +53,11 @@ const RegisterPage = () => {
       setDepartments(uniqueDepartments);
     } catch (err) {
       if (err.response && err.response.status === 401) {
-        setFetchError("Unauthorized: Invalid or expired token. Using default options.");
+        setFetchError("Tidak diizinkan: Token tidak valid atau kadaluarsa. Menggunakan opsi default.");
       } else {
-        setFetchError("Error fetching departments: " + err.message);
+        setFetchError("Gagal mengambil data jurusan: " + err.message);
       }
-      setDepartments([]); // Fallback to empty array
+      setDepartments([]);
     } finally {
       setLoading(false);
     }
@@ -68,9 +67,8 @@ const RegisterPage = () => {
     setLoading(true);
     setFetchError(null);
     const token = getToken();
-    // Skip fetching if no token (public registration page)
     if (!token) {
-      setGrades([]); // Set empty array to avoid breaking the UI
+      setGrades([]);
       setLoading(false);
       return;
     }
@@ -79,51 +77,45 @@ const RegisterPage = () => {
       const response = await axios.get("https://api-uks.rplrus.com/api/grades", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      // Remove duplicates by creating a unique list based on grade name
       const uniqueGrades = Array.from(
         new Map(response.data.map((grade) => [grade.name, grade])).values()
       );
       setGrades(uniqueGrades);
     } catch (err) {
       if (err.response && err.response.status === 401) {
-        setFetchError("Unauthorized: Invalid or expired token. Using default options.");
+        setFetchError("Tidak diizinkan: Token tidak valid atau kadaluarsa. Menggunakan opsi default.");
       } else {
-        setFetchError("Error fetching grades: " + err.message);
+        setFetchError("Gagal mengambil data kelas: " + err.message);
       }
-      setGrades([]); // Fallback to empty array
+      setGrades([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Set favicon and title (matching Edit Profile)
   useEffect(() => {
-    // Mengatur judul tab
-    document.title = 'Register';
+    document.title = 'Daftar';
     
-    // Mengatur favicon
     const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
     favicon.rel = 'icon';
-    favicon.href = UKS2Img; // Menggunakan UKS2Img sebagai favicon
+    favicon.href = UKS2Img;
     document.head.appendChild(favicon);
 
-    // Debugging logs
-    console.log("RegisterPage component mounted");
-    console.log("Initial document title:", document.title);
-    console.log("UKS2Img import path:", UKS2Img);
-    console.log("Initial favicon href:", favicon ? favicon.href : "No favicon found");
-    console.log("Set favicon href to:", favicon.href);
+    console.log("Komponen RegisterPage dimuat");
+    console.log("Judul dokumen awal:", document.title);
+    console.log("Path import UKS2Img:", UKS2Img);
+    console.log("Favicon awal:", favicon ? favicon.href : "Favicon tidak ditemukan");
+    console.log("Mengatur favicon ke:", favicon.href);
 
-    // Check title and favicon after rendering
     const timeout = setTimeout(() => {
-      console.log("Document title after render:", document.title);
+      console.log("Judul dokumen setelah render:", document.title);
       const updatedFavicon = document.querySelector("link[rel='icon']");
-      console.log("Favicon after render:", updatedFavicon ? updatedFavicon.href : "No favicon found");
+      console.log("Favicon setelah render:", updatedFavicon ? updatedFavicon.href : "Favicon tidak ditemukan");
     }, 1000);
 
     return () => {
       clearTimeout(timeout);
-      console.log("RegisterPage component unmounted");
+      console.log("Komponen RegisterPage dilepas");
     };
   }, []);
 
@@ -160,8 +152,7 @@ const RegisterPage = () => {
     setError(null);
 
     if (formData.password.length < 8 || formData.confirm_password.length < 8) {
-      setError("Password minimal 8 karakter.");
-      setToastMessage("Password minimal 8 karakter.");
+      setToastMessage("Kata sandi minimal 8 karakter.");
       setIsSuccess(false);
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
@@ -169,8 +160,8 @@ const RegisterPage = () => {
     }
 
     if (formData.password !== formData.confirm_password) {
-      setError("Password dan konfirmasi tidak sama.");
-      setToastMessage("Password dan konfirmasi tidak sama.");
+      setError("Kata sandi dan konfirmasi tidak sama.");
+      setToastMessage("Kata sandi dan konfirmasi tidak sama.");
       setIsSuccess(false);
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
@@ -180,7 +171,7 @@ const RegisterPage = () => {
     try {
       const token = localStorage.getItem("token");
       await AuthService.register(formData, token);
-      setToastMessage("Register Berhasil");
+      setToastMessage("Pendaftaran Berhasil");
       setIsSuccess(true);
       setShowToast(true);
       setTimeout(() => {
@@ -188,8 +179,7 @@ const RegisterPage = () => {
         navigate("/dashboard");
       }, 2000);
     } catch (err) {
-      const msg = err.response?.data?.message || "Registrasi gagal.";
-      setToastMessage(msg);
+      setToastMessage("Pendaftaran gagal. Silakan periksa data yang dimasukkan atau coba lagi nanti.");
       setIsSuccess(false);
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
@@ -237,9 +227,9 @@ const RegisterPage = () => {
         <div className="absolute bottom-10 left-10 w-8 h-8 bg-cyan-500 rotate-45" />
         <div className="absolute top-20 right-10 w-6 h-6 bg-cyan-500 rotate-45" />
         <h1 className="text-4xl font-bold text-gray-800 text-center mb-8 leading-tight">
-          Hallo, Teman<br />Selamat Datang!
+          Halo, Teman<br />Selamat Datang!
         </h1>
-        <img src={UksImg} alt="Doctor" className="w-60 h-60 mb-8" />
+        <img src={UksImg} alt="Dokter" className="w-60 h-60 mb-8" />
         <hr className="w-24 border-[1.5px] border-gray-400 mb-6" />
         <div className="text-center">
           <h2 className="text-lg font-bold text-gray-800 mb-2">UKS SMK RUS</h2>
@@ -252,16 +242,16 @@ const RegisterPage = () => {
       <div className="w-1/2 flex flex-col justify-center items-center p-12">
         <div className="w-full max-w-sm flex flex-col items-start mb-8">
           <img src={LogoImg} alt="Logo" className="w-16 h-16 mb-4 object-contain" />
-          <h2 className="text-2xl font-bold text-gray-800">Sign up to your account</h2>
+          <h2 className="text-2xl font-bold text-gray-800">Daftar Akun Anda</h2>
         </div>
 
         <form className="w-full max-w-sm text-left" onSubmit={handleSubmit}>
           {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
           {fetchError && <p className="text-red-500 text-sm mb-4">{fetchError}</p>}
-          {loading && <p className="text-gray-600 text-sm mb-4">Loading departments and grades...</p>}
+          {loading && <p className="text-gray-600 text-sm mb-4">Memuat jurusan dan kelas...</p>}
 
           <div className="mb-4">
-            <label className="text-xs font-semibold text-gray-600 mb-1 block">Email Address</label>
+            <label className="text-xs font-semibold text-gray-600 mb-1 block">Alamat Email</label>
             <input
               name="email"
               type="email"
@@ -273,7 +263,7 @@ const RegisterPage = () => {
           </div>
 
           <div className="mb-4">
-            <label className="text-xs font-semibold text-gray-600 mb-1 block">Create Username</label>
+            <label className="text-xs font-semibold text-gray-600 mb-1 block">Nama Lengkap</label>
             <input
               name="name"
               type="text"
@@ -285,7 +275,7 @@ const RegisterPage = () => {
           </div>
 
           <div className="mb-4 relative">
-            <label className="text-xs font-semibold text-gray-600 mb-1 block">Create Password</label>
+            <label className="text-xs font-semibold text-gray-600 mb-1 block">Kata Sandi</label>
             <input
               name="password"
               type={showPassword ? "text" : "password"}
@@ -298,7 +288,7 @@ const RegisterPage = () => {
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute inset-y-0 right-0 flex items-center pr-3 mt-6 text-gray-500 hover:text-cyan-500 focus:outline-none"
-              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
             >
               {showPassword ? (
                 <svg
@@ -341,7 +331,7 @@ const RegisterPage = () => {
           </div>
 
           <div className="mb-4 relative">
-            <label className="text-xs font-semibold text-gray-600 mb-1 block">Confirm Password</label>
+            <label className="text-xs font-semibold text-gray-600 mb-1 block">Konfirmasi Kata Sandi</label>
             <input
               name="confirm_password"
               type={showConfirmPassword ? "text" : "password"}
@@ -354,7 +344,7 @@ const RegisterPage = () => {
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               className="absolute inset-y-0 right-0 flex items-center pr-3 mt-6 text-gray-500 hover:text-cyan-500 focus:outline-none"
-              aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+              aria-label={showConfirmPassword ? "Sembunyikan konfirmasi kata sandi" : "Tampilkan konfirmasi kata sandi"}
             >
               {showConfirmPassword ? (
                 <svg
@@ -397,14 +387,14 @@ const RegisterPage = () => {
           </div>
 
           <div className="mb-4">
-            <label className="text-xs font-semibold text-gray-600 mb-1 block">Role</label>
+            <label className="text-xs font-semibold text-gray-600 mb-1 block">Peran</label>
             <select
               name="role"
               value={formData.role}
               onChange={handleChange}
               className="w-full px-4 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm text-black focus:outline-none focus:ring-2 focus:ring-cyan-400"
             >
-              <option value="user">User</option>
+              <option value="user">Pengguna</option>
               <option value="admin">Admin</option>
             </select>
           </div>
@@ -465,7 +455,7 @@ const RegisterPage = () => {
             className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 rounded-md text-sm transition-colors duration-200"
             disabled={loading}
           >
-            {loading ? "Loading..." : "Sign Up"}
+            {loading ? "Memuat..." : "Daftar"}
           </button>
 
           <button
@@ -473,7 +463,7 @@ const RegisterPage = () => {
             onClick={() => navigate("/dashboard")}
             className="w-full mt-2 text-cyan-600 text-sm hover:underline text-center"
           >
-            Kembali ke Dashboard
+            Kembali ke Dasbor
           </button>
         </form>
       </div>

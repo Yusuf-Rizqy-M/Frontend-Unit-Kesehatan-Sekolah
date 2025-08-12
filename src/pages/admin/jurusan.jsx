@@ -237,7 +237,7 @@ const JurusanPage = () => {
                     <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">No</th>
                     <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">Nama</th>
                     <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">Deskripsi</th>
-                    <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium text-center">Aksi</th>
+                    <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium text-center"></th>
                   </tr>
                 </thead>
                 <tbody>

@@ -19,7 +19,7 @@ const ProfileSettings = () => {
       try {
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         if (!token) {
-          throw new Error('No token found. Please login.');
+          throw new Error('Token tidak ditemukan. Silakan masuk.');
         }
 
         const response = await axios({
@@ -33,7 +33,7 @@ const ProfileSettings = () => {
         const { name, email, phone_number } = response.data.data;
         setProfile({ name, email, phone_number: phone_number || '' });
       } catch (err) {
-        setError(err.message || 'Failed to fetch profile');
+        setError(err.message || 'Gagal mengambil profil');
       } finally {
         setLoading(false);
       }
@@ -48,7 +48,6 @@ const ProfileSettings = () => {
   };
 
   const handlePhoneKeyDown = (e) => {
-    // Allow only digits, backspace, delete, arrow keys, and tab
     const allowedKeys = [
       'Backspace',
       'Delete',
@@ -67,18 +66,16 @@ const ProfileSettings = () => {
     setSuccess('');
     setIsSubmitting(true);
 
-    // Validate email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(profile.email)) {
-      setError('Please enter a valid email address');
+      setError('Silakan masukkan alamat email yang valid');
       setIsSubmitting(false);
       return;
     }
 
-    // Validate phone number
     const phoneRegex = /^\d{10,15}$/;
     if (profile.phone_number && !phoneRegex.test(profile.phone_number)) {
-      setError('Please enter a valid phone number (10 to 15 digits)');
+      setError('Silakan masukkan nomor telepon yang valid (10 hingga 15 digit)');
       setIsSubmitting(false);
       return;
     }
@@ -86,10 +83,9 @@ const ProfileSettings = () => {
     try {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       if (!token) {
-        throw new Error('No token found. Please login.');
+        throw new Error('Token tidak ditemukan. Silakan masuk.');
       }
 
-      // Hanya kirim email dan phone_number, karena name tidak boleh diubah
       const { email, phone_number } = profile;
       const dataToSend = { email, phone_number };
 
@@ -107,17 +103,17 @@ const ProfileSettings = () => {
       console.log('Response from server:', response.data);
 
       if (response.data.message === 'Profile updated successfully') {
-        setSuccess('Profile updated successfully');
+        setSuccess('Profil berhasil diperbarui');
         setIsEditing(false);
       } else {
-        throw new Error(response.data.message || 'Failed to update profile');
+        throw new Error(response.data.message || 'Gagal memperbarui profil');
       }
     } catch (err) {
       console.error('Error details:', err.response || err);
       if (err.response?.status === 401) {
-        setError('Unauthorized: Invalid or expired token. Please login again.');
+        setError('Tidak diizinkan: Token tidak valid atau kedaluwarsa. Silakan masuk kembali.');
       } else {
-        setError(err.response?.data?.message || err.message || 'Failed to update profile.');
+        setError(err.response?.data?.message || err.message || 'Gagal memperbarui profil');
       }
     } finally {
       setIsSubmitting(false);
@@ -131,7 +127,7 @@ const ProfileSettings = () => {
           <div className="flex justify-center">
             <div className="w-16 h-16 bg-gray-200 rounded-full"></div>
           </div>
-          <p className="text-center text-gray-500 mt-4">Loading...</p>
+          <p className="text-center text-gray-500 mt-4">Memuat...</p>
         </div>
       </div>
     );
@@ -144,8 +140,8 @@ const ProfileSettings = () => {
           <div className="w-20 h-20 bg-[#75CCD1] rounded-full flex items-center justify-center text-white text-3xl font-bold mb-4 shadow-md">
             {profile.name ? profile.name.charAt(0).toUpperCase() : 'U'}
           </div>
-          <h1 className="text-3xl font-bold text-[#75CCD1] tracking-tight">Profile Settings</h1>
-          <p className="text-gray-500 mt-2 text-sm">Update your personal information</p>
+          <h1 className="text-3xl font-bold text-[#75CCD1] tracking-tight">Pengaturan Profil</h1>
+          <p className="text-gray-500 mt-2 text-sm">Perbarui informasi pribadi Anda</p>
         </div>
 
         {error && (
@@ -154,7 +150,7 @@ const ProfileSettings = () => {
           </div>
         )}
         {success && (
-          <div className="bg-[#75CCD1] bg-opacity-10 border-l-4 border-[#75CCD1] text-[#75CCD1] p-4 rounded-xl mb-6 animate-fade-in">
+          <div className="bg-white border-l-4 border-[#75CCD1] text-[#75CCD1] p-4 rounded-xl mb-6 animate-fade-in">
             {success}
           </div>
         )}
@@ -163,7 +159,7 @@ const ProfileSettings = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name
+                Nama Lengkap
               </label>
               <input
                 type="text"
@@ -172,12 +168,12 @@ const ProfileSettings = () => {
                 onChange={handleInputChange}
                 className="block w-full rounded-xl border-gray-200 shadow-sm bg-gray-100 text-gray-500 cursor-not-allowed py-3 px-4"
                 disabled
-                title="Name can only be changed by an admin"
+                title="Nama hanya dapat diubah oleh admin"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address
+                Email
               </label>
               <input
                 type="email"
@@ -190,7 +186,7 @@ const ProfileSettings = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Phone Number
+                Nomor Telephone
               </label>
               <input
                 type="tel"
@@ -207,7 +203,7 @@ const ProfileSettings = () => {
                 to="/dashboard"
                 className="px-5 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition duration-200 ease-in-out font-medium"
               >
-                Back to Dashboard
+                Ke Dashboard
               </Link>
               <div className="flex space-x-3">
                 <button
@@ -215,14 +211,14 @@ const ProfileSettings = () => {
                   onClick={() => setIsEditing(false)}
                   className="px-5 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition duration-200 ease-in-out font-medium"
                 >
-                  Cancel
+                  Kembali
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
                   className={`px-5 py-2 bg-[#75CCD1] text-white rounded-xl hover:bg-[#5ABBC0] transition duration-200 ease-in-out font-medium ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  {isSubmitting ? 'Saving...' : 'Save Changes'}
+                  {isSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}
                 </button>
               </div>
             </div>
@@ -230,29 +226,29 @@ const ProfileSettings = () => {
         ) : (
           <div className="space-y-6">
             <div className="border-b border-gray-200 pb-4">
-              <p className="text-sm font-medium text-gray-600">Full Name</p>
-              <p className="mt-1 text-lg text-[#75CCD1] font-semibold">{profile.name || 'Not set'}</p>
+              <p className="text-sm font-medium text-gray-600">Nama Lengkap</p>
+              <p className="mt-1 text-lg text-[#75CCD1] font-semibold">{profile.name || 'Belum diatur'}</p>
             </div>
             <div className="border-b border-gray-200 pb-4">
-              <p className="text-sm font-medium text-gray-600">Email Address</p>
-              <p className="mt-1 text-lg text-[#75CCD1] font-semibold">{profile.email || 'Not set'}</p>
+              <p className="text-sm font-medium text-gray-600">Email</p>
+              <p className="mt-1 text-lg text-[#75CCD1] font-semibold">{profile.email || 'Belum diatur'}</p>
             </div>
             <div className="border-b border-gray-200 pb-4">
-              <p className="text-sm font-medium text-gray-600">Phone Number</p>
-              <p className="mt-1 text-lg text-[#75CCD1] font-semibold">{profile.phone_number || 'Not set'}</p>
+              <p className="text-sm font-medium text-gray-600">Nomor Telephone</p>
+              <p className="mt-1 text-lg text-[#75CCD1] font-semibold">{profile.phone_number || 'Belum diatur'}</p>
             </div>
             <div className="flex justify-between">
               <Link
                 to="/dashboard"
                 className="px-5 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition duration-200 ease-in-out font-medium"
               >
-                Back to Dashboard
+                Ke Dashboard
               </Link>
               <button
                 onClick={() => setIsEditing(true)}
                 className="px-5 py-2 bg-[#75CCD1] text-white rounded-xl hover:bg-[#5ABBC0] transition duration-200 ease-in-out font-medium"
               >
-                Edit Profile
+                Ubah Profil
               </button>
             </div>
           </div>

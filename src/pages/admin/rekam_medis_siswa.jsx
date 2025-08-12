@@ -372,7 +372,7 @@ const RekamMedisSiswa = () => {
                     <th className="p-3 text-left text-gray-800 dark:text-gray-200">Jenis Kelamin</th>
                     <th className="p-3 text-left text-gray-800 dark:text-gray-200">Kelas</th>
                     <th className="p-3 text-left text-gray-800 dark:text-gray-200">Nama Kelas</th>
-                    <th className="p-3 text-left text-gray-800 dark:text-gray-200">Action</th>
+                    <th className="p-3 text-left text-gray-800 dark:text-gray-200"></th>
                   </tr>
                 </thead>
                 <tbody>

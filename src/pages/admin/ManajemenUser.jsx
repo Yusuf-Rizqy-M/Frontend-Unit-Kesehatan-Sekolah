@@ -273,10 +273,37 @@ export default function ManajemenUser() {
     return matchesSearch && matchesDepartment && matchesGrade && matchesClass && matchesRole && isActive;
   });
 
-  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage) || 1;
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
   const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
+
+  // Calculate the range of pages to display (maximum 5 pages)
+  const getPageRange = () => {
+    const maxPagesToShow = 5; // Maximum number of page buttons to display
+    let startPage, endPage;
+
+    if (totalPages <= maxPagesToShow) {
+      // If total pages are less than or equal to 5, show all pages
+      startPage = 1;
+      endPage = totalPages;
+    } else {
+      // Calculate the range to show 5 pages centered around the current page
+      const maxPagesBeforeCurrent = Math.floor(maxPagesToShow / 2); // Pages before current (2 if maxPagesToShow is 5)
+      const maxPagesAfterCurrent = maxPagesToShow - maxPagesBeforeCurrent - 1; // Pages after current (2 if maxPagesToShow is 5)
+
+      startPage = Math.max(1, currentPage - maxPagesBeforeCurrent);
+      endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+
+      // Adjust startPage if endPage reaches totalPages
+      if (endPage === totalPages) {
+        startPage = Math.max(1, totalPages - maxPagesToShow + 1);
+      }
+    }
+
+    // Return an array of page numbers to display
+    return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
+  };
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -588,7 +615,6 @@ export default function ManajemenUser() {
                     <th className="px-4 py-3">Kelas</th>
                     <th className="px-4 py-3">Nama Kelas</th>
                     <th className="px-4 py-3">Jenis Kelamin</th>
-                    <th className="px-4 py-3">Jenis Kelamin</th>
                     <th className="px-4 py-3">No HP</th>
                     <th className="px-4 py-3"></th>
                   </tr>
@@ -644,7 +670,7 @@ export default function ManajemenUser() {
                 >
                   {'<'}
                 </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                {getPageRange().map((page) => (
                   <button
                     key={page}
                     onClick={() => handlePageChange(page)}

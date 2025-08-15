@@ -16,9 +16,7 @@ function Dashboard() {
     yesterday: 0,
     week: 0,
     all: 0,
-    monthly: Array(12).fill(0),
-    daily: [],
-    hourly: [],
+    monthly: Array(12).fill(0), // Back to monthly data
     totalUsers: 0,
   });
   const [todayQueue, setTodayQueue] = useState([]);
@@ -27,25 +25,6 @@ function Dashboard() {
   const [token, setToken] = useState(localStorage.getItem('token') || null);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const chartRef = useRef(null);
-
-  // Mock data for fallback in case of API failure
-  const mockData = {
-    today: 10,
-    yesterday: 15,
-    week: 50,
-    all: 36,
-    monthly: [0, 0, 0, 0, 2, 1, 1, 0, 0, 0, 0, 0],
-    daily: [10, 12, 15, 18, 20, 10, 15],
-    hourly: [2, 5, 8, 10, 7, 6],
-    totalUsers: 5,
-    todayQueue: [
-      { queueNumber: 'Q001', status: 'Mengantri', studentName: 'John Doe', submittedSince: '2025-07-22 08:00' },
-      { queueNumber: 'Q002', status: 'Done', studentName: 'Jane Smith', submittedSince: '2025-07-22 07:30' },
-      { queueNumber: 'Q003', status: 'Mengantri', studentName: 'Ahmad Yani', submittedSince: '2025-07-22 08:15' },
-      { queueNumber: 'Q004', status: 'Done', studentName: 'Siti Nurhaliza', submittedSince: '2025-07-21 16:45' },
-      { queueNumber: 'Q005', status: 'Mengantri', studentName: 'Budi Santoso', submittedSince: '2025-07-22 08:30' },
-    ],
-  };
 
   // Set favicon, title, and sync dark mode
   useEffect(() => {
@@ -108,8 +87,6 @@ function Dashboard() {
         yesterday: data.yesterday || 0,
         week: data.week || 0,
         all: data.all || 0,
-        daily: data.daily || Array(7).fill(0),
-        hourly: data.hourly || Array(6).fill(0),
       };
     } catch (err) {
       console.error('Queue Stats Fetch Error:', err);
@@ -129,12 +106,18 @@ function Dashboard() {
       });
       if (!response.ok) throw new Error(`Failed to fetch monthly stats: ${response.status}`);
       const data = await response.json();
+      
+      // Initialize array with 12 months
       const monthly = Array(12).fill(0);
+      
+      // Populate data based on API response
       data.forEach((item) => {
         if (item.bulan >= 1 && item.bulan <= 12) {
-          monthly[item.bulan - 1] = item.total;
+          // Ensure the total value is between 1-30 for better visualization
+          monthly[item.bulan - 1] = Math.min(Math.max(item.total || 0, 0), 30);
         }
       });
+      
       return monthly;
     } catch (err) {
       console.error('Monthly Stats Fetch Error:', err);
@@ -243,31 +226,13 @@ function Dashboard() {
         week: queueData.week,
         all: queueData.all,
         monthly: monthlyData,
-        daily: queueData.daily,
-        hourly: queueData.hourly,
         totalUsers,
       });
       setTodayQueue(selectedQueue);
     } catch (err) {
       console.error('Fetch Error:', err);
       setError(err.message || 'Gagal mengambil data');
-      setQueueStats({
-        today: 10,
-        yesterday: 15,
-        week: 50,
-        all: 36,
-        monthly: [0, 0, 0, 0, 2, 1, 1, 0, 0, 0, 0, 0],
-        daily: [10, 12, 15, 18, 20, 10, 15],
-        hourly: [2, 5, 8, 10, 7, 6],
-        totalUsers: 5,
-      });
-      setTodayQueue([
-        { queueNumber: 'Q001', status: 'Mengantri', studentName: 'John Doe', submittedSince: '2025-07-22 08:00' },
-        { queueNumber: 'Q002', status: 'Selesai', studentName: 'Jane Smith', submittedSince: '2025-07-22 07:30' },
-        { queueNumber: 'Q003', status: 'Mengantri', studentName: 'Ahmad Yani', submittedSince: '2025-07-22 08:15' },
-        { queueNumber: 'Q004', status: 'Selesai', studentName: 'Siti Nurhaliza', submittedSince: '2025-07-21 16:45' },
-        { queueNumber: 'Q005', status: 'Mengantri', studentName: 'Budi Santoso', submittedSince: '2025-07-22 08:30' },
-      ]);
+      // Don't set any fallback data - just show error state
     } finally {
       setLoading(false);
     }
@@ -279,33 +244,81 @@ function Dashboard() {
   }, []);
 
   // Memoize chart data to prevent unnecessary re-renders
-  const chartData = useMemo(() => ({
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-    datasets: [{
-      label: 'Queue Stats',
-      data: queueStats.monthly,
-      borderColor: isDarkMode ? '#00C4B4' : '#1B4A4F',
-      backgroundColor: isDarkMode ? 'rgba(0, 196, 180, 0.2)' : 'rgba(27, 74, 79, 0.2)',
-      fill: true,
-      tension: 0.4,
-    }],
-  }), [queueStats.monthly, isDarkMode]);
+  const chartData = useMemo(() => {
+    return {
+      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      datasets: [{
+        label: 'Jumlah Pengunjung',
+        data: queueStats.monthly,
+        borderColor: isDarkMode ? '#00C4B4' : '#1B4A4F',
+        backgroundColor: isDarkMode ? 'rgba(0, 196, 180, 0.2)' : 'rgba(27, 74, 79, 0.2)',
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: isDarkMode ? '#00C4B4' : '#1B4A4F',
+        pointBorderColor: isDarkMode ? '#00C4B4' : '#1B4A4F',
+        pointHoverBackgroundColor: isDarkMode ? '#00E5D3' : '#2A5A5F',
+        pointHoverBorderColor: isDarkMode ? '#00E5D3' : '#2A5A5F',
+      }],
+    };
+  }, [queueStats.monthly, isDarkMode]);
 
   // Chart options
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { position: 'top' },
-      tooltip: { mode: 'index', intersect: false },
+      legend: { 
+        position: 'top',
+        labels: {
+          color: isDarkMode ? '#ffffff' : '#374151',
+        }
+      },
+      tooltip: { 
+        mode: 'index', 
+        intersect: false,
+        backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+        titleColor: isDarkMode ? '#ffffff' : '#374151',
+        bodyColor: isDarkMode ? '#ffffff' : '#374151',
+        borderColor: isDarkMode ? '#374151' : '#e5e7eb',
+        borderWidth: 1,
+      },
       title: {
         display: true,
-        text: 'Statistik antrian bulanan',
+        text: 'Statistik Pengunjung Bulanan',
         font: { size: 18 },
+        color: isDarkMode ? '#ffffff' : '#374151',
       },
     },
     scales: {
-      y: { beginAtZero: true },
+      x: {
+        title: {
+          display: true,
+          text: 'Bulan',
+          color: isDarkMode ? '#ffffff' : '#374151',
+        },
+        ticks: {
+          color: isDarkMode ? '#ffffff' : '#374151',
+        },
+        grid: {
+          color: isDarkMode ? '#374151' : '#e5e7eb',
+        }
+      },
+      y: { 
+        beginAtZero: true,
+        max: 30, // Set maximum value to 30 for better visualization
+        title: {
+          display: true,
+          text: 'Jumlah Pengunjung (1-30)',
+          color: isDarkMode ? '#ffffff' : '#374151',
+        },
+        ticks: {
+          color: isDarkMode ? '#ffffff' : '#374151',
+          stepSize: 5, // Show ticks every 5 units
+        },
+        grid: {
+          color: isDarkMode ? '#374151' : '#e5e7eb',
+        }
+      },
     },
   };
 
@@ -370,10 +383,20 @@ function Dashboard() {
             {/* Line Chart */}
             <div className="bg-white dark:bg-[#051D4E] rounded-[20px] shadow p-6 mb-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl text-gray-800 dark:text-gray-100 font-bold">Statistik Antrean</h2>
+                <h2 className="text-xl text-gray-800 dark:text-gray-100 font-bold">Statistik Antrean Harian</h2>
               </div>
               <div className="h-64">
-                <Line data={chartData} options={chartOptions} ref={chartRef} />
+                {loading ? (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1B4A4F] dark:border-white"></div>
+                  </div>
+                ) : error ? (
+                  <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                    Gagal memuat grafik
+                  </div>
+                ) : (
+                  <Line data={chartData} options={chartOptions} ref={chartRef} />
+                )}
               </div>
             </div>
           </div>

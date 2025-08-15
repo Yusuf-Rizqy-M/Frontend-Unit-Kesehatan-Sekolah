@@ -57,6 +57,23 @@ export default function RekamAntrian() {
     }
   };
 
+  // Additional helper function to validate student data
+  const validateStudentData = (student) => {
+    if (!student) {
+      return { isValid: false, message: "Data siswa tidak ada." };
+    }
+    
+    if (!student.id) {
+      return { isValid: false, message: "ID siswa tidak valid." };
+    }
+    
+    if (!student.name || student.name === "Tidak Diketahui") {
+      return { isValid: false, message: "Nama siswa tidak valid." };
+    }
+    
+    return { isValid: true };
+  };
+
   // Set tab title dan favicon
   useEffect(() => {
     document.title = 'Rekam Antrian Siswa';
@@ -214,12 +231,53 @@ export default function RekamAntrian() {
     }
   }, [filterMode]);
 
+  // Fixed handleNavigateToDetails with correct route path
   const handleNavigateToDetails = (student) => {
-    if (student?.id) {
-      const path = `/RekamMedis/${student.id}`;
-      navigate(path, { state: { student } });
-    } else {
-      showToastMessage("ID siswa tidak tersedia.", "error");
+    console.log("=== NAVIGATION DEBUG ===");
+    console.log("Full student object:", student);
+    console.log("Student ID:", student?.id);
+    console.log("Student ID type:", typeof student?.id);
+    console.log("Current location:", window.location.pathname);
+    
+    if (!student || !student.id) {
+      console.error("❌ Navigation failed: Invalid student data", { student });
+      showToastMessage("Data siswa tidak valid. ID siswa tidak tersedia.", "error");
+      return;
+    }
+
+    // Use the CORRECT route path from your Router configuration
+    const correctRoute = `/MedicalRecord/${student.id}`;  // ← This matches your route definition
+    console.log(`🚀 Navigating to correct route: ${correctRoute}`);
+    
+    try {
+      navigate(correctRoute, { 
+        state: { 
+          student: {
+            id: student.id,
+            name: student.name,
+            gender: student.gender,
+            class: student.class,
+            name_grades: student.name_grades,
+            name_department: student.name_department,
+            phone_number: student.phone_number,
+            name_parent: student.name_parent,
+            no_hp_parent: student.no_hp_parent,
+            name_walikelas: student.name_walikelas
+          },
+          fromQueue: true,
+          queueContext: {
+            returnPath: "/rekamantri",
+            action: "process"
+          }
+        }
+      });
+      
+      console.log("✅ Navigation command sent successfully");
+      showToastMessage(`Menuju halaman rekam medis siswa: ${student.name}`, "success");
+      
+    } catch (navigationError) {
+      console.error("❌ Navigation error:", navigationError);
+      showToastMessage("Gagal navigasi ke halaman rekam medis.", "error");
     }
   };
 
@@ -227,6 +285,7 @@ export default function RekamAntrian() {
     navigate(`/rekamantri/detailrekamantri/${user.id}`, { state: { user } });
   };
 
+  // Improved handleStatusChange function with better navigation logic
   const handleStatusChange = async (queueId, rawId, newStatus, prevStatus, student) => {
     try {
       setUpdatingStatus((prev) => ({ ...prev, [queueId]: true }));
@@ -249,23 +308,75 @@ export default function RekamAntrian() {
             throw err;
           }
         }
-        handleNavigateToDetails(student);
+        
+        // Update local state first
+        setQueueData((prev) =>
+          prev.map((item) =>
+            item.id === queueId ? { ...item, status: newStatus } : item
+          )
+        );
+        
+        // Update counters
+        setTotalWaiting((prev) => prev - 1);
+        setTotalProcessing((prev) => prev + 1);
+        
+        // Show success message
+        if (response?.data?.message) {
+          showToastMessage(response.data.message, "success");
+        }
+        
+        // Navigate to medical record page after successful processing
+        // Add a small delay to ensure the UI updates are visible
+        setTimeout(() => {
+          handleNavigateToDetails(student);
+        }, 500);
+        
       } else if (newStatus === "Selesai") {
-        const medicalRecordRes = await axios.get(`https://api-uks.rplrus.com/api/healthcondition/${student.id}`, config);
-        const hasMedicalRecord = medicalRecordRes.data.data?.some(record => record.status === 'active');
-        if (!hasMedicalRecord) {
-          showToastMessage("Silakan isi rekam medis terlebih dahulu.", "error");
+        // Check if medical record exists before marking as complete
+        try {
+          const medicalRecordRes = await axios.get(`https://api-uks.rplrus.com/api/healthcondition/${student.id}`, config);
+          const hasMedicalRecord = medicalRecordRes.data.data?.some(record => record.status === 'active');
+          
+          if (!hasMedicalRecord) {
+            showToastMessage("Silakan isi rekam medis terlebih dahulu sebelum menyelesaikan antrian.", "error");
+            // Navigate to medical record page to fill it first
+            handleNavigateToDetails(student);
+            return;
+          }
+          
+          try {
+            response = await axios.post(`https://api-uks.rplrus.com/api/admin/queues/${rawId}/finish`, {}, config);
+          } catch (err) {
+            if (err.response?.status === 405) {
+              response = await axios.put(`https://api-uks.rplrus.com/api/admin/queues/${rawId}/finish`, {}, config);
+            } else {
+              throw err;
+            }
+          }
+          
+          // Update local state
+          setQueueData((prev) =>
+            prev.map((item) =>
+              item.id === queueId ? { ...item, status: newStatus } : item
+            )
+          );
+          
+          // Update counters
+          setTotalProcessing((prev) => prev - 1);
+          setTotalCompleted((prev) => prev + 1);
+          
+          if (response?.data?.message) {
+            showToastMessage(response.data.message, "success");
+          }
+          
+        } catch (medicalRecordErr) {
+          console.error("Error checking medical record:", medicalRecordErr);
+          // If there's an error checking medical records, still allow navigation to medical record page
+          showToastMessage("Tidak dapat memeriksa rekam medis. Navigasi ke halaman rekam medis.", "warning");
+          handleNavigateToDetails(student);
           return;
         }
-        try {
-          response = await axios.post(`https://api-uks.rplrus.com/api/admin/queues/${rawId}/finish`, {}, config);
-        } catch (err) {
-          if (err.response?.status === 405) {
-            response = await axios.put(`https://api-uks.rplrus.com/api/admin/queues/${rawId}/finish`, {}, config);
-          } else {
-            throw err;
-          }
-        }
+        
       } else if (newStatus === "Dibatalkan") {
         try {
           response = await axios.post(`https://api-uks.rplrus.com/api/admin/queues/${rawId}/skip`, {}, config);
@@ -276,24 +387,39 @@ export default function RekamAntrian() {
             throw err;
           }
         }
+        
+        // Update local state
+        setQueueData((prev) =>
+          prev.map((item) =>
+            item.id === queueId ? { ...item, status: newStatus } : item
+          )
+        );
+        
+        // Update counters based on previous status
+        if (prevStatus === "Menunggu") {
+          setTotalWaiting((prev) => prev - 1);
+        } else if (prevStatus === "Sedang Diproses") {
+          setTotalProcessing((prev) => prev - 1);
+        }
+        setTotalSkipped((prev) => prev + 1);
+        
+        if (response?.data?.message) {
+          showToastMessage(response.data.message, "success");
+        }
       } else if (newStatus === "Menunggu") {
         // Tidak ada endpoint API untuk "Menunggu"; perbarui secara lokal
+        setQueueData((prev) =>
+          prev.map((item) =>
+            item.id === queueId ? { ...item, status: newStatus } : item
+          )
+        );
+        
+        setTotalWaiting((prev) => (prevStatus === "Menunggu" ? prev - 1 : prev) + (newStatus === "Menunggu" ? 1 : 0));
+        setTotalProcessing((prev) => (prevStatus === "Sedang Diproses" ? prev - 1 : prev) + (newStatus === "Sedang Diproses" ? 1 : 0));
+        setTotalCompleted((prev) => (prevStatus === "Selesai" ? prev - 1 : prev) + (newStatus === "Selesai" ? 1 : 0));
+        setTotalSkipped((prev) => (prevStatus === "Dibatalkan" ? prev - 1 : prev) + (newStatus === "Dibatalkan" ? 1 : 0));
       }
 
-      setQueueData((prev) =>
-        prev.map((item) =>
-          item.id === queueId ? { ...item, status: newStatus } : item
-        )
-      );
-
-      setTotalWaiting((prev) => (prevStatus === "Menunggu" ? prev - 1 : prev) + (newStatus === "Menunggu" ? 1 : 0));
-      setTotalProcessing((prev) => (prevStatus === "Sedang Diproses" ? prev - 1 : prev) + (newStatus === "Sedang Diproses" ? 1 : 0));
-      setTotalCompleted((prev) => (prevStatus === "Selesai" ? prev - 1 : prev) + (newStatus === "Selesai" ? 1 : 0));
-      setTotalSkipped((prev) => (prevStatus === "Dibatalkan" ? prev - 1 : prev) + (newStatus === "Dibatalkan" ? 1 : 0));
-
-      if (response?.data?.message) {
-        showToastMessage(response.data.message, "success");
-      }
     } catch (err) {
       const allowedMethods = err.response?.headers?.allow || "tidak diketahui";
       const errorMessage =
@@ -667,35 +793,55 @@ export default function RekamAntrian() {
                                             : item.status === "Dibatalkan"
                                             ? "bg-red-100 text-red-800"
                                             : "bg-green-200 text-gray-800"
-                                        } disabled:opacity-50`}
-                                        disabled={filterMode !== "today" || !getNextStatus(item.status)}
-                                        onClick={() =>
+                                        } disabled:opacity-50 hover:opacity-80 transition-opacity`}
+                                        disabled={filterMode !== "today" || !getNextStatus(item.status) || updatingStatus[item.id]}
+                                        onClick={() => {
+                                          // Validate student data before processing
+                                          const validation = validateStudentData(item.student);
+                                          if (!validation.isValid) {
+                                            showToastMessage(validation.message, "error");
+                                            return;
+                                          }
+                                          
                                           handleStatusChange(
                                             item.id,
                                             item.rawId,
                                             getNextStatus(item.status),
                                             item.status,
                                             item.student
-                                          )
-                                        }
+                                          );
+                                        }}
                                       >
-                                        {item.status === "Menunggu"
-                                          ? "Proses"
-                                          : item.status === "Sedang Diproses"
-                                          ? "Selesai"
-                                          : item.status}
+                                        {updatingStatus[item.id] ? "Memproses..." : 
+                                          item.status === "Menunggu"
+                                            ? "Proses"
+                                            : item.status === "Sedang Diproses"
+                                            ? "Selesai"
+                                            : item.status}
                                       </button>
-                                      {item.status === "Menunggu" || item.status === "Sedang Diproses" ? (
+                                      {(item.status === "Menunggu" || item.status === "Sedang Diproses") && (
                                         <button
-                                          className="px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 disabled:opacity-50"
-                                          disabled={filterMode !== "today"}
-                                          onClick={() =>
-                                            handleStatusChange(item.id, item.rawId, "Dibatalkan", item.status, item.student)
-                                          }
+                                          className="px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 disabled:opacity-50 hover:opacity-80 transition-opacity"
+                                          disabled={filterMode !== "today" || updatingStatus[item.id]}
+                                          onClick={() => {
+                                            const validation = validateStudentData(item.student);
+                                            if (!validation.isValid) {
+                                              showToastMessage(validation.message, "error");
+                                              return;
+                                            }
+                                            
+                                            handleStatusChange(
+                                              item.id, 
+                                              item.rawId, 
+                                              "Dibatalkan", 
+                                              item.status, 
+                                              item.student
+                                            );
+                                          }}
                                         >
-                                          Batalkan
+                                          {updatingStatus[item.id] ? "Membatalkan..." : "Batalkan"}
                                         </button>
-                                      ) : null}
+                                      )}
                                     </>
                                   )}
                                 </td>

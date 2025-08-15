@@ -1,9 +1,8 @@
 import Layout from '../../components/user/layout';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import EducationCard from '../../widget/educationcard';
 import UKS2Img from '../../assets/img/uks2.png';
 import Clean from '../../assets/img/cleaannn.png';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import DOMPurify from 'dompurify';
 
 function EdukasiKesehatan() {
@@ -15,8 +14,98 @@ function EdukasiKesehatan() {
   const [categoryIcon, setCategoryIcon] = useState(Clean);
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [categoryColors, setCategoryColors] = useState({});
   const { categoryId } = useParams();
   const navigate = useNavigate();
+  const canvasRef = useRef(null);
+
+  // Function to extract dominant color from image
+  const extractDominantColor = (imageUrl, categoryId) => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      img.onload = () => {
+        const canvas = canvasRef.current || document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        
+        try {
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const data = imageData.data;
+          
+          let r = 0, g = 0, b = 0;
+          let pixelCount = 0;
+          
+          // Sample pixels to get average color
+          for (let i = 0; i < data.length; i += 16) { // Sample every 4th pixel for performance
+            if (data[i + 3] > 200) { // Only count opaque pixels
+              r += data[i];
+              g += data[i + 1];
+              b += data[i + 2];
+              pixelCount++;
+            }
+          }
+          
+          if (pixelCount > 0) {
+            r = Math.floor(r / pixelCount);
+            g = Math.floor(g / pixelCount);
+            b = Math.floor(b / pixelCount);
+            
+            // Convert to pastel by mixing with white
+            const pastelR = Math.floor((r + 255 * 2) / 3);
+            const pastelG = Math.floor((g + 255 * 2) / 3);
+            const pastelB = Math.floor((b + 255 * 2) / 3);
+            
+            const pastelColor = `rgb(${pastelR}, ${pastelG}, ${pastelB})`;
+            const darkColor = `rgb(${Math.floor(r * 0.8)}, ${Math.floor(g * 0.8)}, ${Math.floor(b * 0.8)})`;
+            
+            resolve({ light: pastelColor, dark: darkColor });
+          } else {
+            // Fallback pastel colors
+            const fallbackColors = [
+              { light: 'rgb(255, 228, 230)', dark: 'rgba(231, 120, 173, 1)' }, // Pink
+              { light: 'rgb(219, 234, 254)', dark: 'rgb(59, 130, 246)' }, // Blue
+              { light: 'rgb(220, 252, 231)', dark: 'rgb(16, 185, 129)' },  // Green
+              { light: 'rgb(254, 235, 200)', dark: 'rgb(245, 158, 11)' },  // Orange
+              { light: 'rgb(237, 233, 254)', dark: 'rgb(139, 92, 246)' }, // Purple
+              { light: 'rgb(254, 252, 232)', dark: 'rgb(251, 191, 36)' }   // Yellow
+            ];
+            resolve(fallbackColors[categoryId % fallbackColors.length]);
+          }
+        } catch (error) {
+          // Fallback if canvas fails
+          const fallbackColors = [
+            { light: 'rgb(255, 228, 230)', dark: 'rgb(220, 38, 127)' },
+            { light: 'rgb(219, 234, 254)', dark: 'rgb(59, 130, 246)' },
+            { light: 'rgb(220, 252, 231)', dark: 'rgb(16, 185, 129)' },
+            { light: 'rgb(254, 235, 200)', dark: 'rgb(245, 158, 11)' },
+            { light: 'rgb(237, 233, 254)', dark: 'rgb(139, 92, 246)' },
+            { light: 'rgb(254, 252, 232)', dark: 'rgb(251, 191, 36)' }
+          ];
+          resolve(fallbackColors[categoryId % fallbackColors.length]);
+        }
+      };
+      
+      img.onerror = () => {
+        // Fallback colors if image fails to load
+        const fallbackColors = [
+          { light: 'rgb(255, 228, 230)', dark: 'rgb(220, 38, 127)' },
+          { light: 'rgb(219, 234, 254)', dark: 'rgb(59, 130, 246)' },
+          { light: 'rgb(220, 252, 231)', dark: 'rgb(16, 185, 129)' },
+          { light: 'rgb(254, 235, 200)', dark: 'rgb(245, 158, 11)' },
+          { light: 'rgb(237, 233, 254)', dark: 'rgb(139, 92, 246)' },
+          { light: 'rgb(254, 252, 232)', dark: 'rgb(251, 191, 36)' }
+        ];
+        resolve(fallbackColors[categoryId % fallbackColors.length]);
+      };
+      
+      img.src = imageUrl;
+    });
+  };
 
   const createExcerpt = (htmlContent, maxLength = 200) => {
     if (!htmlContent) return '';
@@ -72,6 +161,20 @@ function EdukasiKesehatan() {
         if (data.status) {
           setCategories(data.data);
           
+          // Extract colors for each category
+          const colorPromises = data.data.map(async (category) => {
+            const colors = await extractDominantColor(category.image || Clean, category.id);
+            return { id: category.id, colors };
+          });
+          
+          Promise.all(colorPromises).then(colorResults => {
+            const colorMap = {};
+            colorResults.forEach(({ id, colors }) => {
+              colorMap[id] = colors;
+            });
+            setCategoryColors(colorMap);
+          });
+          
           if (categoryId) {
             const matchedCategory = data.data.find(cat => cat.id.toString() === categoryId);
             
@@ -125,6 +228,89 @@ function EdukasiKesehatan() {
     <Layout>
       <style>
         {`
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+          
+          * {
+            font-family: 'Inter', sans-serif;
+          }
+          
+          .container {
+            min-height: 100vh;
+            padding: 20px;
+          }
+          
+          .hero-card {
+            background: linear-gradient(135deg, #1eb1aaff 0%, #92d9d8ff 100%);
+            border-radius: 24px;
+            padding: 40px 32px;
+            margin-bottom: 32px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+          }
+          
+          .hero-title {
+            font-size: 48px;
+            font-weight: 700;
+            color: white;
+            line-height: 1.1;
+            margin: 0;
+          }
+          
+          .hero-icon {
+            position: absolute;
+            right: 32px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 120px;
+            height: 120px;
+            z-index: 2;
+          }
+          
+          .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+          }
+          
+          .category-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+          }
+          
+          .category-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border-color: #3b82f6;
+          }
+          
+          .category-icon {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 16px;
+            object-fit: contain;
+          }
+          
+          .category-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+            text-transform: capitalize;
+          }
+          
           .double-spinner {
             position: relative;
             width: 60px;
@@ -157,32 +343,37 @@ function EdukasiKesehatan() {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
           }
-          @keyframes fadeIn {
-            from {
-              opacity: 0;
-              transform: translateY(20px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
+          
+          .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #2A8F9E;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
           }
-          @keyframes slideUp {
-            from {
-              opacity: 0;
-              transform: translateY(10px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
+          .back-button:hover {
+            background: #005A79;
+            transform: translateX(-4px);
           }
-          .animate-fade-in {
-            animation: fadeIn 0.5s ease-in-out;
+          .back-button svg {
+            width: 1.25rem;
+            height: 1.25rem;
           }
-          .animate-slide-up {
-            animation: slideUp 0.5s ease-in-out;
+          
+          .responsive-image {
+            max-width: 50%;
+            height: auto;
+            object-fit: cover;
+            border-radius: 0.5rem;
           }
+          
           .modal {
             position: fixed;
             top: 0;
@@ -224,103 +415,110 @@ function EdukasiKesehatan() {
           .modal-close:hover {
             background: #005A79;
           }
-          .back-button {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: #2A8F9E;
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: 500;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            cursor: pointer;
-          }
-          .back-button:hover {
-            background: #005A79;
-            transform: translateX(-4px);
-          }
-          .back-button svg {
-            width: 1.25rem;
-            height: 1.25rem;
-          }
-          .responsive-image {
-            max-width: 50%;
-            height: auto;
-            object-fit: cover;
-            border-radius: 0.5rem;
-            margin-left: 0;
-            margin-right: auto;
-          }
-          @media (max-width: 640px) {
-            .back-button {
-              padding: 0.5rem 1rem;
-              font-size: 0.875rem;
+          
+          @media (max-width: 768px) {
+            .hero-title {
+              font-size: 32px;
             }
-            .back-button svg {
-              width: 1rem;
-              height: 1rem;
+            .hero-icon {
+              width: 80px;
+              height: 80px;
+              right: 20px;
             }
-            .responsive-image {
-              max-width: 100%;
-              height: auto;
+            .hero-card {
+              padding: 24px 20px;
+            }
+            .categories-grid {
+              grid-template-columns: repeat(2, 1fr);
+              gap: 16px;
+            }
+            .category-card {
+              height: 160px;
+              padding: 16px;
+            }
+            .category-icon {
+              width: 60px;
+              height: 60px;
+            }
+            .category-title {
+              font-size: 14px;
             }
           }
-          @media (min-width: 641px) and (max-width: 1024px) {
-            .responsive-image {
-              max-width: 80%;
-              height: auto;
+          
+          @media (min-width: 769px) and (max-width: 1024px) {
+            .categories-grid {
+              grid-template-columns: repeat(3, 1fr);
             }
           }
+          
           @media (min-width: 1025px) {
-            .responsive-image {
-              max-width: 50%;
-              height: auto;
+            .categories-grid {
+              grid-template-columns: repeat(5, 1fr);
             }
           }
         `}
       </style>
-      <main className="animate-fade-in">
+      
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
+      
+      <div className="container">
         {loading ? (
-          <div className="flex flex-col items-center justify-center h-[calc(100vh-100px)]">
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '50vh' }}>
             <div className="double-spinner">
               <div className="spinner-ring outer"></div>
               <div className="spinner-ring inner"></div>
             </div>
-            <p className="text-gray-500 mt-4 animate-pulse">Memuat...</p>
+            <p style={{ color: '#6b7280', marginTop: '1rem' }}>Memuat...</p>
           </div>
         ) : error ? (
-          <p className="text-center text-red-500 animate-slide-up">{error}</p>
+          <div style={{ textAlign: 'center', color: '#ef4444', padding: '1rem' }}>
+            <p>{error}</p>
+          </div>
         ) : !categoryId ? (
           <>
-            <section className="relative w-full flex justify-center items-center bg-white mb-12 sm:mb-16 md:mb-20 min-h-[200px] sm:min-h-[250px] md:min-h-[300px] mt-[20px] sm:mt-[-50px] md:mt-[-150px] lg:mt-[-250px] animate-fade-in px-4 sm:px-6 lg:px-8">
-              <div className="w-full max-w-sm sm:max-w-2xl md:max-w-4xl lg:max-w-6xl xl:w-[1200px]">
-                <div className="bg-[#75CCD1] rounded-[15px] sm:rounded-[18px] md:rounded-[20px] flex items-center shadow-md p-4 sm:p-6 md:p-8 lg:p-12 pt-3 sm:pt-4 md:pt-6 pl-6 sm:pl-8 md:pl-10 lg:pl-12 transform transition-all duration-500 hover:shadow-lg min-h-[120px] sm:min-h-[150px] md:min-h-[180px] lg:h-[200px]">
-                  <h2 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white text-left leading-tight animate-slide-up">
-                    Jelajahi <br /> berbagai <span className="text-[#005A79]">Edukasi kesehatan</span>
-                  </h2>
-                </div>
-              </div>
-            </section>
+            {/* Hero Section */}
+            <div className="hero-card">
+              <h1 className="hero-title">
+                Jelajahi edukasi<br />
+                kesehatan
+              </h1>
+            </div>
 
-            <h2 className="-mt-2 sm:-mt-8 md:-mt-12 lg:-mt-17 text-xl sm:text-2xl md:text-3xl font-semibold text-[#2A8F9E] text-center animate-slide-up px-4">
-              Apa yang ingin <span className="text-[#005A79]">dibaca?</span>
-            </h2>
-
-            <div className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-5 lg:gap-6 mt-6 sm:mt-8 md:mt-10 px-4">
-              {categories.map(category => (
-                <Link key={category.id} to={`/edukasi-kesehatan/${category.id}`}>
-                  <div className="transform transition-all duration-300 hover:scale-105 hover:shadow-lg">
-                    <EducationCard title={category.title} icon={category.image} />
-                  </div>
-                </Link>
-              ))}
+            {/* Categories Grid */}
+            <div className="categories-grid">
+              {categories.map((category, index) => {
+                const colors = categoryColors[category.id] || { light: 'rgb(255, 228, 230)', dark: 'rgb(220, 38, 127)' };
+                return (
+                  <Link key={category.id} to={`/edukasi-kesehatan/${category.id}`} style={{ textDecoration: 'none' }}>
+                    <div 
+                      className="category-card"
+                      style={{ 
+                        backgroundColor: colors.light,
+                        borderColor: colors.dark 
+                      }}
+                    >
+                      <img 
+                        src={category.image || Clean} 
+                        alt={category.title}
+                        className="category-icon"
+                        onError={(e) => (e.target.src = Clean)}
+                      />
+                      <h3 
+                        className="category-title"
+                        style={{ color: colors.dark }}
+                      >
+                        {category.title}
+                      </h3>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </>
         ) : (
-          <section className="w-full px-4 md:px-20 py-5 bg-white animate-fade-in">
-            <div className="flex items-center justify-start mb-8">
+          // Article list view (existing code for when categoryId exists)
+          <div style={{ background: 'white', padding: '2rem', borderRadius: '1rem' }}>
+            <div style={{ marginBottom: '2rem' }}>
               <button 
                 onClick={() => navigate('/edukasikesehatan')} 
                 className="back-button"
@@ -332,62 +530,74 @@ function EdukasiKesehatan() {
               </button>
             </div>
 
-            <div className="text-center mb-12">
+            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
               <img
                 src={categoryIcon}
                 alt={`${categoryTitle} Icon`}
-                className="mx-auto w-40 h-40 mb-2 transform transition-transform duration-300 hover:scale-110"
+                style={{ width: '160px', height: '160px', margin: '0 auto 1rem', objectFit: 'contain' }}
               />
-              <h2 className="text-xl md:text-2xl font-semibold text-[#2A8F9E] animate-slide-up">
-                Artikel tentang <span className="text-[#2A8F9E]">{categoryTitle}</span>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#2A8F9E', margin: 0 }}>
+                Artikel tentang <span style={{ color: '#2A8F9E' }}>{categoryTitle}</span>
               </h2>
-              <hr className="mt-2 border-t border-gray-200 w-3/4 mx-auto transition-all duration-500" />
+              <hr style={{ marginTop: '1rem', border: 'none', borderTop: '1px solid #e5e7eb', width: '75%', margin: '1rem auto' }} />
             </div>
 
-            <div className="space-y-12">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
               {articles.length > 0 ? (
-                articles.map((article, index) => (
+                articles.map((article) => (
                   <div
                     key={article.id}
-                    className="flex flex-col md:flex-row justify-between items-start gap-6 border-b border-gray-200 pb-6 cursor-pointer hover:bg-gray-50 transition-all duration-300 p-4 rounded-lg animate-slide-up"
-                    style={{ animationDelay: `${index * 0.1}s` }}
+                    style={{ 
+                      display: 'flex', 
+                      gap: '1.5rem', 
+                      borderBottom: '1px solid #e5e7eb', 
+                      paddingBottom: '1.5rem',
+                      cursor: 'pointer',
+                      padding: '1rem',
+                      borderRadius: '0.5rem',
+                      transition: 'background-color 0.3s'
+                    }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#f9fafb'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
                   >
-                    <div className="w-full md:w-3/5 text-left pl-4 md:pl-6">
-                      <h3 className="text-base md:text-lg font-semibold text-[#1C4245] mb-2 hover:text-[#2A8F9E] transition-colors duration-200">
+                    <div style={{ flex: '3', paddingLeft: '1.5rem' }}>
+                      <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#1C4245', marginBottom: '0.5rem' }}>
                         {article.title}
                       </h3>
                       <div 
-                        className="text-sm text-[#1C4245] prose prose-sm max-w-none
-                                   prose-p:text-[#1C4245] prose-strong:text-[#1C4245] 
-                                   prose-em:text-[#1C4245] prose-blockquote:text-[#1C4245]
-                                   prose-blockquote:border-l-[#2A8F9E] prose-blockquote:pl-4
-                                   prose-ul:text-[#1C4245] prose-ol:text-[#1C4245]
-                                   prose-li:text-[#1C4245] prose-h1:text-[#1C4245]
-                                   prose-h2:text-[#1C4245] prose-h3:text-[#1C4245]"
+                        style={{ fontSize: '0.875rem', color: '#1C4245', marginBottom: '1rem' }}
                         dangerouslySetInnerHTML={{ 
                           __html: createExcerpt(article.description, 300) 
                         }}
                       />
                       <p 
-                        className="text-xs text-[#2A8F9E] mt-3 font-medium transform transition-transform duration-200 hover:translate-x-1"
+                        style={{ fontSize: '0.75rem', color: '#2A8F9E', fontWeight: '500', cursor: 'pointer' }}
                         onClick={() => navigate(`/edukasi-kesehatan/${categoryId}/${article.id}`)}
                       >
                         Klik untuk baca selengkapnya →
                       </p>
                     </div>
-                    <div className="w-full md:w-2/5">
+                    <div style={{ flex: '2' }}>
                       <img
                         src={article.image}
                         alt={article.title}
-                        className="w-full h-auto object-cover rounded-xl shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105 responsive-image"
+                        style={{ 
+                          width: '100%', 
+                          height: 'auto', 
+                          objectFit: 'cover', 
+                          borderRadius: '0.75rem',
+                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                        }}
                         onError={(e) => (e.target.src = Clean)}
                       />
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="text-center animate-slide-up">
-                  <p className="text-gray-500 mb-4">Tidak ada artikel yang ditemukan untuk kategori ini. Anda akan diarahkan kembali dalam 5 detik...</p>
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ color: '#6b7280', marginBottom: '1rem' }}>
+                    Tidak ada artikel yang ditemukan untuk kategori ini. Anda akan diarahkan kembali dalam 5 detik...
+                  </p>
                   <button 
                     onClick={() => navigate('/edukasikesehatan')} 
                     className="back-button"
@@ -400,53 +610,48 @@ function EdukasiKesehatan() {
                 </div>
               )}
             </div>
-          </section>
+          </div>
         )}
 
+        {/* Modal for article details */}
         {isModalOpen && selectedArticle && (
           <div className="modal">
             <div className="modal-content">
               <button className="modal-close" onClick={() => setIsModalOpen(false)}>×</button>
-              <div className="text-center mb-6">
+              <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
                 <button 
                   onClick={() => navigate('/edukasikesehatan')} 
-                  className="back-button inline-flex items-center gap-2 bg-[#2A8F9E] text-white px-4 py-2 rounded-md hover:bg-[#005A79]"
+                  className="back-button"
+                  style={{ marginBottom: '1rem' }}
                 >
-                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-5 h-5">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: '1.25rem', height: '1.25rem' }}>
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
                   </svg>
                   Kembali
                 </button>
-                <img
-                  src={require('../../assets/img/heart-icon.png')}
-                  alt="Heart Icon"
-                  className="mx-auto w-12 h-12 mb-2"
-                />
-                <h2 className="text-xl md:text-2xl font-semibold text-[#2A8F9E] mb-2">
-                  Artikel tentang <span className="text-[#2A8F9E]">{categoryTitle}</span>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#2A8F9E', marginBottom: '0.5rem' }}>
+                  Artikel tentang <span style={{ color: '#2A8F9E' }}>{categoryTitle}</span>
                 </h2>
-                <p className="text-sm text-[#1C4245] max-w-lg mx-auto">
-                  Our Health Haven is equipped with essential medical facilities to ensure students receive the best care in a safe and comfortable environment.
-                </p>
               </div>
-              {Array(3).fill().map((_, index) => (
-                <div key={index} className="mb-6">
-                  <h3 className="text-lg font-semibold text-[#2A8F9E] mb-2">Pemeriksaan Kesehatan</h3>
-                  <p className="text-sm text-[#1C4245] mb-4 max-w-lg mx-auto">
-                    Our Health Haven is equipped with essential medical facilities to ensure students receive the best care in a safe and comfortable environment.
-                  </p>
-                  <img
-                    src={selectedArticle.image}
-                    alt={selectedArticle.title}
-                    className="responsive-image image-left"
-                    onError={(e) => (e.target.src = Clean)}
-                  />
-                </div>
-              ))}
+              <div>
+                <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#2A8F9E', marginBottom: '0.5rem' }}>
+                  {selectedArticle.title}
+                </h3>
+                <div
+                  style={{ fontSize: '0.875rem', color: '#1C4245', marginBottom: '1rem' }}
+                  dangerouslySetInnerHTML={{ __html: selectedArticle.description }}
+                />
+                <img
+                  src={selectedArticle.image}
+                  alt={selectedArticle.title}
+                  className="responsive-image"
+                  onError={(e) => (e.target.src = Clean)}
+                />
+              </div>
             </div>
           </div>
         )}
-      </main>
+      </div>
     </Layout>
   );
 }

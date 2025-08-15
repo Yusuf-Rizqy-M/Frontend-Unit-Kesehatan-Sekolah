@@ -5,7 +5,6 @@ import Header from '../../partials/Header';
 import axios from 'axios';
 import UKS2Img from '../../assets/img/uks2.png'; // Favicon import
 
-
 const RekamMedisSiswa = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -56,13 +55,13 @@ const RekamMedisSiswa = () => {
   useEffect(() => {
     // Set document title
     document.title = 'Rekam Medis Siswa';
-
     // Set favicon
     const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
     favicon.rel = 'icon';
     favicon.href = UKS2Img; // Use UKS2Img as favicon
     document.head.appendChild(favicon);
   }, []);
+
   // Initialize theme based on localStorage or system preference
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
@@ -79,29 +78,26 @@ const RekamMedisSiswa = () => {
   const fetchStudents = async () => {
     setLoading(true);
     setError(null);
-
     const token = getToken();
     if (!token) {
       setError('Token autentikasi tidak ditemukan. Silakan Login.');
       setLoading(false);
       return;
     }
-
     try {
       const response = await axios.get('https://api-uks.rplrus.com/api/users', {
         headers: { Authorization: `Bearer ${token}` },
         params: { status: 'active' },
       });
-
       if (response.data.status && response.data.data) {
         const activeStudents = response.data.data.filter(user => user.status === 'active');
         const mappedStudents = activeStudents.map(student => ({
           id: student.id,
           name: student.name,
-          gender: student.gender || 'N/A',
-          kelas: student.class || 'N/A',
-          namaKelas: student.name_grades || 'N/A',
-          department: student.name_department || 'N/A',
+          gender: student.gender || 'Belum Terisi',
+          kelas: student.class || 'Belum Terisi',
+          namaKelas: student.name_grades || 'Belum Terisi',
+          department: student.name_department || 'Belum Terisi',
           role: student.role,
         }));
         setStudents(mappedStudents);
@@ -128,7 +124,6 @@ const RekamMedisSiswa = () => {
       setError('Token autentikasi tidak ditemukan. Silakan Login.');
       return;
     }
-
     try {
       const response = await axios.get('https://api-uks.rplrus.com/api/departments', {
         headers: { Authorization: `Bearer ${token}` },
@@ -141,7 +136,7 @@ const RekamMedisSiswa = () => {
       if (err.response && err.response.status === 401) {
         setError('Unauthorized: Token tidak valid atau kedaluwarsa. Silakan Login Kembali.');
       } else {
-        setError('Terjadi kesalahan saat mengambil departemen:' + err.message);
+        setError('Terjadi kesalahan saat mengambil departemen: ' + err.message);
       }
     }
   };
@@ -153,7 +148,6 @@ const RekamMedisSiswa = () => {
       setError('Token autentikasi tidak ditemukan. Silakan Login.');
       return;
     }
-
     try {
       const response = await axios.get('https://api-uks.rplrus.com/api/grades', {
         headers: { Authorization: `Bearer ${token}` },
@@ -192,6 +186,33 @@ const RekamMedisSiswa = () => {
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
   const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
+
+  // Calculate the range of pages to display (maximum 5 pages)
+  const getPageRange = () => {
+    const maxPagesToShow = 5; // Maximum number of page buttons to display
+    let startPage, endPage;
+
+    if (totalPages <= maxPagesToShow) {
+      // If total pages are less than or equal to 5, show all pages
+      startPage = 1;
+      endPage = totalPages;
+    } else {
+      // Calculate the range to show 5 pages centered around the current page
+      const maxPagesBeforeCurrent = Math.floor(maxPagesToShow / 2); // Pages before current (2 if maxPagesToShow is 5)
+      const maxPagesAfterCurrent = maxPagesToShow - maxPagesBeforeCurrent - 1; // Pages after current (2 if maxPagesToShow is 5)
+
+      startPage = Math.max(1, currentPage - maxPagesBeforeCurrent);
+      endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+
+      // Adjust startPage if endPage reaches totalPages
+      if (endPage === totalPages) {
+        startPage = Math.max(1, totalPages - maxPagesToShow + 1);
+      }
+    }
+
+    // Return an array of page numbers to display
+    return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
+  };
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -235,8 +256,6 @@ const RekamMedisSiswa = () => {
         <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
         <main className="grow">
           <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto">
-            {/* Dark Mode Toggle Button */}
-
             {/* Toast Notification */}
             {showToast && (
               <div
@@ -265,11 +284,9 @@ const RekamMedisSiswa = () => {
                 <span className="font-medium text-sm">{toastMessage}</span>
               </div>
             )}
-
             <h2 className="text-2xl md:text-3xl text-gray-800 dark:text-gray-200 border-b-2 border-green-500 dark:border-green-400 pb-2 mb-8 inline-block">
               Rekam Medis Siswa
             </h2>
-
             {error && (
               <div className="bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-200 px-4 py-3 rounded mb-6">
                 {error}
@@ -285,7 +302,6 @@ const RekamMedisSiswa = () => {
                 </button>
               </div>
             )}
-
             <div className="bg-[#9BC7B6] dark:bg-[#1a2a5e] rounded-[10px] p-4 flex items-center gap-4 mb-6">
               <div className="relative flex-1 min-w-0">
                 <span className="absolute inset-y-0 left-3 flex items-center text-[#6D9C9D] dark:text-gray-400">
@@ -362,7 +378,6 @@ const RekamMedisSiswa = () => {
                 <option value="admin">Admin</option>
               </select>
             </div>
-
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
@@ -413,11 +428,9 @@ const RekamMedisSiswa = () => {
                 </tbody>
               </table>
             </div>
-
             <div className="flex justify-between items-center mt-6 text-sm text-gray-600 dark:text-gray-300">
               <p>
-                Showing{' '}
-                {filteredUsers.length === 0 ? 0 : indexOfFirstUser + 1}–{Math.min(indexOfLastUser, filteredUsers.length)} of{' '}
+                Showing {filteredUsers.length === 0 ? 0 : indexOfFirstUser + 1}–{Math.min(indexOfLastUser, filteredUsers.length)} of{' '}
                 {filteredUsers.length}
               </p>
               <div className="flex gap-1">
@@ -428,7 +441,7 @@ const RekamMedisSiswa = () => {
                 >
                   ← Sebelumnya
                 </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                {getPageRange().map((page) => (
                   <button
                     key={page}
                     onClick={() => handlePageChange(page)}
@@ -453,7 +466,6 @@ const RekamMedisSiswa = () => {
           </div>
         </main>
       </div>
-
       {/* CSS for Toast Animation */}
       <style jsx>{`
         .animate-fade-in-out {

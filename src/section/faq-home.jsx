@@ -12,7 +12,7 @@ const faqs = [
   {
     question: "Kapan saya bisa mengunjungi UKS?",
     answer:
-      "UKS SMK Raden Umar Said Kudus buka setiap hari sekolah mulai pukul 08.00 hingga 15.00. Kami siap membantu kebutuhan kesehatanmu selama berada di sekolah. Jangan ragu untuk datang ya! 😊",
+      "UKS SMK Raden Umar Said Kudus buka setiap hari sekolah mulai pukul 07.00 hingga 15.00. Kami siap membantu kebutuhan kesehatanmu selama berada di sekolah. Jangan ragu untuk datang ya! 😊",
   },
   {
     question: "Apakah UKS bisa memberikan obat?",

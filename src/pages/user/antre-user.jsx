@@ -451,7 +451,7 @@ function AntreUser() {
                       Antrean sekarang
                     </h2>
                     <div className="w-[400px] h-[250px] bg-[#93D3CC] rounded-xl shadow-lg flex items-center justify-center">
-                      <h1 className="text-white text-7xl font-bold">
+                      <h1 className="text-white text-9xl font-bold">
                         {getCurrentQueueDisplay()}
                       </h1>
                     </div>

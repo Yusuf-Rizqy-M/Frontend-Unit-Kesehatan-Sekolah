@@ -20,6 +20,9 @@ const DetailRekamMedisSiswa = () => {
   const [showEditForm, setShowEditForm] = useState(false);
   const [showViewForm, setShowViewForm] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
+  // New state for delete confirmation modal
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [recordToDelete, setRecordToDelete] = useState(null);
 
   // Set document title and favicon
   useEffect(() => {
@@ -69,7 +72,7 @@ const DetailRekamMedisSiswa = () => {
     };
 
     fetchUserDetails();
-  }, [id]); // Bergantung pada id dari useParams
+  }, [id]);
 
   // Fetch medical records untuk pengguna
   useEffect(() => {
@@ -105,7 +108,7 @@ const DetailRekamMedisSiswa = () => {
         }
       } catch (error) {
         console.error('Error mengambil rekam medis:', error);
-        setMedicalRecords([]); // Set empty array on error to avoid undefined issues
+        setMedicalRecords([]);
       }
     };
 
@@ -132,33 +135,45 @@ const DetailRekamMedisSiswa = () => {
     setShowEditForm(true);
   };
 
-  const handleDeleteRecord = async (recordId) => {
-    if (window.confirm('Apakah Anda yakin ingin menonaktifkan rekam medis ini?')) {
-      try {
-        const token = getToken();
-        if (!token) {
-          throw new Error('Token autentikasi tidak ditemukan');
-        }
+  // Updated handleDeleteRecord to show confirmation modal
+  const handleDeleteRecord = (recordId) => {
+    const record = medicalRecords.find((r) => r.id_user_condition === recordId);
+    setRecordToDelete(record);
+    setIsConfirmModalOpen(true);
+  };
 
-        const response = await fetch(
-          `https://api-uks.rplrus.com/api/health-conditions/${userData.id}/${recordId}`,
-          {
-            method: 'DELETE',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          }
-        );
+  // New function to handle delete confirmation
+  const confirmDelete = async () => {
+    if (!recordToDelete) return;
 
-        if (!response.ok) {
-          throw new Error('Gagal menandai rekam medis sebagai tidak aktif');
-        }
-
-        setMedicalRecords(medicalRecords.filter((record) => record.id_user_condition !== recordId));
-      } catch (error) {
-        console.error('Error menandai rekam medis sebagai tidak aktif:', error);
+    try {
+      const token = getToken();
+      if (!token) {
+        throw new Error('Token autentikasi tidak ditemukan');
       }
+
+      const response = await fetch(
+        `https://api-uks.rplrus.com/api/health-conditions/${userData.id}/${recordToDelete.id_user_condition}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Gagal menandai rekam medis sebagai tidak aktif');
+      }
+
+      setMedicalRecords(medicalRecords.filter((record) => record.id_user_condition !== recordToDelete.id_user_condition));
+      setIsConfirmModalOpen(false);
+      setRecordToDelete(null);
+    } catch (error) {
+      console.error('Error menandai rekam medis sebagai tidak aktif:', error);
+      setIsConfirmModalOpen(false);
+      setRecordToDelete(null);
     }
   };
 
@@ -183,7 +198,7 @@ const DetailRekamMedisSiswa = () => {
     navigate('/rekammedis');
   };
 
-  // Add Form Component
+  // Add Form Component (unchanged)
   const AddForm = () => {
     const [formData, setFormData] = useState({
       tension: '',
@@ -196,6 +211,8 @@ const DetailRekamMedisSiswa = () => {
       anamnesis: '',
     });
     const [error, setError] = useState(null);
+    const [showToast, setShowToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState('');
 
     const popupRef = useRef(null);
 
@@ -211,9 +228,32 @@ const DetailRekamMedisSiswa = () => {
       };
     }, []);
 
-    const handleFormChange = (e) => {
+    const handleNumericInput = (e, name) => {
+      const value = e.target.value;
+      const isValid = name === 'tension'
+        ? /^[0-9/]*$/.test(value)
+        : name === 'temperature' || name === 'height' || name === 'weight'
+          ? /^[0-9]*\.?[0-9]*$/.test(value)
+          : /^[0-9]*$/.test(value);
+
+      if (value === '' || isValid) {
+        setFormData((prev) => ({ ...prev, [name]: value }));
+        setError(null);
+        setShowToast(false);
+      } else {
+        setToastMessage(
+          `Hanya angka${name === 'tension' ? ' dan tanda "/" yang diperbolehkan' : name === 'temperature' || name === 'height' || name === 'weight' ? ' dan tanda "." yang diperbolehkan' : ''} untuk ${name}`
+        );
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+      }
+    };
+
+    const handleTextInput = (e) => {
       const { name, value } = e.target;
       setFormData((prev) => ({ ...prev, [name]: value }));
+      setError(null);
+      setShowToast(false);
     };
 
     const handleSave = async (e) => {
@@ -222,6 +262,30 @@ const DetailRekamMedisSiswa = () => {
         const token = getToken();
         if (!token) {
           throw new Error('Token autentikasi tidak ditemukan');
+        }
+
+        const numericFields = [
+          { name: 'temperature', type: 'float' },
+          { name: 'height', type: 'float' },
+          { name: 'weight', type: 'float' },
+          { name: 'spo2', type: 'int' },
+          { name: 'pulse', type: 'int' },
+        ];
+
+        for (const field of numericFields) {
+          if (formData[field.name] && isNaN(parseFloat(formData[field.name]))) {
+            setToastMessage(`Field ${field.name} harus berupa angka`);
+            setShowToast(true);
+            setTimeout(() => setShowToast(false), 3000);
+            return;
+          }
+        }
+
+        if (formData.tension && !/^\d+\/\d+$/.test(formData.tension)) {
+          setToastMessage('Tensi harus dalam format seperti 120/80');
+          setShowToast(true);
+          setTimeout(() => setShowToast(false), 3000);
+          return;
         }
 
         const response = await fetch('https://api-uks.rplrus.com/api/health-conditions', {
@@ -233,12 +297,12 @@ const DetailRekamMedisSiswa = () => {
           body: JSON.stringify({
             user_id: userData.id,
             admin_id: JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user') || '{}').id,
-            tension: parseInt(formData.tension),
-            temperature: parseInt(formData.temperature),
-            height: parseFloat(formData.height),
-            weight: parseFloat(formData.weight),
-            spo2: parseInt(formData.spo2),
-            pulse: parseInt(formData.pulse),
+            tension: formData.tension,
+            temperature: formData.temperature ? parseFloat(formData.temperature) : null,
+            height: formData.height ? parseFloat(formData.height) : null,
+            weight: formData.weight ? parseFloat(formData.weight) : null,
+            spo2: formData.spo2 ? parseInt(formData.spo2) : null,
+            pulse: formData.pulse ? parseInt(formData.pulse) : null,
             therapy: formData.therapy,
             anamnesis: formData.anamnesis,
             status: 'active',
@@ -254,6 +318,9 @@ const DetailRekamMedisSiswa = () => {
         setShowAddForm(false);
       } catch (error) {
         setError(error.message);
+        setToastMessage(error.message);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
         console.error('Error membuat rekam medis:', error);
       }
     };
@@ -264,6 +331,27 @@ const DetailRekamMedisSiswa = () => {
 
     return (
       <div className="fixed inset-0 bg-transparent flex items-center justify-center z-50 font-sans">
+        {showToast && (
+          <div
+            className="fixed bottom-6 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg shadow-md flex items-center gap-2 animate-fade-in-out z-50 bg-red-200 text-red-800"
+          >
+            <div className="rounded-full p-1 bg-red-600">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <span className="font-medium text-sm">{toastMessage}</span>
+          </div>
+        )}
         <div ref={popupRef} className="bg-white rounded-lg p-6 w-full max-w-3xl shadow-lg">
           <div className="flex items-center mb-4">
             <button
@@ -295,7 +383,7 @@ const DetailRekamMedisSiswa = () => {
               <textarea
                 name="anamnesis"
                 value={formData.anamnesis}
-                onChange={handleFormChange}
+                onChange={handleTextInput}
                 placeholder="Masukkan anamnesis"
                 className="w-full h-24 p-4 rounded-lg bg-[#E6F0FA] text-gray-800 focus:outline-none resize-none"
                 required
@@ -303,12 +391,12 @@ const DetailRekamMedisSiswa = () => {
             </div>
             <div className="grid grid-cols-6 gap-2">
               {[
-                { label: 'Tensi', name: 'tension', placeholder: '120' },
-                { label: 'Nadi', name: 'pulse', placeholder: '80' },
-                { label: 'Suhu', name: 'temperature', placeholder: '36.5' },
-                { label: 'SpO2', name: 'spo2', placeholder: '98' },
-                { label: 'Tinggi Badan', name: 'height', placeholder: '170.00' },
-                { label: 'Berat Badan', name: 'weight', placeholder: '60.00' },
+                { label: 'Tensi', name: 'tension', placeholder: '0/0' },
+                { label: 'Nadi', name: 'pulse', placeholder: '0' },
+                { label: 'Suhu', name: 'temperature', placeholder: '0.0' },
+                { label: 'SpO2', name: 'spo2', placeholder: '0' },
+                { label: 'Tinggi Badan', name: 'height', placeholder: '0.0' },
+                { label: 'Berat Badan', name: 'weight', placeholder: '0.0' },
               ].map(({ label, name, placeholder }, idx) => (
                 <div key={idx}>
                   <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
@@ -316,7 +404,7 @@ const DetailRekamMedisSiswa = () => {
                     type="text"
                     name={name}
                     value={formData[name]}
-                    onChange={handleFormChange}
+                    onChange={(e) => handleNumericInput(e, name)}
                     placeholder={placeholder}
                     className="w-full p-2 rounded-lg bg-[#E6F0FA] text-center text-gray-800 focus:outline-none"
                     required
@@ -329,7 +417,7 @@ const DetailRekamMedisSiswa = () => {
               <textarea
                 name="therapy"
                 value={formData.therapy}
-                onChange={handleFormChange}
+                onChange={handleTextInput}
                 placeholder="Masukkan terapi"
                 className="w-full h-24 p-4 rounded-lg bg-[#E6F0FA] text-gray-800 focus:outline-none resize-none"
                 required
@@ -355,19 +443,21 @@ const DetailRekamMedisSiswa = () => {
     );
   };
 
-  // Edit Form Component
+  // Edit Form Component (unchanged)
   const EditForm = ({ record }) => {
     const [formData, setFormData] = useState({
-      tension: record?.tension || '',
-      temperature: record?.temperature || '',
-      height: record?.height || '',
-      weight: record?.weight || '',
-      spo2: record?.spo2 || '',
-      pulse: record?.pulse || '',
+      tension: record?.tension?.toString() || '',
+      temperature: record?.temperature?.toString() || '',
+      height: record?.height?.toString() || '',
+      weight: record?.weight?.toString() || '',
+      spo2: record?.spo2?.toString() || '',
+      pulse: record?.pulse?.toString() || '',
       therapy: record?.therapy || '',
       anamnesis: record?.anamnesis || '',
     });
     const [error, setError] = useState(null);
+    const [showToast, setShowToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState('');
 
     const popupRef = useRef(null);
 
@@ -383,9 +473,32 @@ const DetailRekamMedisSiswa = () => {
       };
     }, []);
 
-    const handleFormChange = (e) => {
+    const handleNumericInput = (e, name) => {
+      const value = e.target.value;
+      const isValid = name === 'tension'
+        ? /^[0-9/]*$/.test(value)
+        : name === 'temperature' || name === 'height' || name === 'weight'
+          ? /^[0-9]*\.?[0-9]*$/.test(value)
+          : /^[0-9]*$/.test(value);
+
+      if (value === '' || isValid) {
+        setFormData((prev) => ({ ...prev, [name]: value }));
+        setError(null);
+        setShowToast(false);
+      } else {
+        setToastMessage(
+          `Hanya angka${name === 'tension' ? ' dan tanda "/" yang diperbolehkan' : name === 'temperature' || name === 'height' || name === 'weight' ? ' dan tanda "." yang diperbolehkan' : ''} untuk ${name}`
+        );
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+      }
+    };
+
+    const handleTextInput = (e) => {
       const { name, value } = e.target;
       setFormData((prev) => ({ ...prev, [name]: value }));
+      setError(null);
+      setShowToast(false);
     };
 
     const handleSave = async (e) => {
@@ -394,6 +507,30 @@ const DetailRekamMedisSiswa = () => {
         const token = getToken();
         if (!token) {
           throw new Error('Token autentikasi tidak ditemukan');
+        }
+
+        const numericFields = [
+          { name: 'temperature', type: 'float' },
+          { name: 'height', type: 'float' },
+          { name: 'weight', type: 'float' },
+          { name: 'spo2', type: 'int' },
+          { name: 'pulse', type: 'int' },
+        ];
+
+        for (const field of numericFields) {
+          if (formData[field.name] && isNaN(parseFloat(formData[field.name]))) {
+            setToastMessage(`Field ${field.name} harus berupa angka`);
+            setShowToast(true);
+            setTimeout(() => setShowToast(false), 3000);
+            return;
+          }
+        }
+
+        if (formData.tension && !/^\d+\/\d+$/.test(formData.tension)) {
+          setToastMessage('Tensi harus dalam format seperti 120/80');
+          setShowToast(true);
+          setTimeout(() => setShowToast(false), 3000);
+          return;
         }
 
         const response = await fetch(
@@ -405,12 +542,12 @@ const DetailRekamMedisSiswa = () => {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              tension: parseInt(formData.tension),
-              temperature: parseInt(formData.temperature),
-              height: parseFloat(formData.height),
-              weight: parseFloat(formData.weight),
-              spo2: parseInt(formData.spo2),
-              pulse: parseInt(formData.pulse),
+              tension: formData.tension,
+              temperature: formData.temperature ? parseFloat(formData.temperature) : null,
+              height: formData.height ? parseFloat(formData.height) : null,
+              weight: formData.weight ? parseFloat(formData.weight) : null,
+              spo2: formData.spo2 ? parseInt(formData.spo2) : null,
+              pulse: formData.pulse ? parseInt(formData.pulse) : null,
               therapy: formData.therapy,
               anamnesis: formData.anamnesis,
             }),
@@ -428,6 +565,9 @@ const DetailRekamMedisSiswa = () => {
         setShowEditForm(false);
       } catch (error) {
         setError(error.message);
+        setToastMessage(error.message);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
         console.error('Error memperbarui rekam medis:', error);
       }
     };
@@ -438,6 +578,27 @@ const DetailRekamMedisSiswa = () => {
 
     return (
       <div className="fixed inset-0 bg-transparent flex items-center justify-center z-50 font-sans">
+        {showToast && (
+          <div
+            className="fixed bottom-6 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg shadow-md flex items-center gap-2 animate-fade-in-out z-50 bg-red-200 text-red-800"
+          >
+            <div className="rounded-full p-1 bg-red-600">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <span className="font-medium text-sm">{toastMessage}</span>
+          </div>
+        )}
         <div ref={popupRef} className="bg-white rounded-lg p-6 w-full max-w-3xl shadow-lg">
           <div className="flex items-center mb-4">
             <button
@@ -469,7 +630,7 @@ const DetailRekamMedisSiswa = () => {
               <textarea
                 name="anamnesis"
                 value={formData.anamnesis}
-                onChange={handleFormChange}
+                onChange={handleTextInput}
                 placeholder="Masukkan anamnesis"
                 className="w-full h-24 p-4 rounded-lg bg-[#E6F0FA] text-gray-800 focus:outline-none resize-none"
                 required
@@ -477,12 +638,12 @@ const DetailRekamMedisSiswa = () => {
             </div>
             <div className="grid grid-cols-6 gap-2">
               {[
-                { label: 'Tensi', name: 'tension', placeholder: '120' },
-                { label: 'Nadi', name: 'pulse', placeholder: '80' },
-                { label: 'Suhu', name: 'temperature', placeholder: '36.5' },
-                { label: 'SpO2', name: 'spo2', placeholder: '98' },
-                { label: 'Tinggi Badan', name: 'height', placeholder: '170.00' },
-                { label: 'Berat Badan', name: 'weight', placeholder: '60.00' },
+                { label: 'Tensi', name: 'tension', placeholder: 'Masukan Tensi' },
+                { label: 'Nadi', name: 'pulse', placeholder: 'Masukan Nadi' },
+                { label: 'Suhu', name: 'temperature', placeholder: 'Masukan Suhu' },
+                { label: 'SpO2', name: 'spo2', placeholder: 'Masukan SpO2' },
+                { label: 'Tinggi Badan', name: 'height', placeholder: 'Masukan Tinggi Badan' },
+                { label: 'Berat Badan', name: 'weight', placeholder: 'Masukan Berat Badan' },
               ].map(({ label, name, placeholder }, idx) => (
                 <div key={idx}>
                   <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
@@ -490,7 +651,7 @@ const DetailRekamMedisSiswa = () => {
                     type="text"
                     name={name}
                     value={formData[name]}
-                    onChange={handleFormChange}
+                    onChange={(e) => handleNumericInput(e, name)}
                     placeholder={placeholder}
                     className="w-full p-2 rounded-lg bg-[#E6F0FA] text-center text-gray-800 focus:outline-none"
                     required
@@ -503,7 +664,7 @@ const DetailRekamMedisSiswa = () => {
               <textarea
                 name="therapy"
                 value={formData.therapy}
-                onChange={handleFormChange}
+                onChange={handleTextInput}
                 placeholder="Masukkan terapi"
                 className="w-full h-24 p-4 rounded-lg bg-[#E6F0FA] text-gray-800 focus:outline-none resize-none"
                 required
@@ -529,7 +690,7 @@ const DetailRekamMedisSiswa = () => {
     );
   };
 
-  // View Form Component
+  // View Form Component (unchanged)
   const ViewForm = ({ record }) => {
     const popupRef = useRef(null);
 
@@ -842,8 +1003,8 @@ const DetailRekamMedisSiswa = () => {
                       key={page}
                       onClick={() => handlePageChange(page)}
                       className={`px-3 py-1 border rounded ${currentPage === page
-                          ? 'bg-green-600 dark:bg-[#204ECF] text-white'
-                          : 'text-gray-600 dark:text-gray-300'
+                        ? 'bg-green-600 dark:bg-[#204ECF] text-white'
+                        : 'text-gray-600 dark:text-gray-300'
                         }`}
                     >
                       {page}
@@ -859,6 +1020,37 @@ const DetailRekamMedisSiswa = () => {
                 </div>
               </div>
             </div>
+            {/* New Confirmation Delete Modal */}
+            {isConfirmModalOpen && recordToDelete && (
+              <div className="fixed inset-0 bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50">
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-2xl relative animate-fade-in">
+                  <div className="p-6 text-center">
+                    <h3 className="text-xl font-bold text-red-600 dark:text-red-400 mb-2">
+                      Yakin Ingin Menghapus Rekam Medis?
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-300 mb-4">
+                      Anda akan menghapus rekam medis #{recordToDelete.id_user_condition} (dibuat pada {recordToDelete.created_at?.split('T')[0] || 'tanggal tidak tersedia'}). Data ini akan hilang secara permanen. Pastikan Anda sudah menyimpan informasi penting sebelum melanjutkan.
+                    </p>
+                    <div className="flex justify-center gap-4">
+                      <button
+                        className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition duration-200"
+                        onClick={() => setIsConfirmModalOpen(false)}
+                        aria-label={`Batalkan penghapusan rekam medis #${recordToDelete.id_user_condition}`}
+                      >
+                        Batal
+                      </button>
+                      <button
+                        className="px-6 py-2 bg-red-500 dark:bg-red-600 text-white rounded-lg hover:bg-red-600 dark:hover:bg-red-700 transition duration-200"
+                        onClick={confirmDelete}
+                        aria-label={`Hapus rekam medis #${recordToDelete.id_user_condition}`}
+                      >
+                        Hapus
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </main>
         {showAddForm && <AddForm />}

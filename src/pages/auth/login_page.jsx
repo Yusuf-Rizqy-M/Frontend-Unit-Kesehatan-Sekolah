@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; // Added useEffect import
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import useLogin from '../../hooks/useLogin';
 import UksImg2 from '../../assets/img/doctor_img_rounded.png';
@@ -11,9 +11,11 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
   const navigate = useNavigate();
 
-  // Set favicon and debug
+  // Set favicon and handle toast for errors
   useEffect(() => {
     console.log('LoginPage component mounted');
     console.log('Initial document title:', document.title);
@@ -38,11 +40,19 @@ const LoginPage = () => {
       console.log('Favicon after render:', updatedFavicon ? updatedFavicon.href : 'No favicon found');
     }, 1000);
 
+    // Handle toast for login errors
+    if (error) {
+      setToastMessage(error || 'Email atau password salah');
+      setShowToast(true);
+      const toastTimeout = setTimeout(() => setShowToast(false), 3000);
+      return () => clearTimeout(toastTimeout);
+    }
+
     return () => {
       clearTimeout(timeout);
       console.log('LoginPage component unmounted');
     };
-  }, []);
+  }, [error]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -169,9 +179,25 @@ const LoginPage = () => {
             <label htmlFor="remember" className="text-sm text-gray-700">Ingat saya</label>
           </div>
 
-          {error && (
-            <div className="mb-4 text-sm text-red-500 bg-red-100 p-2 rounded">
-              {error}
+          {showToast && (
+            <div
+              className="fixed bottom-6 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg shadow-md flex items-center gap-2 animate-fade-in-out z-50 bg-red-200 text-red-800"
+            >
+              <div className="rounded-full p-1 bg-red-600">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 text-white"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <span className="font-medium text-sm">{toastMessage}</span>
             </div>
           )}
 

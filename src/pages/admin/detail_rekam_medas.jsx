@@ -3,19 +3,17 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Sidebar from '../../partials/Sidebar';
 import Header from '../../partials/Header';
 import { FaEdit, FaTrash } from 'react-icons/fa';
-import UKS2Img from '../../assets/img/uks2.png'; // Favicon import
+import UKS2Img from '../../assets/img/uks2.png';
 
 const DetailRekamMedisSiswa = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
-  const { id } = useParams(); // Ambil ID dari URL
-  const [userData, setUserData] = useState(null); // State untuk data pengguna
+  const { id } = useParams();
+  const [userData, setUserData] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [medicalRecords, setMedicalRecords] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 10;
-
-  // Form visibility states
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showViewForm, setShowViewForm] = useState(false);
@@ -24,7 +22,6 @@ const DetailRekamMedisSiswa = () => {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [recordToDelete, setRecordToDelete] = useState(null);
 
-  // Set document title and favicon
   useEffect(() => {
     document.title = 'Detail Rekam Medis Siswa';
     const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
@@ -33,12 +30,10 @@ const DetailRekamMedisSiswa = () => {
     document.head.appendChild(favicon);
   }, []);
 
-  // Retrieve token from storage
   const getToken = () => {
     return localStorage.getItem('token') || sessionStorage.getItem('token');
   };
 
-  // Fetch user details berdasarkan ID dari URL
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
@@ -67,14 +62,13 @@ const DetailRekamMedisSiswa = () => {
         }
       } catch (error) {
         console.error('Error mengambil detail pengguna:', error);
-        setUserData(null); // Set null jika gagal untuk menampilkan pesan fallback
+        setUserData(null);
       }
     };
 
     fetchUserDetails();
   }, [id]);
 
-  // Fetch medical records untuk pengguna
   useEffect(() => {
     if (!userData?.id) {
       console.error('ID pengguna tidak ditemukan');
@@ -135,17 +129,15 @@ const DetailRekamMedisSiswa = () => {
     setShowEditForm(true);
   };
 
-  // Updated handleDeleteRecord to show confirmation modal
+  // Modified handleDeleteRecord to open the confirmation modal
   const handleDeleteRecord = (recordId) => {
     const record = medicalRecords.find((r) => r.id_user_condition === recordId);
     setRecordToDelete(record);
     setIsConfirmModalOpen(true);
   };
 
-  // New function to handle delete confirmation
+  // New function to confirm deletion
   const confirmDelete = async () => {
-    if (!recordToDelete) return;
-
     try {
       const token = getToken();
       if (!token) {
@@ -198,7 +190,7 @@ const DetailRekamMedisSiswa = () => {
     navigate('/rekammedis');
   };
 
-  // Add Form Component (unchanged)
+  // AddForm, EditForm, and ViewForm components remain unchanged
   const AddForm = () => {
     const [formData, setFormData] = useState({
       tension: '',
@@ -211,8 +203,6 @@ const DetailRekamMedisSiswa = () => {
       anamnesis: '',
     });
     const [error, setError] = useState(null);
-    const [showToast, setShowToast] = useState(false);
-    const [toastMessage, setToastMessage] = useState('');
 
     const popupRef = useRef(null);
 
@@ -228,32 +218,9 @@ const DetailRekamMedisSiswa = () => {
       };
     }, []);
 
-    const handleNumericInput = (e, name) => {
-      const value = e.target.value;
-      const isValid = name === 'tension'
-        ? /^[0-9/]*$/.test(value)
-        : name === 'temperature' || name === 'height' || name === 'weight'
-          ? /^[0-9]*\.?[0-9]*$/.test(value)
-          : /^[0-9]*$/.test(value);
-
-      if (value === '' || isValid) {
-        setFormData((prev) => ({ ...prev, [name]: value }));
-        setError(null);
-        setShowToast(false);
-      } else {
-        setToastMessage(
-          `Hanya angka${name === 'tension' ? ' dan tanda "/" yang diperbolehkan' : name === 'temperature' || name === 'height' || name === 'weight' ? ' dan tanda "." yang diperbolehkan' : ''} untuk ${name}`
-        );
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 3000);
-      }
-    };
-
-    const handleTextInput = (e) => {
+    const handleFormChange = (e) => {
       const { name, value } = e.target;
       setFormData((prev) => ({ ...prev, [name]: value }));
-      setError(null);
-      setShowToast(false);
     };
 
     const handleSave = async (e) => {
@@ -262,30 +229,6 @@ const DetailRekamMedisSiswa = () => {
         const token = getToken();
         if (!token) {
           throw new Error('Token autentikasi tidak ditemukan');
-        }
-
-        const numericFields = [
-          { name: 'temperature', type: 'float' },
-          { name: 'height', type: 'float' },
-          { name: 'weight', type: 'float' },
-          { name: 'spo2', type: 'int' },
-          { name: 'pulse', type: 'int' },
-        ];
-
-        for (const field of numericFields) {
-          if (formData[field.name] && isNaN(parseFloat(formData[field.name]))) {
-            setToastMessage(`Field ${field.name} harus berupa angka`);
-            setShowToast(true);
-            setTimeout(() => setShowToast(false), 3000);
-            return;
-          }
-        }
-
-        if (formData.tension && !/^\d+\/\d+$/.test(formData.tension)) {
-          setToastMessage('Tensi harus dalam format seperti 120/80');
-          setShowToast(true);
-          setTimeout(() => setShowToast(false), 3000);
-          return;
         }
 
         const response = await fetch('https://api-uks.rplrus.com/api/health-conditions', {
@@ -297,12 +240,12 @@ const DetailRekamMedisSiswa = () => {
           body: JSON.stringify({
             user_id: userData.id,
             admin_id: JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user') || '{}').id,
-            tension: formData.tension,
-            temperature: formData.temperature ? parseFloat(formData.temperature) : null,
-            height: formData.height ? parseFloat(formData.height) : null,
-            weight: formData.weight ? parseFloat(formData.weight) : null,
-            spo2: formData.spo2 ? parseInt(formData.spo2) : null,
-            pulse: formData.pulse ? parseInt(formData.pulse) : null,
+            tension: parseInt(formData.tension),
+            temperature: parseInt(formData.temperature),
+            height: parseFloat(formData.height),
+            weight: parseFloat(formData.weight),
+            spo2: parseInt(formData.spo2),
+            pulse: parseInt(formData.pulse),
             therapy: formData.therapy,
             anamnesis: formData.anamnesis,
             status: 'active',
@@ -318,9 +261,6 @@ const DetailRekamMedisSiswa = () => {
         setShowAddForm(false);
       } catch (error) {
         setError(error.message);
-        setToastMessage(error.message);
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 3000);
         console.error('Error membuat rekam medis:', error);
       }
     };
@@ -331,27 +271,6 @@ const DetailRekamMedisSiswa = () => {
 
     return (
       <div className="fixed inset-0 bg-transparent flex items-center justify-center z-50 font-sans">
-        {showToast && (
-          <div
-            className="fixed bottom-6 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg shadow-md flex items-center gap-2 animate-fade-in-out z-50 bg-red-200 text-red-800"
-          >
-            <div className="rounded-full p-1 bg-red-600">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 text-white"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </div>
-            <span className="font-medium text-sm">{toastMessage}</span>
-          </div>
-        )}
         <div ref={popupRef} className="bg-white rounded-lg p-6 w-full max-w-3xl shadow-lg">
           <div className="flex items-center mb-4">
             <button
@@ -383,7 +302,7 @@ const DetailRekamMedisSiswa = () => {
               <textarea
                 name="anamnesis"
                 value={formData.anamnesis}
-                onChange={handleTextInput}
+                onChange={handleFormChange}
                 placeholder="Masukkan anamnesis"
                 className="w-full h-24 p-4 rounded-lg bg-[#E6F0FA] text-gray-800 focus:outline-none resize-none"
                 required
@@ -391,12 +310,12 @@ const DetailRekamMedisSiswa = () => {
             </div>
             <div className="grid grid-cols-6 gap-2">
               {[
-                { label: 'Tensi', name: 'tension', placeholder: '0/0' },
+                { label: 'Tensi', name: 'tension', placeholder: '0' },
                 { label: 'Nadi', name: 'pulse', placeholder: '0' },
-                { label: 'Suhu', name: 'temperature', placeholder: '0.0' },
+                { label: 'Suhu', name: 'temperature', placeholder: '0' },
                 { label: 'SpO2', name: 'spo2', placeholder: '0' },
-                { label: 'Tinggi Badan', name: 'height', placeholder: '0.0' },
-                { label: 'Berat Badan', name: 'weight', placeholder: '0.0' },
+                { label: 'Tinggi Badan', name: 'height', placeholder: '0' },
+                { label: 'Berat Badan', name: 'weight', placeholder: '0' },
               ].map(({ label, name, placeholder }, idx) => (
                 <div key={idx}>
                   <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
@@ -404,7 +323,7 @@ const DetailRekamMedisSiswa = () => {
                     type="text"
                     name={name}
                     value={formData[name]}
-                    onChange={(e) => handleNumericInput(e, name)}
+                    onChange={handleFormChange}
                     placeholder={placeholder}
                     className="w-full p-2 rounded-lg bg-[#E6F0FA] text-center text-gray-800 focus:outline-none"
                     required
@@ -417,7 +336,7 @@ const DetailRekamMedisSiswa = () => {
               <textarea
                 name="therapy"
                 value={formData.therapy}
-                onChange={handleTextInput}
+                onChange={handleFormChange}
                 placeholder="Masukkan terapi"
                 className="w-full h-24 p-4 rounded-lg bg-[#E6F0FA] text-gray-800 focus:outline-none resize-none"
                 required
@@ -443,21 +362,18 @@ const DetailRekamMedisSiswa = () => {
     );
   };
 
-  // Edit Form Component (unchanged)
   const EditForm = ({ record }) => {
     const [formData, setFormData] = useState({
-      tension: record?.tension?.toString() || '',
-      temperature: record?.temperature?.toString() || '',
-      height: record?.height?.toString() || '',
-      weight: record?.weight?.toString() || '',
-      spo2: record?.spo2?.toString() || '',
-      pulse: record?.pulse?.toString() || '',
+      tension: record?.tension || '',
+      temperature: record?.temperature || '',
+      height: record?.height || '',
+      weight: record?.weight || '',
+      spo2: record?.spo2 || '',
+      pulse: record?.pulse || '',
       therapy: record?.therapy || '',
       anamnesis: record?.anamnesis || '',
     });
     const [error, setError] = useState(null);
-    const [showToast, setShowToast] = useState(false);
-    const [toastMessage, setToastMessage] = useState('');
 
     const popupRef = useRef(null);
 
@@ -473,32 +389,9 @@ const DetailRekamMedisSiswa = () => {
       };
     }, []);
 
-    const handleNumericInput = (e, name) => {
-      const value = e.target.value;
-      const isValid = name === 'tension'
-        ? /^[0-9/]*$/.test(value)
-        : name === 'temperature' || name === 'height' || name === 'weight'
-          ? /^[0-9]*\.?[0-9]*$/.test(value)
-          : /^[0-9]*$/.test(value);
-
-      if (value === '' || isValid) {
-        setFormData((prev) => ({ ...prev, [name]: value }));
-        setError(null);
-        setShowToast(false);
-      } else {
-        setToastMessage(
-          `Hanya angka${name === 'tension' ? ' dan tanda "/" yang diperbolehkan' : name === 'temperature' || name === 'height' || name === 'weight' ? ' dan tanda "." yang diperbolehkan' : ''} untuk ${name}`
-        );
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 3000);
-      }
-    };
-
-    const handleTextInput = (e) => {
+    const handleFormChange = (e) => {
       const { name, value } = e.target;
       setFormData((prev) => ({ ...prev, [name]: value }));
-      setError(null);
-      setShowToast(false);
     };
 
     const handleSave = async (e) => {
@@ -507,30 +400,6 @@ const DetailRekamMedisSiswa = () => {
         const token = getToken();
         if (!token) {
           throw new Error('Token autentikasi tidak ditemukan');
-        }
-
-        const numericFields = [
-          { name: 'temperature', type: 'float' },
-          { name: 'height', type: 'float' },
-          { name: 'weight', type: 'float' },
-          { name: 'spo2', type: 'int' },
-          { name: 'pulse', type: 'int' },
-        ];
-
-        for (const field of numericFields) {
-          if (formData[field.name] && isNaN(parseFloat(formData[field.name]))) {
-            setToastMessage(`Field ${field.name} harus berupa angka`);
-            setShowToast(true);
-            setTimeout(() => setShowToast(false), 3000);
-            return;
-          }
-        }
-
-        if (formData.tension && !/^\d+\/\d+$/.test(formData.tension)) {
-          setToastMessage('Tensi harus dalam format seperti 120/80');
-          setShowToast(true);
-          setTimeout(() => setShowToast(false), 3000);
-          return;
         }
 
         const response = await fetch(
@@ -542,12 +411,12 @@ const DetailRekamMedisSiswa = () => {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              tension: formData.tension,
-              temperature: formData.temperature ? parseFloat(formData.temperature) : null,
-              height: formData.height ? parseFloat(formData.height) : null,
-              weight: formData.weight ? parseFloat(formData.weight) : null,
-              spo2: formData.spo2 ? parseInt(formData.spo2) : null,
-              pulse: formData.pulse ? parseInt(formData.pulse) : null,
+              tension: parseInt(formData.tension),
+              temperature: parseInt(formData.temperature),
+              height: parseFloat(formData.height),
+              weight: parseFloat(formData.weight),
+              spo2: parseInt(formData.spo2),
+              pulse: parseInt(formData.pulse),
               therapy: formData.therapy,
               anamnesis: formData.anamnesis,
             }),
@@ -565,9 +434,6 @@ const DetailRekamMedisSiswa = () => {
         setShowEditForm(false);
       } catch (error) {
         setError(error.message);
-        setToastMessage(error.message);
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 3000);
         console.error('Error memperbarui rekam medis:', error);
       }
     };
@@ -578,27 +444,6 @@ const DetailRekamMedisSiswa = () => {
 
     return (
       <div className="fixed inset-0 bg-transparent flex items-center justify-center z-50 font-sans">
-        {showToast && (
-          <div
-            className="fixed bottom-6 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg shadow-md flex items-center gap-2 animate-fade-in-out z-50 bg-red-200 text-red-800"
-          >
-            <div className="rounded-full p-1 bg-red-600">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 text-white"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </div>
-            <span className="font-medium text-sm">{toastMessage}</span>
-          </div>
-        )}
         <div ref={popupRef} className="bg-white rounded-lg p-6 w-full max-w-3xl shadow-lg">
           <div className="flex items-center mb-4">
             <button
@@ -630,7 +475,7 @@ const DetailRekamMedisSiswa = () => {
               <textarea
                 name="anamnesis"
                 value={formData.anamnesis}
-                onChange={handleTextInput}
+                onChange={handleFormChange}
                 placeholder="Masukkan anamnesis"
                 className="w-full h-24 p-4 rounded-lg bg-[#E6F0FA] text-gray-800 focus:outline-none resize-none"
                 required
@@ -638,12 +483,12 @@ const DetailRekamMedisSiswa = () => {
             </div>
             <div className="grid grid-cols-6 gap-2">
               {[
-                { label: 'Tensi', name: 'tension', placeholder: 'Masukan Tensi' },
-                { label: 'Nadi', name: 'pulse', placeholder: 'Masukan Nadi' },
-                { label: 'Suhu', name: 'temperature', placeholder: 'Masukan Suhu' },
-                { label: 'SpO2', name: 'spo2', placeholder: 'Masukan SpO2' },
-                { label: 'Tinggi Badan', name: 'height', placeholder: 'Masukan Tinggi Badan' },
-                { label: 'Berat Badan', name: 'weight', placeholder: 'Masukan Berat Badan' },
+                { label: 'Tensi', name: 'tension', placeholder: '120' },
+                { label: 'Nadi', name: 'pulse', placeholder: '80' },
+                { label: 'Suhu', name: 'temperature', placeholder: '36.5' },
+                { label: 'SpO2', name: 'spo2', placeholder: '98' },
+                { label: 'Tinggi Badan', name: 'height', placeholder: '170.00' },
+                { label: 'Berat Badan', name: 'weight', placeholder: '60.00' },
               ].map(({ label, name, placeholder }, idx) => (
                 <div key={idx}>
                   <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
@@ -651,7 +496,7 @@ const DetailRekamMedisSiswa = () => {
                     type="text"
                     name={name}
                     value={formData[name]}
-                    onChange={(e) => handleNumericInput(e, name)}
+                    onChange={handleFormChange}
                     placeholder={placeholder}
                     className="w-full p-2 rounded-lg bg-[#E6F0FA] text-center text-gray-800 focus:outline-none"
                     required
@@ -664,7 +509,7 @@ const DetailRekamMedisSiswa = () => {
               <textarea
                 name="therapy"
                 value={formData.therapy}
-                onChange={handleTextInput}
+                onChange={handleFormChange}
                 placeholder="Masukkan terapi"
                 className="w-full h-24 p-4 rounded-lg bg-[#E6F0FA] text-gray-800 focus:outline-none resize-none"
                 required
@@ -690,7 +535,6 @@ const DetailRekamMedisSiswa = () => {
     );
   };
 
-  // View Form Component (unchanged)
   const ViewForm = ({ record }) => {
     const popupRef = useRef(null);
 
@@ -1003,8 +847,8 @@ const DetailRekamMedisSiswa = () => {
                       key={page}
                       onClick={() => handlePageChange(page)}
                       className={`px-3 py-1 border rounded ${currentPage === page
-                        ? 'bg-green-600 dark:bg-[#204ECF] text-white'
-                        : 'text-gray-600 dark:text-gray-300'
+                          ? 'bg-green-600 dark:bg-[#204ECF] text-white'
+                          : 'text-gray-600 dark:text-gray-300'
                         }`}
                     >
                       {page}

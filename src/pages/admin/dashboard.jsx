@@ -12,15 +12,21 @@ ChartJS.register(LinearScale, CategoryScale, PointElement, LineElement, Title, T
 function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [queueStats, setQueueStats] = useState({
-    today: 0,
-    yesterday: 0,
-    week: 0,
-    all: 0,
-    monthly: Array(12).fill(0), // Back to monthly data
-    totalUsers: 0,
+    today: 12,
+    yesterday: 8,
+    week: 45,
+    all: 320,
+    monthly: [10, 15, 12, 20, 18, 25, 22, 28, 15, 10, 8, 5],
+    totalUsers: 150,
   });
-  const [todayQueue, setTodayQueue] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [todayQueue, setTodayQueue] = useState([
+    { queueNumber: "Q001", status: "Mengantri", studentName: "Budi Santoso", submittedSince: "21/08/2025 08:30" },
+    { queueNumber: "Q002", status: "Selesai", studentName: "Siti Aminah", submittedSince: "21/08/2025 08:45" },
+    { queueNumber: "Q003", status: "Mengantri", studentName: "Ahmad Yani", submittedSince: "21/08/2025 09:00" },
+    { queueNumber: "Q004", status: "Selesai", studentName: "Rina Sari", submittedSince: "21/08/2025 09:15" },
+    { queueNumber: "Q005", status: "Mengantri", studentName: "Dewi Lestari", submittedSince: "21/08/2025 09:30" },
+  ]);
+  const [loading, setLoading] = useState(false); // Set to false for presentation
   const [error, setError] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token') || null);
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -40,208 +46,6 @@ function Dashboard() {
     // Sync dark mode with Tailwind
     document.documentElement.classList.toggle('dark', isDarkMode);
   }, [isDarkMode]);
-
-  // Function to handle login and get token
-  const loginAndGetToken = async () => {
-    try {
-      const response = await fetch('https://api-uks.rplrus.com/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: 'admin@gmail.com',
-          password: 'admin123',
-          remember: true,
-        }),
-      });
-      if (!response.ok) throw new Error('Gagal Login');
-      const data = await response.json();
-      if (data.status) {
-        const newToken = data.data.token;
-        localStorage.setItem('token', newToken);
-        setToken(newToken);
-        return newToken;
-      } else {
-        throw new Error(data.message || 'Login berhasil');
-      }
-    } catch (err) {
-      console.error('Login Error:', err);
-      setError('Gagal masuk. Periksa kredensial atau server.');
-      return null;
-    }
-  };
-
-  // Fetch queue stats
-  const fetchQueueStats = async (currentToken) => {
-    try {
-      const response = await fetch('https://api-uks.rplrus.com/api/admin/queues/stats', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${currentToken}`,
-        },
-      });
-      if (!response.ok) throw new Error(`Failed to fetch queue stats: ${response.status}`);
-      const data = await response.json();
-      return {
-        today: data.today || 0,
-        yesterday: data.yesterday || 0,
-        week: data.week || 0,
-        all: data.all || 0,
-      };
-    } catch (err) {
-      console.error('Queue Stats Fetch Error:', err);
-      throw err;
-    }
-  };
-
-  // Fetch monthly stats
-  const fetchMonthlyStats = async (currentToken) => {
-    try {
-      const response = await fetch('https://api-uks.rplrus.com/api/dashboard/pengunjung', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${currentToken}`,
-        },
-      });
-      if (!response.ok) throw new Error(`Failed to fetch monthly stats: ${response.status}`);
-      const data = await response.json();
-      
-      // Initialize array with 12 months
-      const monthly = Array(12).fill(0);
-      
-      // Populate data based on API response
-      data.forEach((item) => {
-        if (item.bulan >= 1 && item.bulan <= 12) {
-          // Ensure the total value is between 1-30 for better visualization
-          monthly[item.bulan - 1] = Math.min(Math.max(item.total || 0, 0), 30);
-        }
-      });
-      
-      return monthly;
-    } catch (err) {
-      console.error('Monthly Stats Fetch Error:', err);
-      throw err;
-    }
-  };
-
-  // Fetch total users
-  const fetchTotalUsers = async (currentToken) => {
-    try {
-      const response = await fetch('https://api-uks.rplrus.com/api/users/count', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${currentToken}`,
-        },
-      });
-      if (!response.ok) throw new Error(`Gagal mengambil total pengguna: ${response.status}`);
-      const data = await response.json();
-      if (data.status) {
-        return data.total || 0;
-      } else {
-        throw new Error(data.message || 'Gagal mengambil total pengguna');
-      }
-    } catch (err) {
-      console.error('Kesalahan Pengambilan Total Pengguna:', err);
-      throw err;
-    }
-  };
-
-  // Fetch today's queue
-  const fetchTodayQueue = async (currentToken) => {
-    try {
-      const response = await fetch('https://api-uks.rplrus.com/api/admin/queues/today', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${currentToken}`,
-        },
-      });
-      if (!response.ok) throw new Error(`Gagal mengambil antrean hari ini: ${response.status} ${response.statusText}`);
-      const data = await response.json();
-      return data.data || [];
-    } catch (err) {
-      console.error('Today Queue Fetch Error:', err);
-      throw err;
-    }
-  };
-
-  // Combined fetch function
-  const fetchAllStats = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      let currentToken = token;
-      if (!currentToken) {
-        currentToken = await loginAndGetToken();
-        if (!currentToken) throw new Error('Tidak ada token valid yang tersedia');
-      }
-
-      // Fetch all APIs concurrently
-      const [queueData, monthlyData, totalUsers, todayQueueData] = await Promise.all([
-        fetchQueueStats(currentToken),
-        fetchMonthlyStats(currentToken),
-        fetchTotalUsers(currentToken),
-        fetchTodayQueue(currentToken),
-      ]);
-
-      // Process today's queue to select 5 relevant entries
-      const sortedQueue = todayQueueData
-        .sort((a, b) => a.queue_number - b.queue_number)
-        .map(entry => ({
-          queueNumber: `Q${entry.queue_number.toString().padStart(3, '0')}`,
-          status: entry.status === 'Menunggu' ? 'Mengantri' : 'Selesai',
-          studentName: entry.user.name || 'Unknown',
-          submittedSince: new Date(entry.created_at).toLocaleString('en-GB', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-          }).replace(',', ''),
-        }));
-
-      // Determine current queue position (first 'waiting' entry)
-      const currentQueueEntry = sortedQueue.find((entry) => entry.status === 'Mengantri');
-      const currentQueueNumber = currentQueueEntry
-        ? parseInt(currentQueueEntry.queueNumber.slice(1))
-        : sortedQueue.length > 0
-        ? parseInt(sortedQueue[0].queueNumber.slice(1))
-        : 1;
-
-      // Select 5 entries based on current queue position
-      let startIndex;
-      if (currentQueueNumber <= 5) {
-        startIndex = 0;
-      } else {
-        startIndex = sortedQueue.findIndex(entry => parseInt(entry.queueNumber.slice(1)) >= currentQueueNumber);
-        if (startIndex === -1) startIndex = Math.max(0, sortedQueue.length - 5);
-      }
-      const selectedQueue = sortedQueue.slice(startIndex, startIndex + 5);
-
-      setQueueStats({
-        today: queueData.today,
-        yesterday: queueData.yesterday,
-        week: queueData.week,
-        all: queueData.all,
-        monthly: monthlyData,
-        totalUsers,
-      });
-      setTodayQueue(selectedQueue);
-    } catch (err) {
-      console.error('Fetch Error:', err);
-      setError(err.message || 'Gagal mengambil data');
-      // Don't set any fallback data - just show error state
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fetch data on mount
-  useEffect(() => {
-    fetchAllStats();
-  }, []);
 
   // Memoize chart data to prevent unnecessary re-renders
   const chartData = useMemo(() => {
@@ -337,7 +141,8 @@ function Dashboard() {
                   className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                   onClick={() => {
                     setError(null);
-                    fetchAllStats();
+                    // No fetch for presentation, just clear error
+                    setError(null);
                   }}
                 >
                   Retry

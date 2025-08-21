@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../../partials/Sidebar";
 import Header from "../../partials/Header";
@@ -6,7 +6,7 @@ import { User, Users } from "lucide-react";
 import axios from "axios";
 import moment from "moment";
 import "moment/locale/id";
-import UKS2Img from '../../assets/img/uks2.png'; // Favicon import
+import UKS2Img from '../../assets/img/uks2.png';
 
 export default function RekamAntrian() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -26,7 +26,10 @@ export default function RekamAntrian() {
   const [toastType, setToastType] = useState("success");
   const [updatingStatus, setUpdatingStatus] = useState({});
   const [filterMode, setFilterMode] = useState("today");
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [isUserInteracting, setIsUserInteracting] = useState(false);
   const navigate = useNavigate();
+  const refreshIntervalRef = useRef(null);
 
   moment.locale("id");
 
@@ -41,7 +44,6 @@ export default function RekamAntrian() {
     setTimeout(() => setShowToast(false), 3000);
   };
 
-  // Fungsi untuk memetakan status API ke status UI dalam bahasa Indonesia
   const mapStatusToUI = (apiStatus) => {
     switch (apiStatus.toLowerCase()) {
       case "done":
@@ -57,24 +59,127 @@ export default function RekamAntrian() {
     }
   };
 
-  // Additional helper function to validate student data
   const validateStudentData = (student) => {
     if (!student) {
       return { isValid: false, message: "Data siswa tidak ada." };
     }
-    
     if (!student.id) {
       return { isValid: false, message: "ID siswa tidak valid." };
     }
-    
     if (!student.name || student.name === "Tidak Diketahui") {
       return { isValid: false, message: "Nama siswa tidak valid." };
     }
-    
     return { isValid: true };
   };
 
-  // Set tab title dan favicon
+  const fetchQueueData = useCallback(async () => {
+    if (isUserInteracting || Object.values(updatingStatus).some((status) => status)) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const token = getToken();
+      if (!token) {
+        throw new Error("Token autentikasi tidak ditemukan. Silakan masuk kembali.");
+      }
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const [
+        completedRes,
+        waitingRes,
+        processingRes,
+        skippedRes,
+        currentQueueRes,
+        latestQueueRes,
+        todayQueueRes,
+      ] = await Promise.all([
+        axios.get("https://api-uks.rplrus.com/api/admin/queues/total-completed-today", config),
+        axios.get("https://api-uks.rplrus.com/api/admin/queues/total-waiting-today", config),
+        axios.get("https://api-uks.rplrus.com/api/admin/queues/total-processing-today", config),
+        axios.get("https://api-uks.rplrus.com/api/admin/queues/total-skipped-today", config),
+        axios.get("https://api-uks.rplrus.com/api/queue/current-active", config),
+        axios.get("https://api-uks.rplrus.com/api/queues/latest", config),
+        axios.get("https://api-uks.rplrus.com/api/admin/queues/today", config),
+      ]);
+
+      const newTotalCompleted = completedRes.data.data.total_completed || 0;
+      const newTotalWaiting = waitingRes.data.data.total_waiting || 0;
+      const newTotalProcessing = processingRes.data.data.total_processing || 0;
+      const newTotalSkipped = skippedRes.data.data.total_skipped || 0;
+      const newCurrentQueue = currentQueueRes.data.data || { queue_number: "Tidak Ada", status: "Tidak Diketahui", reason: "Tidak Diketahui" };
+      const newLatestQueue = latestQueueRes.data.data || { queue_number: "Tidak Ada", status: "Tidak Diketahui", reason: "Tidak Diketahui" };
+
+      let queueDataArray = [];
+      if (filterMode === "today") {
+        queueDataArray = Array.isArray(todayQueueRes.data.data) ? todayQueueRes.data.data : [];
+      } else if (filterMode === "yesterday") {
+        const yesterdayQueueRes = await axios.get("https://api-uks.rplrus.com/api/admin/queues/yesterday", config);
+        queueDataArray = Array.isArray(yesterdayQueueRes.data.data) ? yesterdayQueueRes.data.data : [];
+      } else if (filterMode === "all") {
+        const allQueueRes = await axios.get("https://api-uks.rplrus.com/api/admin/queues/history", config);
+        queueDataArray = Array.isArray(allQueueRes.data.data) ? allQueueRes.data.data : [];
+      }
+
+      const formattedQueueData = queueDataArray.map((item) => ({
+        id: item.queue_number != null ? item.queue_number.toString().padStart(3, "0") : "Tidak Ada",
+        reason: item.reason || "Tidak Diketahui",
+        status: mapStatusToUI(item.status || "Tidak Diketahui"),
+        name: item.user?.name || "Tidak Diketahui",
+        submit: item.created_at ? moment(item.created_at).fromNow(true) : "Tidak Diketahui",
+        rawId: item.id,
+        userId: item.user?.id || null,
+        student: {
+          id: item.user?.id || null,
+          name: item.user?.name || "Tidak Diketahui",
+          gender: item.user?.gender || "Tidak Diketahui",
+          class: item.user?.class || "Tidak Diketahui",
+          name_grades: item.user?.name_grades || "Tidak Diketahui",
+          name_department: item.user?.name_department || "Tidak Diketahui",
+          phone_number: item.user?.phone_number || null,
+          name_parent: item.user?.name_parent || null,
+          no_hp_parent: item.user?.no_hp_parent || null,
+          name_walikelas: item.user?.name_walikelas || null,
+        },
+      }));
+
+      if (
+        newTotalCompleted !== totalCompleted ||
+        newTotalWaiting !== totalWaiting ||
+        newTotalProcessing !== totalProcessing ||
+        newTotalSkipped !== totalSkipped ||
+        JSON.stringify(newCurrentQueue) !== JSON.stringify(currentQueue) ||
+        JSON.stringify(newLatestQueue) !== JSON.stringify(latestQueue) ||
+        JSON.stringify(formattedQueueData) !== JSON.stringify(queueData)
+      ) {
+        setTotalCompleted(newTotalCompleted);
+        setTotalWaiting(newTotalWaiting);
+        setTotalProcessing(newTotalProcessing);
+        setTotalSkipped(newTotalSkipped);
+        setCurrentQueue(newCurrentQueue);
+        setLatestQueue(newLatestQueue);
+        setQueueData(formattedQueueData);
+        setLastUpdated(new Date());
+      }
+    } catch (err) {
+      const errorMessage =
+        err.response?.status === 401
+          ? "Akses tidak diizinkan. Silakan masuk kembali."
+          : err.response?.status === 404 && filterMode === "yesterday"
+          ? "Data antrian kemarin tidak ditemukan."
+          : "Gagal memuat data antrian. Silakan coba lagi nanti.";
+      setError(errorMessage);
+      showToastMessage(errorMessage, "error");
+      console.error("Kesalahan saat memuat data:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [filterMode, isUserInteracting, updatingStatus, totalCompleted, totalWaiting, totalProcessing, totalSkipped, currentQueue, latestQueue, queueData]);
+
   useEffect(() => {
     document.title = 'Rekam Antrian Siswa';
     const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
@@ -84,100 +189,18 @@ export default function RekamAntrian() {
   }, []);
 
   useEffect(() => {
-    const fetchQueueData = async () => {
-      try {
-        setLoading(true);
-        const token = getToken();
-        if (!token) {
-          throw new Error("Token autentikasi tidak ditemukan. Silakan masuk kembali.");
-        }
-        const config = {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        };
+    fetchQueueData();
 
-        const [
-          completedRes,
-          waitingRes,
-          processingRes,
-          skippedRes,
-          currentQueueRes,
-          latestQueueRes,
-          todayQueueRes,
-        ] = await Promise.all([
-          axios.get("https://api-uks.rplrus.com/api/admin/queues/total-completed-today", config),
-          axios.get("https://api-uks.rplrus.com/api/admin/queues/total-waiting-today", config),
-          axios.get("https://api-uks.rplrus.com/api/admin/queues/total-processing-today", config),
-          axios.get("https://api-uks.rplrus.com/api/admin/queues/total-skipped-today", config),
-          axios.get("https://api-uks.rplrus.com/api/queue/current-active", config),
-          axios.get("https://api-uks.rplrus.com/api/queues/latest", config),
-          axios.get("https://api-uks.rplrus.com/api/admin/queues/today", config),
-        ]);
-
-        setTotalCompleted(completedRes.data.data.total_completed || 0);
-        setTotalWaiting(waitingRes.data.data.total_waiting || 0);
-        setTotalProcessing(processingRes.data.data.total_processing || 0);
-        setTotalSkipped(skippedRes.data.data.total_skipped || 0);
-        setCurrentQueue(
-          currentQueueRes.data.data || { queue_number: "Tidak Ada", status: "Tidak Diketahui", reason: "Tidak Diketahui" }
-        );
-        setLatestQueue(
-          latestQueueRes.data.data || { queue_number: "Tidak Ada", status: "Tidak Diketahui", reason: "Tidak Diketahui" }
-        );
-
-        let queueDataArray = [];
-        if (filterMode === "today") {
-          queueDataArray = Array.isArray(todayQueueRes.data.data) ? todayQueueRes.data.data : [];
-        } else if (filterMode === "yesterday") {
-          const yesterdayQueueRes = await axios.get("https://api-uks.rplrus.com/api/admin/queues/yesterday", config);
-          queueDataArray = Array.isArray(yesterdayQueueRes.data.data) ? yesterdayQueueRes.data.data : [];
-        } else if (filterMode === "all") {
-          const allQueueRes = await axios.get("https://api-uks.rplrus.com/api/admin/queues/history", config);
-          queueDataArray = Array.isArray(allQueueRes.data.data) ? allQueueRes.data.data : [];
-        }
-
-        const formattedQueueData = queueDataArray.map((item) => ({
-          id: item.queue_number != null ? item.queue_number.toString().padStart(3, "0") : "Tidak Ada",
-          reason: item.reason || "Tidak Diketahui",
-          status: mapStatusToUI(item.status || "Tidak Diketahui"),
-          name: item.user?.name || "Tidak Diketahui",
-          submit: item.created_at ? moment(item.created_at).fromNow(true) : "Tidak Diketahui",
-          rawId: item.id,
-          userId: item.user?.id || null,
-          student: {
-            id: item.user?.id || null,
-            name: item.user?.name || "Tidak Diketahui",
-            gender: item.user?.gender || "Tidak Diketahui",
-            class: item.user?.class || "Tidak Diketahui",
-            name_grades: item.user?.name_grades || "Tidak Diketahui",
-            name_department: item.user?.name_department || "Tidak Diketahui",
-            phone_number: item.user?.phone_number || null,
-            name_parent: item.user?.name_parent || null,
-            no_hp_parent: item.user?.no_hp_parent || null,
-            name_walikelas: item.user?.name_walikelas || null,
-          },
-        }));
-        setQueueData(formattedQueueData);
-      } catch (err) {
-        const errorMessage =
-          err.response?.status === 401
-            ? "Akses tidak diizinkan. Silakan masuk kembali."
-            : err.response?.status === 404 && filterMode === "yesterday"
-            ? "Data antrian kemarin tidak ditemukan."
-            : "Gagal memuat data antrian. Silakan coba lagi nanti.";
-        setError(errorMessage);
-        showToastMessage(errorMessage, "error");
-        console.error("Kesalahan saat memuat data:", err);
-      } finally {
-        setLoading(false);
+    // Set up auto-refresh interval (every 30 seconds)
+    refreshIntervalRef.current = setInterval(() => {
+      if (filterMode !== "history" && !isUserInteracting && !Object.values(updatingStatus).some((status) => status)) {
+        fetchQueueData();
       }
-    };
+    }, 30000);
 
-    if (filterMode !== "history") {
-      fetchQueueData();
-    }
-  }, [filterMode]);
+    // Clean up interval on component unmount
+    return () => clearInterval(refreshIntervalRef.current);
+  }, [fetchQueueData, filterMode]);
 
   const fetchUserData = async () => {
     try {
@@ -209,6 +232,7 @@ export default function RekamAntrian() {
             name_walikelas: user.name_walikelas || null,
           }));
         setUserData(mappedUsers);
+        setLastUpdated(new Date());
       } else {
         throw new Error(response.data.message || "Format respons tidak valid");
       }
@@ -231,27 +255,27 @@ export default function RekamAntrian() {
     }
   }, [filterMode]);
 
-  // Fixed handleNavigateToDetails with correct route path
   const handleNavigateToDetails = (student) => {
+    setIsUserInteracting(true);
     console.log("=== NAVIGATION DEBUG ===");
     console.log("Full student object:", student);
     console.log("Student ID:", student?.id);
     console.log("Student ID type:", typeof student?.id);
     console.log("Current location:", window.location.pathname);
-    
+
     if (!student || !student.id) {
       console.error("❌ Navigation failed: Invalid student data", { student });
       showToastMessage("Data siswa tidak valid. ID siswa tidak tersedia.", "error");
+      setIsUserInteracting(false);
       return;
     }
 
-    // Use the CORRECT route path from your Router configuration
-    const correctRoute = `/MedicalRecord/${student.id}`;  // ← This matches your route definition
+    const correctRoute = `/MedicalRecord/${student.id}`;
     console.log(`🚀 Navigating to correct route: ${correctRoute}`);
-    
+
     try {
-      navigate(correctRoute, { 
-        state: { 
+      navigate(correctRoute, {
+        state: {
           student: {
             id: student.id,
             name: student.name,
@@ -262,32 +286,34 @@ export default function RekamAntrian() {
             phone_number: student.phone_number,
             name_parent: student.name_parent,
             no_hp_parent: student.no_hp_parent,
-            name_walikelas: student.name_walikelas
+            name_walikelas: student.name_walikelas,
           },
           fromQueue: true,
           queueContext: {
             returnPath: "/rekamantri",
-            action: "process"
-          }
-        }
+            action: "process",
+          },
+        },
       });
-      
       console.log("✅ Navigation command sent successfully");
       showToastMessage(`Menuju halaman rekam medis siswa: ${student.name}`, "success");
-      
     } catch (navigationError) {
       console.error("❌ Navigation error:", navigationError);
       showToastMessage("Gagal navigasi ke halaman rekam medis.", "error");
+    } finally {
+      setTimeout(() => setIsUserInteracting(false), 1000); // Re-enable auto-refresh after 1 second
     }
   };
 
   const handleNavigateToHistory = (user) => {
+    setIsUserInteracting(true);
     navigate(`/rekamantri/detailrekamantri/${user.id}`, { state: { user } });
+    setTimeout(() => setIsUserInteracting(false), 1000);
   };
 
-  // Improved handleStatusChange function with better navigation logic
   const handleStatusChange = async (queueId, rawId, newStatus, prevStatus, student) => {
     try {
+      setIsUserInteracting(true);
       setUpdatingStatus((prev) => ({ ...prev, [queueId]: true }));
       const token = getToken();
       if (!token) {
@@ -308,38 +334,26 @@ export default function RekamAntrian() {
             throw err;
           }
         }
-        
-        // Update local state first
         setQueueData((prev) =>
           prev.map((item) =>
             item.id === queueId ? { ...item, status: newStatus } : item
           )
         );
-        
-        // Update counters
         setTotalWaiting((prev) => prev - 1);
         setTotalProcessing((prev) => prev + 1);
-        
-        // Show success message
         if (response?.data?.message) {
           showToastMessage(response.data.message, "success");
         }
-        
-        // Navigate to medical record page after successful processing
-        // Add a small delay to ensure the UI updates are visible
         setTimeout(() => {
           handleNavigateToDetails(student);
         }, 500);
-        
       } else if (newStatus === "Selesai") {
-        // Check if medical record exists before marking as complete
         try {
           const medicalRecordRes = await axios.get(`https://api-uks.rplrus.com/api/healthcondition/${student.id}`, config);
           const hasMedicalRecord = medicalRecordRes.data.data?.some(record => record.status === 'active');
           
           if (!hasMedicalRecord) {
             showToastMessage("Silakan isi rekam medis terlebih dahulu sebelum menyelesaikan antrian.", "error");
-            // Navigate to medical record page to fill it first
             handleNavigateToDetails(student);
             return;
           }
@@ -353,30 +367,24 @@ export default function RekamAntrian() {
               throw err;
             }
           }
-          
-          // Update local state
           setQueueData((prev) =>
             prev.map((item) =>
               item.id === queueId ? { ...item, status: newStatus } : item
             )
           );
-          
-          // Update counters
+
           setTotalProcessing((prev) => prev - 1);
           setTotalCompleted((prev) => prev + 1);
           
           if (response?.data?.message) {
             showToastMessage(response.data.message, "success");
           }
-          
         } catch (medicalRecordErr) {
           console.error("Error checking medical record:", medicalRecordErr);
-          // If there's an error checking medical records, still allow navigation to medical record page
           showToastMessage("Tidak dapat memeriksa rekam medis. Navigasi ke halaman rekam medis.", "warning");
           handleNavigateToDetails(student);
           return;
         }
-        
       } else if (newStatus === "Dibatalkan") {
         try {
           response = await axios.post(`https://api-uks.rplrus.com/api/admin/queues/${rawId}/skip`, {}, config);
@@ -387,15 +395,13 @@ export default function RekamAntrian() {
             throw err;
           }
         }
-        
-        // Update local state
+
         setQueueData((prev) =>
           prev.map((item) =>
             item.id === queueId ? { ...item, status: newStatus } : item
           )
         );
-        
-        // Update counters based on previous status
+
         if (prevStatus === "Menunggu") {
           setTotalWaiting((prev) => prev - 1);
         } else if (prevStatus === "Sedang Diproses") {
@@ -407,7 +413,6 @@ export default function RekamAntrian() {
           showToastMessage(response.data.message, "success");
         }
       } else if (newStatus === "Menunggu") {
-        // Tidak ada endpoint API untuk "Menunggu"; perbarui secara lokal
         setQueueData((prev) =>
           prev.map((item) =>
             item.id === queueId ? { ...item, status: newStatus } : item
@@ -419,7 +424,6 @@ export default function RekamAntrian() {
         setTotalCompleted((prev) => (prevStatus === "Selesai" ? prev - 1 : prev) + (newStatus === "Selesai" ? 1 : 0));
         setTotalSkipped((prev) => (prevStatus === "Dibatalkan" ? prev - 1 : prev) + (newStatus === "Dibatalkan" ? 1 : 0));
       }
-
     } catch (err) {
       const allowedMethods = err.response?.headers?.allow || "tidak diketahui";
       const errorMessage =
@@ -433,6 +437,7 @@ export default function RekamAntrian() {
       console.error("Kesalahan saat memperbarui status:", err);
     } finally {
       setUpdatingStatus((prev) => ({ ...prev, [queueId]: false }));
+      setIsUserInteracting(false);
     }
   };
 
@@ -443,7 +448,9 @@ export default function RekamAntrian() {
   };
 
   const handleFilterChange = (mode) => {
+    setIsUserInteracting(true);
     setFilterMode(mode);
+    setTimeout(() => setIsUserInteracting(false), 1000);
   };
 
   const handleRetry = () => {
@@ -455,6 +462,7 @@ export default function RekamAntrian() {
     } else {
       setLoading(true);
       setQueueData([]);
+      fetchQueueData();
     }
   };
 
@@ -507,6 +515,9 @@ export default function RekamAntrian() {
                 90% { opacity: 1; }
                 100% { opacity: 0; }
               }
+              .last-updated {
+                transition: opacity 0.3s ease-in-out;
+              }
             `}
           </style>
           <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto">
@@ -538,9 +549,16 @@ export default function RekamAntrian() {
               </div>
             )}
 
-            <h1 className="text-2xl md:text-3xl text-gray-800 dark:text-gray-100 font-bold pb-4">
-              Rekam Antrian Siswa
-            </h1>
+            <div className="flex justify-between items-center mb-4">
+              <h1 className="text-2xl md:text-3xl text-gray-800 dark:text-gray-100 font-bold">
+                Rekam Antrian Siswa
+              </h1>
+              {lastUpdated && filterMode !== "history" && (
+                <span className="text-sm text-gray-500 dark:text-gray-400 last-updated">
+                 
+                </span>
+              )}
+            </div>
 
             {error && (
               <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
@@ -796,13 +814,11 @@ export default function RekamAntrian() {
                                         } disabled:opacity-50 hover:opacity-80 transition-opacity`}
                                         disabled={filterMode !== "today" || !getNextStatus(item.status) || updatingStatus[item.id]}
                                         onClick={() => {
-                                          // Validate student data before processing
                                           const validation = validateStudentData(item.student);
                                           if (!validation.isValid) {
                                             showToastMessage(validation.message, "error");
                                             return;
                                           }
-                                          
                                           handleStatusChange(
                                             item.id,
                                             item.rawId,
@@ -829,7 +845,6 @@ export default function RekamAntrian() {
                                               showToastMessage(validation.message, "error");
                                               return;
                                             }
-                                            
                                             handleStatusChange(
                                               item.id, 
                                               item.rawId, 

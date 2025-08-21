@@ -2,16 +2,15 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Layout from "../../components/user/layout";
-import UKS2Img from "../../assets/img/uks2.png"; // Impor gambar UKS2Img untuk favicon, sesuaikan path
+import UKS2Img from "../../assets/img/uks2.png"; 
 
-// Toast Notification Component
 const Toast = ({ message, type, isVisible, onClose }) => {
   useEffect(() => {
     if (isVisible) {
-      console.log("Toast is visible:", message); // Debug log
+      console.log("Toast is visible:", message); 
       const timer = setTimeout(() => {
         onClose();
-      }, 4000); // Auto close after 4 seconds
+      }, 4000); 
       return () => clearTimeout(timer);
     }
   }, [isVisible, onClose]);
@@ -29,7 +28,7 @@ const Toast = ({ message, type, isVisible, onClose }) => {
   return (
     <div
       className={`fixed top-4 right-4 ${bgColor} text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-72 max-w-96 animate-slide-in`}
-      style={{ zIndex: 9999 }} // Ensure it appears above everything
+      style={{ zIndex: 9999 }}
     >
       <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white bg-opacity-20">
         <span className="text-sm font-bold">{icon}</span>
@@ -60,36 +59,39 @@ function AntreUser() {
   const [loading, setLoading] = useState(true);
   const [showNotification, setShowNotification] = useState(false);
   const [latestQueueNumber, setLatestQueueNumber] = useState(null);
-
-  // Toast notification state
   const [toast, setToast] = useState({
     isVisible: false,
     message: "",
-    type: "info", // 'success', 'error', 'info'
+    type: "info",
   });
 
   const navigate = useNavigate();
-
   const apiUrl = "https://api-uks.rplrus.com/api";
   const token = localStorage.getItem("token");
 
-  // Function to show toast notification
   const showToast = (message, type = "info") => {
     setToast({
       isVisible: true,
       message,
       type,
     });
-    console.log("Toast shown:", message, type); // Debug log
+    console.log("Toast shown:", message, type);
   };
 
-  // Function to close toast notification
   const closeToast = () => {
     setToast((prev) => ({ ...prev, isVisible: false }));
-    console.log("Toast closed"); // Debug log
+    console.log("Toast closed");
   };
 
-  // Check for token and redirect to login if missing
+  // Utility function to calculate dynamic font size based on text length
+  const getDynamicFontSize = (text) => {
+    if (!text) return "text-5xl"; // Default for empty text
+    const length = text.length;
+    if (length <= 2) return "text-9xl"; // For short queue numbers (e.g., "01")
+    if (length <= 6) return "text-6xl"; // For medium text (e.g., "KOSONG")
+    return "text-5xl"; // For longer text (e.g., "MENUNGGU")
+  };
+
   useEffect(() => {
     if (!token) {
       showToast("Silakan masuk untuk melanjutkan", "error");
@@ -98,24 +100,19 @@ function AntreUser() {
   }, [token, navigate]);
 
   useEffect(() => {
-    // Mengatur judul tab
     document.title = "Antrian Pasien";
-
-    // Mengatur favicon
     const favicon =
       document.querySelector("link[rel='icon']") ||
       document.createElement("link");
     favicon.rel = "icon";
-    favicon.href = UKS2Img; // Menggunakan UKS2Img sebagai favicon
+    favicon.href = UKS2Img;
     document.head.appendChild(favicon);
 
-    // Test toast on component mount
     setTimeout(() => {
       showToast("Sistem antrian siap digunakan", "info");
     }, 1000);
-  }, []); // Efek hanya dijalankan sekali saat komponen dimuat
+  }, []);
 
-  // Check queue status
   const checkQueueStatus = async () => {
     try {
       setLoading(true);
@@ -131,7 +128,6 @@ function AntreUser() {
     }
   };
 
-  // Fetch current active queue
   const fetchCurrentActiveQueue = async () => {
     try {
       setLoading(true);
@@ -147,7 +143,6 @@ function AntreUser() {
     }
   };
 
-  // Fetch user's current queue
   const fetchUserQueue = async () => {
     try {
       setLoading(true);
@@ -169,7 +164,6 @@ function AntreUser() {
     }
   };
 
-  // Fetch latest queue number
   const fetchLatestQueueNumber = async () => {
     try {
       setLoading(true);
@@ -186,7 +180,6 @@ function AntreUser() {
     }
   };
 
-  // Create a new queue
   const handleCreateQueue = async () => {
     if (!reason.trim()) {
       showToast("Harap mengisi alasan", "error");
@@ -216,7 +209,6 @@ function AntreUser() {
     }
   };
 
-  // Cancel user's queue
   const handleCancelQueue = async () => {
     try {
       setLoading(true);
@@ -242,7 +234,6 @@ function AntreUser() {
     }
   };
 
-  // Polling for real-time updates
   useEffect(() => {
     if (!token) return;
 
@@ -265,7 +256,6 @@ function AntreUser() {
     return () => clearInterval(interval);
   }, [token]);
 
-  // Show notification when currentQueue matches userQueue
   useEffect(() => {
     if (userQueue && currentQueue === userQueue.queue_number) {
       setShowNotification(true);
@@ -274,14 +264,12 @@ function AntreUser() {
     }
   }, [currentQueue, userQueue]);
 
-  // Calculate next queue number based on latest queue number
   const getNextQueueNumber = () => {
     if (latestQueueNumber === null) return "01";
     const nextNumber = parseInt(latestQueueNumber, 10) + 1;
     return isNaN(nextNumber) ? "01" : nextNumber.toString().padStart(2, "0");
   };
 
-  // Function to get display text for current queue
   const getCurrentQueueDisplay = () => {
     if (!currentQueue || currentQueue === "KOSONG") {
       return "KOSONG";
@@ -289,17 +277,16 @@ function AntreUser() {
     return currentQueue;
   };
 
-  // Function to get display text and style for user queue
   const getUserQueueDisplay = () => {
     if (!userQueue || !userQueue.queue_number) {
       return {
         text: "MENUNGGU",
-        fontSize: "text-5xl", // Smaller font for longer text
+        fontSize: getDynamicFontSize("MENUNGGU"),
       };
     }
     return {
       text: userQueue.queue_number,
-      fontSize: "text-9xl", // Original large font for numbers
+      fontSize: getDynamicFontSize(userQueue.queue_number),
     };
   };
 
@@ -380,7 +367,6 @@ function AntreUser() {
           .animate-slide-in {
             animation: slideInRight 0.3s ease-out;
           }
-          
           @keyframes slideInRight {
             from {
               transform: translateX(100%);
@@ -391,10 +377,19 @@ function AntreUser() {
               opacity: 1;
             }
           }
+          .queue-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            word-break: break-word;
+            padding: 0 1rem;
+            width: 100%;
+            height: 100%;
+          }
         `}
       </style>
       <section className="bg-white w-full min-h-screen py-20 relative overflow-hidden">
-        {/* Background Decorations */}
         <div className="absolute inset-0 z-1 pointer-events-none">
           <div className="absolute top-10 left-[-30px] w-[120px] h-[120px] bg-[#FFD1DC] rounded-full opacity-50" />
           <div className="absolute bottom-20 right-10 w-0 h-0 border-l-[50px] border-r-[50px] border-b-[80px] border-l-transparent border-r-transparent border-b-[#FFFACD] opacity-60" />
@@ -402,7 +397,6 @@ function AntreUser() {
           <div className="absolute bottom-[150px] left-[100px] w-[90px] h-[90px] bg-[#B0E0E6] rounded-full opacity-40" />
         </div>
 
-        {/* Loading Indicator */}
         {(loading || hasActiveQueue === null) && (
           <div className="flex flex-col items-center justify-center h-[calc(100vh-100px)]">
             <div className="double-spinner">
@@ -413,7 +407,6 @@ function AntreUser() {
           </div>
         )}
 
-        {/* Notification Popup */}
         {showNotification && (
           <div className="notification-popup">
             <h3>Sekarang Giliranmu!</h3>
@@ -425,10 +418,8 @@ function AntreUser() {
           </div>
         )}
 
-        {/* Render UI only when not loading and hasActiveQueue is determined */}
         {!loading && hasActiveQueue !== null && (
           <>
-            {/* Header Section */}
             <div className="w-full h-[100px] bg-[#4FB7BD] flex items-center justify-center shadow-md p-6 z-10 relative -mt-20">
               <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white text-center">
                 {hasActiveQueue
@@ -451,23 +442,18 @@ function AntreUser() {
                       Antrean sekarang
                     </h2>
                     <div className="w-[400px] h-[250px] bg-[#93D3CC] rounded-xl shadow-lg flex items-center justify-center">
-                      <h1 className="text-white text-9xl font-bold">
+                      <h1 className={`text-white font-bold queue-box ${getDynamicFontSize(getCurrentQueueDisplay())}`}>
                         {getCurrentQueueDisplay()}
                       </h1>
                     </div>
                   </div>
 
-                  {/* Antrean kamu */}
                   <div className="flex flex-col items-center w-full sm:w-[400px]">
                     <h2 className="text-2xl font-semibold text-[#1C4245] mb-2">
                       Antrean kamu
                     </h2>
                     <div className="w-[400px] h-[250px] bg-[#93D3CC] rounded-xl shadow-lg flex items-center justify-center">
-                      <h1
-                        className={`text-white ${
-                          getUserQueueDisplay().fontSize
-                        } font-bold`}
-                      >
+                      <h1 className={`text-white font-bold queue-box ${getUserQueueDisplay().fontSize}`}>
                         {getUserQueueDisplay().text}
                       </h1>
                     </div>
@@ -479,7 +465,6 @@ function AntreUser() {
                     )}
                   </div>
 
-                  {/* Tombol Batalkan */}
                   <div className="w-full flex justify-center mt-8">
                     <button
                       className="px-6 py-3 bg-red-100 text-red-700 border border-red-500 rounded-lg hover:bg-red-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
@@ -493,20 +478,17 @@ function AntreUser() {
               </>
             ) : (
               <>
-                {/* Sub Header */}
                 <h2 className="mt-6 text-2xl font-semibold text-[#1C4245] text-center z-10 relative">
                   Antrean sekarang
                 </h2>
 
                 <div className="w-[350px] max-w-[90vw] h-[200px] bg-[#93D3CC] mx-auto mt-6 mb-8 rounded-xl shadow-lg z-10 relative flex items-center justify-center px-4">
-                  <h1 className="text-[#FFFFFF] text-5xl sm:text-6xl md:text-7xl font-bold text-center break-words">
+                  <h1 className={`text-[#FFFFFF] font-bold queue-box ${getDynamicFontSize(getCurrentQueueDisplay())}`}>
                     {getCurrentQueueDisplay()}
                   </h1>
                 </div>
 
-                {/* Kotak Putih Bawah */}
                 <div className="w-[800px] max-w-full bg-white mx-auto mt-10 mb-20 rounded-xl shadow-lg z-10 flex flex-col md:flex-row border border-[#A2A2A2]">
-                  {/* Kiri - Form */}
                   <div className="w-full md:w-1/2 p-6 flex flex-col justify-between">
                     <div>
                       <h3 className="text-xl font-semibold text-black mb-2">
@@ -532,15 +514,14 @@ function AntreUser() {
                   </div>
                   <div className="hidden md:block w-px bg-gray-300"></div>
 
-                  {/* Kanan - Nomor Antrian */}
                   <div className="w-full md:w-1/2 flex flex-col items-center justify-center p-6">
                     <h3 className="text-lg font-semibold text-[#1C4245] mb-4">
                       Nomor antrian anda
                     </h3>
                     <div className="bg-[#93D3CC] w-full h-55 flex items-center justify-center rounded-xl">
-                      <span className="text-white text-7xl font-bold">
-                        <h1>{getNextQueueNumber()}</h1>
-                      </span>
+                      <h1 className={`text-white font-bold queue-box ${getDynamicFontSize(getNextQueueNumber())}`}>
+                        {getNextQueueNumber()}
+                      </h1>
                     </div>
                   </div>
                 </div>
@@ -549,7 +530,6 @@ function AntreUser() {
           </>
         )}
 
-        {/* Toast Notification */}
         <Toast
           message={toast.message}
           type={toast.type}

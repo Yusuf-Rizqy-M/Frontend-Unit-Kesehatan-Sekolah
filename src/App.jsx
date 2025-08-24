@@ -38,6 +38,7 @@ import KelasPage from "./pages/admin/kelas";
 import Jurusanpage from "./pages/admin/jurusan";
 import Settingpage from "./pages/admin/settings";
 import RegisterExcel from "./pages/admin/registerexcel";
+import ManajemenObat from "./pages/admin/manajemen_obat";
 
 // Routes
 import ProtectedRoute from "./routes/protectedRoute";
@@ -261,7 +262,14 @@ function App() {
             </ProtectedRoute>
           }
         />
-
+        <Route
+          path="/manajemenobat"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <ManajemenObat />
+            </ProtectedRoute>
+          }
+        />
         {/* 404 fallback */}
         <Route path="/notfound" element={<NotFound />} />
         <Route path="*" element={<NotFound />} />

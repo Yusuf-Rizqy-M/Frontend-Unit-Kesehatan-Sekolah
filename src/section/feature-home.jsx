@@ -68,7 +68,7 @@ const FeaturePage = () => {
             Cek kesehatanmu dengan Kalkulator BMI! Masukkan berat dan tinggi badan untuk mengetahui kategori berat badanmu—kurang, ideal, atau berlebih. Dapatkan juga rekomendasi untuk menjaga keseimbangan tubuh yang sehat.
           </p>
           <a
-            href="/KalkulatorBmi"
+            href="/kalkulatorbmi"
             className="mt-4 inline-block bg-[#2A8F9E] text-white px-4 py-2 rounded-lg transition duration-300 hover:bg-[#237987]"
           >
             Jelajahi Kalkulator BMI →

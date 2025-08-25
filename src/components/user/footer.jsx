@@ -78,11 +78,6 @@ export default function Footer() {
               ))}
             </ul>
           </div>
-
-          {/* Bantuan Section */}
-          <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-[#30456A]">Bantuan</h3>
-          </div>
         </div>
       </div>
     </footer>

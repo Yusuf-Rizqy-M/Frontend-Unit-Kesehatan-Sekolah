@@ -26,6 +26,7 @@ import ArticleDetail from "./pages/user/article_detail"; // Import the ArticleDe
 // Admin
 import Dashboard from "./pages/admin/dashboard";
 import ManajemenUser from "./pages/admin/ManajemenUser";
+import ManajemenGuru from "./pages/admin/ManajemenGuru";
 import UploadBlog from "./pages/admin/upload_blog";
 import KategoriPage from "./pages/admin/Kategori";
 import RekamMedisSiswa from "./pages/admin/rekam_medis_siswa";
@@ -143,6 +144,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <ManajemenUser />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manajemenguru"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <ManajemenGuru />
             </ProtectedRoute>
           }
         />

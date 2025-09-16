@@ -40,6 +40,9 @@ import Jurusanpage from "./pages/admin/jurusan";
 import Settingpage from "./pages/admin/settings";
 import RegisterExcel from "./pages/admin/registerexcel";
 import ManajemenObat from "./pages/admin/manajemen_obat";
+import RegisterExcelGuru from "./pages/admin/registerexcelguru";
+import RekapMedisGuru from "./pages/admin/rekap_medis_guru";
+import ManajemenInventaris from "./pages/admin/manajemen_inventaris";
 
 // Routes
 import ProtectedRoute from "./routes/protectedRoute";
@@ -171,6 +174,14 @@ function App() {
             </ProtectedRoute>
           }
         />
+                <Route
+          path="/rekammedisguru"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <RekapMedisGuru />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/staff_admin"
           element={
@@ -243,7 +254,14 @@ function App() {
             </ProtectedRoute>
           }
         />
-
+        <Route
+          path="/registerexcelguru"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <RegisterExcelGuru />
+            </ProtectedRoute>
+          }
+        />
         {/* Medical Record Routes */}
         <Route
           path="/MedicalRecord/:id"
@@ -276,6 +294,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <ManajemenObat />
+            </ProtectedRoute>
+          }
+        />
+                <Route
+          path="/manajemeninventaris"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <ManajemenInventaris/>
             </ProtectedRoute>
           }
         />

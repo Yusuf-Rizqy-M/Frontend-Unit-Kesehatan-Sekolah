@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from '../../partials/Sidebar';
 import Header from '../../partials/Header';
-import { FaUpload, FaFileExcel, FaCloudUploadAlt, FaCheckCircle, FaExclamationTriangle } from "react-icons/fa";
+import { FaUpload, FaFileExcel, FaCloudUploadAlt, FaCheckCircle, FaExclamationTriangle, FaDownload } from "react-icons/fa";
 import axios from 'axios';
 import UKS2Img from '../../assets/img/uks2.png';
 import AuthService from '../../services/authService';
@@ -181,6 +181,18 @@ const RegisterExcelTeacher = () => {
               </div>
 
               <div className="p-8">
+                {/* Download Template Link */}
+                <div className="mb-6 flex justify-center">
+                  <a
+                    href="../../assets/img/contoh_import_guru.xlsx"
+                    download="contoh_import_guru.xlsx"
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-300 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-blue-600 transform hover:scale-105 transition-all duration-200 cursor-pointer shadow-lg"
+                  >
+                    <FaDownload className="w-5 h-5" />
+                    Unduh Template Excel
+                  </a>
+                </div>
+
                 {/* Drag and Drop Area */}
                 <div
                   className={`relative border-3 border-dashed rounded-2xl p-12 text-center transition-all duration-300 ${

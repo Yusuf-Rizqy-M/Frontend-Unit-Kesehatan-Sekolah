@@ -1,330 +1,264 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from '../../partials/Sidebar';
 import Header from '../../partials/Header';
-import UKS2Img from "../../assets/img/uks2.png"; // Favicon import
-import { FaTrash, FaEye, FaEdit, FaPlus } from "react-icons/fa";
-import axios from "axios";
+import { FaTrash, FaEye, FaEdit, FaPlus, FaPlusCircle, FaMinusCircle } from "react-icons/fa";
+import { api } from '../../services/authServiceInventaris';
+import UKS2Img from '../../assets/img/uks2.png';
 
 const ManajemenInventaris = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [staffs, setStaffs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [medicines, setMedicines] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [selectedStaff, setSelectedStaff] = useState(null);
+  const [selectedMedicine, setSelectedMedicine] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isStockModalOpen, setIsStockModalOpen] = useState(false);
+  const [stockAction, setStockAction] = useState('add');
+  const [stockAmount, setStockAmount] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
-  const [newStaff, setNewStaff] = useState({ name: "", role: "", wa: "", image: null });
-  const [editStaff, setEditStaff] = useState({ id: null, name: "", role: "", wa: "", image: null });
   const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
-  const [toastType, setToastType] = useState("success");
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('success');
   const [deleteId, setDeleteId] = useState(null);
-  const [waError, setWaError] = useState(null); // State for phone number error
 
-  const API_URL = "https://api-uks.rplrus.com/api";
+  const [newMedicine, setNewMedicine] = useState({
+    nama_barang: '',
+    jumlah: '',
+    kategori: '',
+    kondisi: 'baik',
+  });
 
-  // Fungsi untuk menampilkan notifikasi toast
-  const showToastMessage = (message, type = "success") => {
+  const [editMedicine, setEditMedicine] = useState({
+    id: null,
+    nama_barang: '',
+    jumlah: '',
+    kategori: '',
+    kondisi: 'baik',
+  });
+
+  // Set document title and favicon
+  useEffect(() => {
+    document.title = 'Manajemen Inventaris';
+    const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
+    favicon.rel = 'icon';
+    favicon.href = UKS2Img;
+    document.head.appendChild(favicon);
+
+    // Cleanup to prevent duplicate favicon elements
+    return () => {
+      const existingFavicon = document.querySelector("link[rel='icon']");
+      if (existingFavicon && existingFavicon.href === UKS2Img) {
+        document.head.removeChild(existingFavicon);
+      }
+    };
+  }, []);
+
+  // Get token from localStorage or sessionStorage
+  const getToken = () => {
+    return localStorage.getItem('token') || sessionStorage.getItem('token');
+  };
+
+  // Fetch medicines from API
+  const fetchMedicines = async () => {
+    setLoading(true);
+    try {
+      const token = getToken();
+      if (!token) {
+        throw new Error('Token tidak ditemukan. Silakan login kembali.');
+      }
+
+      const response = await api.get('/inventaris', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setMedicines(response.data.filter(med => med.status === 'active'));
+      setLoading(false);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Gagal memuat data inventaris');
+      setLoading(false);
+    }
+  };
+
+  // Fetch medicine details (local fallback since GET /inventaris/{id} is not confirmed)
+  const fetchMedicineDetails = (id) => {
+    const medicine = medicines.find(med => med.id === id);
+    if (medicine) {
+      setSelectedMedicine(medicine);
+      setIsModalOpen(true);
+    } else {
+      showToastMessage('Barang tidak ditemukan', 'error');
+    }
+  };
+
+  // Handle input change for add form
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewMedicine(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // Handle input change for edit form
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditMedicine(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // Handle stock amount change
+  const handleStockAmountChange = (e) => {
+    setStockAmount(e.target.value);
+  };
+
+  // Show toast notification
+  const showToastMessage = (message, type) => {
     setToastMessage(message);
     setToastType(type);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
   };
 
-  // Toggle dark mode
-  const toggleDarkMode = () => {
-    setIsDarkMode((prev) => {
-      const newMode = !prev;
-      if (newMode) {
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-        localStorage.setItem('theme', 'light');
-      }
-      return newMode;
-    });
-  };
-
-  // Inisialisasi tema
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      setIsDarkMode(true);
-      document.documentElement.classList.add('dark');
-    } else {
-      setIsDarkMode(false);
-      document.documentElement.classList.remove('dark');
-    }
-  }, []);
-
-  // Mengatur judul tab dan favicon
-  useEffect(() => {
-    document.title = 'Staf UKS';
-    const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
-    favicon.rel = 'icon';
-    favicon.href = UKS2Img;
-    document.head.appendChild(favicon);
-  }, []);
-
-  // Mengambil data staf
-  useEffect(() => {
-    const fetchStaffs = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          throw new Error("Token autentikasi tidak ditemukan. Silakan masuk kembali.");
-        }
-        const response = await axios.get(`${API_URL}/staff`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setStaffs(response.data);
-      } catch (err) {
-        const errorMessage =
-          err.response?.status === 401
-            ? "Akses tidak diizinkan. Silakan masuk kembali."
-            : "Gagal memuat data staf: " + (err.response?.data?.message || err.message);
-        setError(errorMessage);
-        showToastMessage(errorMessage, "error");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStaffs();
-  }, []);
-
-  // Handle view button click
-  const handleView = (staff) => {
-    setSelectedStaff(staff);
-    setIsModalOpen(true);
-  };
-
-  // Handle edit button click
-  const handleEdit = (staff) => {
-    setEditStaff({
-      id: staff.id,
-      name: staff.name,
-      role: staff.role,
-      wa: staff.wa,
-      image: null,
-    });
-    setIsEditModalOpen(true);
-  };
-
-  // Menutup modal
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setSelectedStaff(null);
-  };
-
-  const closeEditModal = () => {
-    setIsEditModalOpen(false);
-    setEditStaff({ id: null, name: "", role: "", wa: "", image: null });
-    setWaError(null);
-  };
-
-  const closeAddModal = () => {
-    setIsAddModalOpen(false);
-    setNewStaff({ name: "", role: "", wa: "", image: null });
-    setError(null);
-    setWaError(null);
-  };
-
-  // Validasi nomor telepon (hanya angka dan maksimum 15 digit)
-  const validatePhoneNumber = (value) => {
-    const phoneRegex = /^\d*$/;
-    return phoneRegex.test(value) && value.length <= 15;
-  };
-
-  // Validasi panjang nomor telepon (8 hingga 15 digit)
-  const isPhoneNumberValid = (value) => {
-    return value.length >= 8 && value.length <= 15;
-  };
-
-  // Handle input changes untuk staf baru
-  const handleInputChange = (e) => {
-    const { name, value, files } = e.target;
-    if (name === "wa") {
-      if (validatePhoneNumber(value)) {
-        setNewStaff({ ...newStaff, [name]: value });
-        setWaError(null);
-      } else {
-        setWaError(value.length > 15 ? "Nomor WA tidak boleh lebih dari 15 digit" : "Nomor WA hanya boleh berisi angka");
-      }
-    } else if (name === "image" && files) {
-      setNewStaff({ ...newStaff, [name]: files[0] });
-    } else {
-      setNewStaff({ ...newStaff, [name]: value });
-    }
-  };
-
-  // Handle input changes untuk edit staf
-  const handleEditInputChange = (e) => {
-    const { name, value, files } = e.target;
-    if (name === "wa") {
-      if (validatePhoneNumber(value)) {
-        setEditStaff({ ...editStaff, [name]: value });
-        setWaError(null);
-      } else {
-        setWaError(value.length > 15 ? "Nomor WA tidak boleh lebih dari 15 digit" : "Nomor WA hanya boleh berisi angka");
-      }
-    } else if (name === "image" && files) {
-      setEditStaff({ ...editStaff, [name]: files[0] });
-    } else {
-      setEditStaff({ ...editStaff, [name]: value });
-    }
-  };
-
-  // Handle penambahan staf baru
-  const handleAddStaff = async (e) => {
+  // Add medicine
+  const handleAddMedicine = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('token');
-    if (!token) {
-      showToastMessage("Token autentikasi tidak ditemukan. Silakan masuk kembali.", "error");
-      return;
-    }
-
-    if (!isPhoneNumberValid(newStaff.wa)) {
-      setWaError("Nomor WA harus memiliki 8 hingga 15 digit");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("name", newStaff.name);
-    formData.append("role", newStaff.role);
-    formData.append("wa", newStaff.wa);
-    if (newStaff.image) {
-      formData.append("image", newStaff.image);
-    }
-
     try {
-      const response = await axios.post(`${API_URL}/staff`, formData, {
+      const token = getToken();
+      if (!token) {
+        throw new Error('Token tidak ditemukan. Silakan login kembali.');
+      }
+
+      const response = await api.post('/inventaris', {
+        nama_barang: newMedicine.nama_barang,
+        jumlah: parseInt(newMedicine.jumlah),
+        kategori: newMedicine.kategori,
+        kondisi: newMedicine.kondisi,
+      }, {
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
         },
       });
 
-      setStaffs([...staffs, response.data.data]);
-      closeAddModal();
-      showToastMessage("Staf berhasil ditambahkan", "success");
+      setMedicines(prev => [...prev, response.data.data]);
+      showToastMessage(response.data.message, 'success');
+      setIsAddModalOpen(false);
+      setNewMedicine({
+        nama_barang: '',
+        jumlah: '',
+        kategori: '',
+        kondisi: 'baik',
+      });
     } catch (err) {
-      const errorMessage =
-        err.response?.status === 401
-          ? "Akses tidak diizinkan. Silakan masuk kembali."
-          : "Gagal menambahkan staf: " + (err.response?.data?.message || err.message);
-      showToastMessage(errorMessage, "error");
+      showToastMessage(err.response?.data?.message || 'Gagal menambahkan barang', 'error');
     }
   };
 
-  // Handle pembaruan staf
-  const handleUpdateStaff = async (e) => {
+  // Update medicine
+  const handleUpdateMedicine = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('token');
-    if (!token) {
-      showToastMessage("Token autentikasi tidak ditemukan. Silakan masuk kembali.", "error");
-      return;
-    }
-
-    if (!isPhoneNumberValid(editStaff.wa)) {
-      setWaError("Nomor WA harus memiliki 8 hingga 15 digit");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("name", editStaff.name);
-    formData.append("role", editStaff.role);
-    formData.append("wa", editStaff.wa);
-    if (editStaff.image) {
-      formData.append("image", editStaff.image);
-    }
-    formData.append("_method", "PUT");
-
     try {
-      const response = await axios.post(`${API_URL}/staff/${editStaff.id}`, formData, {
+      const token = getToken();
+      if (!token) {
+        throw new Error('Token tidak ditemukan. Silakan login kembali.');
+      }
+
+      const response = await api.put(`/inventaris/${editMedicine.id}`, {
+        nama_barang: editMedicine.nama_barang,
+        jumlah: parseInt(editMedicine.jumlah),
+        kategori: editMedicine.kategori,
+        kondisi: editMedicine.kondisi,
+      }, {
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
         },
       });
 
-      setStaffs(staffs.map(staff => staff.id === editStaff.id ? response.data.data : staff));
-      closeEditModal();
-      showToastMessage("Staf berhasil diperbarui", "success");
+      setMedicines(prev => prev.map(med => 
+        med.id === editMedicine.id ? response.data.data : med
+      ));
+      showToastMessage(response.data.message || 'Barang berhasil diperbarui', 'success');
+      setIsEditModalOpen(false);
     } catch (err) {
-      const errorMessage =
-        err.response?.status === 401
-          ? "Akses tidak diizinkan. Silakan masuk kembali."
-          : "Gagal memperbarui staf: " + (err.response?.data?.message || err.message);
-      showToastMessage(errorMessage, "error");
+      showToastMessage(err.response?.data?.message || 'Gagal memperbarui barang', 'error');
     }
   };
 
-  // Handle konfirmasi penghapusan
-  const handleDeleteConfirm = (id) => {
-    setDeleteId(id);
-    setIsConfirmModalOpen(true);
-  };
-
-  // Handle penghapusan staf
+  // Delete medicine
   const handleDelete = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      showToastMessage("Token autentikasi tidak ditemukan. Silakan masuk kembali.", "error");
-      setIsConfirmModalOpen(false);
-      return;
-    }
-
     try {
-      await axios.delete(`${API_URL}/staff/${deleteId}`, {
+      const token = getToken();
+      if (!token) {
+        throw new Error('Token tidak ditemukan. Silakan login kembali.');
+      }
+
+      const response = await api.delete(`/inventaris/${deleteId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      setStaffs(staffs.filter(staff => staff.id !== deleteId));
+
+      setMedicines(prev => prev.filter(med => med.id !== deleteId));
+      showToastMessage(response.data.message, 'success');
       setIsConfirmModalOpen(false);
-      showToastMessage("Staf berhasil dihapus", "success");
     } catch (err) {
-      const errorMessage =
-        err.response?.status === 401
-          ? "Akses tidak diizinkan. Silakan masuk kembali."
-          : "Gagal menghapus staf: " + (err.response?.data?.message || err.message);
-      showToastMessage(errorMessage, "error");
-    } finally {
-      setDeleteId(null);
+      showToastMessage(err.response?.data?.message || 'Gagal menghapus barang', 'error');
     }
   };
 
-  // Fungsi untuk mendapatkan URL gambar yang benar
-  const getImageUrl = (image) => {
-    if (!image) return "/placeholder.png";
-    const prefix = "https://api-uks.rplrus.com/storage/";
-    if (image.startsWith(prefix + prefix)) {
-      return image.replace(prefix + prefix, prefix);
+  // Handle stock update
+  const handleStockUpdate = async (e) => {
+    e.preventDefault();
+    const amount = parseInt(stockAmount);
+    if (isNaN(amount) || amount <= 0) {
+      showToastMessage('Jumlah stok tidak valid', 'error');
+      return;
     }
-    return image;
+
+    try {
+      const token = getToken();
+      if (!token) {
+        throw new Error('Token tidak ditemukan. Silakan login kembali.');
+      }
+
+      const newJumlah = stockAction === 'add' 
+        ? parseInt(editMedicine.jumlah) + amount 
+        : Math.max(0, parseInt(editMedicine.jumlah) - amount);
+
+      const response = await api.put(`/inventaris/${editMedicine.id}`, {
+        nama_barang: editMedicine.nama_barang,
+        jumlah: newJumlah,
+        kategori: editMedicine.kategori,
+        kondisi: editMedicine.kondisi,
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setMedicines(prev => prev.map(med => 
+        med.id === editMedicine.id ? { ...med, jumlah: newJumlah } : med
+      ));
+      showToastMessage(stockAction === 'add' ? 'Stok berhasil ditambahkan' : 'Stok berhasil dikurangi', 'success');
+      setIsStockModalOpen(false);
+      setStockAmount('');
+    } catch (err) {
+      showToastMessage(err.response?.data?.message || 'Gagal memperbarui stok', 'error');
+    }
   };
 
-  // Logika paginasi
-  const totalPages = Math.ceil(staffs.length / itemsPerPage);
+  // Pagination logic
+  const totalPages = Math.ceil(medicines.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentStaffs = staffs.slice(indexOfFirstItem, indexOfLastItem);
+  const currentMedicines = medicines.slice(indexOfFirstItem, indexOfLastItem);
 
-  // Handle perubahan halaman
-  const handlePageChange = (pageNumber) => {
-    if (pageNumber >= 1 && pageNumber <= totalPages) {
-      setCurrentPage(pageNumber);
-    }
-  };
-
-  // Generate nomor halaman untuk ditampilkan
   const getPageNumbers = () => {
     const pageNumbers = [];
     const maxPagesToShow = 3;
@@ -341,6 +275,16 @@ const ManajemenInventaris = () => {
 
     return pageNumbers;
   };
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  useEffect(() => {
+    fetchMedicines();
+  }, []);
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
@@ -370,18 +314,18 @@ const ManajemenInventaris = () => {
           </style>
           <div className="w-full max-w-7xl mx-auto">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl text-gray-800 dark:text-gray-200 font-bold">Staf UKS</h2>
+              <h2 className="text-2xl text-gray-800 dark:text-gray-200 font-bold">Manajemen Inventaris</h2>
               <button
                 className="flex items-center gap-2 bg-teal-500 dark:bg-teal-600 text-white px-4 py-2 rounded-full hover:bg-teal-600 dark:hover:bg-teal-700 transition-colors duration-200"
                 onClick={() => setIsAddModalOpen(true)}
-                aria-label="Tambah staf baru"
+                aria-label="Tambah barang baru"
               >
                 <FaPlus className="w-5 h-5" />
-                <span>Tambah Staf</span>
+                <span>Tambah Barang</span>
               </button>
             </div>
 
-            {/* Notifikasi Toast */}
+            {/* Toast Notification */}
             {showToast && (
               <div
                 className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 ${
@@ -414,57 +358,78 @@ const ManajemenInventaris = () => {
               <div className="text-center text-gray-500 dark:text-gray-400">Memuat...</div>
             ) : error ? (
               <div className="text-center text-red-500 dark:text-red-400">{error}</div>
-            ) : staffs.length === 0 ? (
-              <div className="text-center text-gray-500 dark:text-gray-400">Tidak ada data staf tersedia.</div>
+            ) : medicines.length === 0 ? (
+              <div className="text-center text-gray-500 dark:text-gray-400">Tidak ada data inventaris tersedia.</div>
             ) : (
               <table className="w-full text-sm bg-white dark:bg-gray-800 shadow-sm">
                 <thead>
                   <tr className="text-left text-gray-500 dark:text-gray-300">
                     <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">No</th>
-                    <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">Nama</th>
-                    <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">Peran</th>
-                    <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">Nomor WA</th>
-                    <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium text-center">Gambar</th>
-                    <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium text-center"></th>
+                    <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">Nama Barang</th>
+                    <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">Jumlah</th>
+                    <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">Kategori</th>
+                    <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium">Kondisi</th>
+                    <th className="py-3 px-4 border-b border-gray-200 dark:border-gray-600 font-medium text-center">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {currentStaffs.map((staff, index) => (
-                    <tr key={staff.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                  {currentMedicines.map((medicine, index) => (
+                    <tr key={medicine.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
                       <td className="py-3 px-4 text-gray-700 dark:text-gray-200">{indexOfFirstItem + index + 1}</td>
-                      <td className="py-3 px-4 text-gray-700 dark:text-gray-200">{staff.name}</td>
-                      <td className="py-3 px-4 text-gray-700 dark:text-gray-200">{staff.role}</td>
-                      <td className="py-3 px-4 text-gray-700 dark:text-gray-200">{staff.wa}</td>
-                      <td className="py-3 px-4 text-center">
-                        <img
-                          src={getImageUrl(staff.image)}
-                          alt={staff.name}
-                          className="w-6 object-contain inline-block"
-                          onError={(e) => (e.target.src = "/placeholder.png")}
-                        />
-                      </td>
+                      <td className="py-3 px-4 text-gray-700 dark:text-gray-200">{medicine.nama_barang}</td>
+                      <td className="py-3 px-4 text-gray-700 dark:text-gray-200">{medicine.jumlah}</td>
+                      <td className="py-3 px-4 text-gray-700 dark:text-gray-200">{medicine.kategori}</td>
+                      <td className="py-3 px-4 text-gray-700 dark:text-gray-200">{medicine.kondisi}</td>
                       <td className="py-3 px-4 text-center">
                         <div className="flex justify-center gap-2">
                           <button
                             className="text-gray-500 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400"
-                            onClick={() => handleView(staff)}
-                            aria-label="Lihat detail staf"
+                            onClick={() => fetchMedicineDetails(medicine.id)}
+                            aria-label="Lihat detail barang"
                           >
                             <FaEye className="w-4 h-4" />
                           </button>
                           <button
                             className="text-gray-500 dark:text-gray-300 hover:text-green-500 dark:hover:text-green-400"
-                            onClick={() => handleEdit(staff)}
-                            aria-label="Edit staf"
+                            onClick={() => {
+                              setEditMedicine(medicine);
+                              setIsEditModalOpen(true);
+                            }}
+                            aria-label="Edit barang"
                           >
                             <FaEdit className="w-4 h-4" />
                           </button>
                           <button
                             className="text-gray-500 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400"
-                            onClick={() => handleDeleteConfirm(staff.id)}
-                            aria-label="Hapus staf"
+                            onClick={() => {
+                              setDeleteId(medicine.id);
+                              setIsConfirmModalOpen(true);
+                            }}
+                            aria-label="Hapus barang"
                           >
                             <FaTrash className="w-4 h-4" />
+                          </button>
+                          <button
+                            className="text-gray-500 dark:text-gray-300 hover:text-teal-500 dark:hover:text-teal-400"
+                            onClick={() => {
+                              setEditMedicine(medicine);
+                              setStockAction('add');
+                              setIsStockModalOpen(true);
+                            }}
+                            aria-label="Tambah stok barang"
+                          >
+                            <FaPlusCircle className="w-4 h-4" />
+                          </button>
+                          <button
+                            className="text-gray-500 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-400"
+                            onClick={() => {
+                              setEditMedicine(medicine);
+                              setStockAction('subtract');
+                              setIsStockModalOpen(true);
+                            }}
+                            aria-label="Kurangi stok barang"
+                          >
+                            <FaMinusCircle className="w-4 h-4" />
                           </button>
                         </div>
                       </td>
@@ -474,10 +439,11 @@ const ManajemenInventaris = () => {
               </table>
             )}
 
+            {/* Pagination */}
             <div className="flex justify-between items-center mt-6 text-gray-500 dark:text-gray-300 text-sm">
               <span>
                 Menampilkan {indexOfFirstItem + 1}-
-                {Math.min(indexOfLastItem, staffs.length)} dari {staffs.length}
+                {Math.min(indexOfLastItem, medicines.length)} dari {medicines.length}
               </span>
               <div className="flex space-x-1">
                 <button
@@ -549,117 +515,97 @@ const ManajemenInventaris = () => {
           </div>
         </main>
 
-        {/* Modal Tambah Staf */}
+        {/* Modal Tambah Barang */}
         {isAddModalOpen && (
           <div className="fixed inset-0 bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50">
             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-2xl relative">
               <button
                 className="absolute top-4 right-4 text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100"
-                onClick={closeAddModal}
+                onClick={() => setIsAddModalOpen(false)}
                 aria-label="Tutup modal"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
-              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4">Tambah Staf</h3>
-              <form onSubmit={handleAddStaff} className="space-y-4">
+              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4">Tambah Barang</h3>
+              <form onSubmit={handleAddMedicine} className="space-y-4">
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-medium text-gray-700 dark:text-gray-300">Nama Staf:</span>
+                    <span className="label-text font-medium text-gray-700 dark:text-gray-300">Nama Barang:</span>
                   </label>
                   <input
                     type="text"
-                    name="name"
-                    value={newStaff.name}
+                    name="nama_barang"
+                    value={newMedicine.nama_barang}
                     onChange={handleInputChange}
                     className="input w-full rounded-lg bg-teal-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 placeholder-gray-500 dark:placeholder-gray-400"
                     required
                     aria-required="true"
-                    placeholder="Masukkan nama staf"
+                    placeholder="Masukkan nama barang"
                   />
                 </div>
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-medium text-gray-700 dark:text-gray-300">Peran:</span>
+                    <span className="label-text font-medium text-gray-700 dark:text-gray-300">Jumlah:</span>
                   </label>
                   <input
-                    type="text"
-                    name="role"
-                    value={newStaff.role}
+                    type="number"
+                    name="jumlah"
+                    value={newMedicine.jumlah}
                     onChange={handleInputChange}
                     className="input w-full rounded-lg bg-teal-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 placeholder-gray-500 dark:placeholder-gray-400"
                     required
                     aria-required="true"
-                    placeholder="Masukkan peran staf"
+                    placeholder="Masukkan jumlah stok"
                   />
                 </div>
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-medium text-gray-700 dark:text-gray-300">Nomor WA:</span>
+                    <span className="label-text font-medium text-gray-700 dark:text-gray-300">Kategori:</span>
                   </label>
                   <input
                     type="text"
-                    name="wa"
-                    value={newStaff.wa}
+                    name="kategori"
+                    value={newMedicine.kategori}
                     onChange={handleInputChange}
-                    maxLength={15}
                     className="input w-full rounded-lg bg-teal-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 placeholder-gray-500 dark:placeholder-gray-400"
                     required
                     aria-required="true"
-                    placeholder="0812345678"
+                    placeholder="Masukkan kategori barang"
                   />
-                  {waError && <p className="text-red-500 dark:text-red-400 text-sm mt-1">{waError}</p>}
                 </div>
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-medium text-gray-700 dark:text-gray-300">Unggah Gambar:</span>
+                    <span className="label-text font-medium text-gray-700 dark:text-gray-300">Kondisi:</span>
                   </label>
-                  <button
-                    type="button"
-                    className="flex items-center justify-center w-full rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 py-2 hover:bg-gray-300 dark:hover:bg-gray-600"
-                    onClick={() => document.getElementById("file-input-add").click()}
-                    aria-label="Unggah gambar staf"
+                  <select
+                    name="kondisi"
+                    value={newMedicine.kondisi}
+                    onChange={handleInputChange}
+                    className="input w-full rounded-lg bg-teal-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 placeholder-gray-500 dark:placeholder-gray-400"
+                    required
+                    aria-required="true"
                   >
-                    <svg
-                      className="w-5 h-5 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                    <span>{newStaff.image ? newStaff.image.name : "Unggah Gambar"}</span>
-                  </button>
-                  <input
-                    id="file-input-add"
-                    type="file"
-                    name="image"
-                    onChange={handleInputChange}
-                    className="hidden"
-                    accept="image/*"
-                  />
+                    <option value="baik">Baik</option>
+                    <option value="rusak ringan">Rusak Ringan</option>
+                    <option value="rusak berat">Rusak Berat</option>
+                  </select>
                 </div>
                 {error && <p className="text-red-500 dark:text-red-400 text-sm">{error}</p>}
                 <div className="flex justify-end gap-2">
                   <button
                     type="button"
                     className="btn bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
-                    onClick={closeAddModal}
-                    aria-label="Batal tambah staf"
+                    onClick={() => setIsAddModalOpen(false)}
+                    aria-label="Batal tambah barang"
                   >
                     Batal
                   </button>
                   <button
                     type="submit"
                     className="btn bg-teal-500 dark:bg-teal-600 text-white rounded-lg hover:bg-teal-600 dark:hover:bg-teal-700"
-                    aria-label="Tambah staf"
+                    aria-label="Tambah barang"
                   >
                     Tambah
                   </button>
@@ -669,117 +615,97 @@ const ManajemenInventaris = () => {
           </div>
         )}
 
-        {/* Modal Edit Staf */}
+        {/* Modal Edit Barang */}
         {isEditModalOpen && (
           <div className="fixed inset-0 bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50">
             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-2xl relative">
               <button
                 className="absolute top-4 right-4 text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100"
-                onClick={closeEditModal}
+                onClick={() => setIsEditModalOpen(false)}
                 aria-label="Tutup modal"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
-              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4">Edit Staf</h3>
-              <form onSubmit={handleUpdateStaff} className="space-y-4">
+              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4">Edit Barang</h3>
+              <form onSubmit={handleUpdateMedicine} className="space-y-4">
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-medium text-gray-700 dark:text-gray-300">Nama Staf:</span>
+                    <span className="label-text font-medium text-gray-700 dark:text-gray-300">Nama Barang:</span>
                   </label>
                   <input
                     type="text"
-                    name="name"
-                    value={editStaff.name}
+                    name="nama_barang"
+                    value={editMedicine.nama_barang}
                     onChange={handleEditInputChange}
                     className="input w-full rounded-lg bg-teal-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 placeholder-gray-500 dark:placeholder-gray-400"
                     required
                     aria-required="true"
-                    placeholder="Masukkan nama staf"
+                    placeholder="Masukkan nama barang"
                   />
                 </div>
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-medium text-gray-700 dark:text-gray-300">Peran:</span>
+                    <span className="label-text font-medium text-gray-700 dark:text-gray-300">Jumlah:</span>
                   </label>
                   <input
-                    type="text"
-                    name="role"
-                    value={editStaff.role}
+                    type="number"
+                    name="jumlah"
+                    value={editMedicine.jumlah}
                     onChange={handleEditInputChange}
                     className="input w-full rounded-lg bg-teal-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 placeholder-gray-500 dark:placeholder-gray-400"
                     required
                     aria-required="true"
-                    placeholder="Masukkan peran staf"
+                    placeholder="Masukkan jumlah stok"
                   />
                 </div>
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-medium text-gray-700 dark:text-gray-300">Nomor WA:</span>
+                    <span className="label-text font-medium text-gray-700 dark:text-gray-300">Kategori:</span>
                   </label>
                   <input
                     type="text"
-                    name="wa"
-                    value={editStaff.wa}
+                    name="kategori"
+                    value={editMedicine.kategori}
                     onChange={handleEditInputChange}
-                    maxLength={15}
                     className="input w-full rounded-lg bg-teal-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 placeholder-gray-500 dark:placeholder-gray-400"
                     required
                     aria-required="true"
-                    placeholder="0812345678"
+                    placeholder="Masukkan kategori barang"
                   />
-                  {waError && <p className="text-red-500 dark:text-red-400 text-sm mt-1">{waError}</p>}
                 </div>
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-medium text-gray-700 dark:text-gray-300">Unggah Gambar:</span>
+                    <span className="label-text font-medium text-gray-700 dark:text-gray-300">Kondisi:</span>
                   </label>
-                  <button
-                    type="button"
-                    className="flex items-center justify-center w-full rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 py-2 hover:bg-gray-300 dark:hover:bg-gray-600"
-                    onClick={() => document.getElementById("file-input-edit").click()}
-                    aria-label="Unggah gambar staf"
+                  <select
+                    name="kondisi"
+                    value={editMedicine.kondisi}
+                    onChange={handleEditInputChange}
+                    className="input w-full rounded-lg bg-teal-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 placeholder-gray-500 dark:placeholder-gray-400"
+                    required
+                    aria-required="true"
                   >
-                    <svg
-                      className="w-5 h-5 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                    <span>{editStaff.image ? editStaff.image.name : "Unggah Gambar"}</span>
-                  </button>
-                  <input
-                    id="file-input-edit"
-                    type="file"
-                    name="image"
-                    onChange={handleEditInputChange}
-                    className="hidden"
-                    accept="image/*"
-                  />
+                    <option value="baik">Baik</option>
+                    <option value="rusak ringan">Rusak Ringan</option>
+                    <option value="rusak berat">Rusak Berat</option>
+                  </select>
                 </div>
                 {error && <p className="text-red-500 dark:text-red-400 text-sm">{error}</p>}
                 <div className="flex justify-end gap-2">
                   <button
                     type="button"
                     className="btn bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
-                    onClick={closeEditModal}
-                    aria-label="Batal edit staf"
+                    onClick={() => setIsEditModalOpen(false)}
+                    aria-label="Batal edit barang"
                   >
                     Batal
                   </button>
                   <button
                     type="submit"
                     className="btn bg-teal-500 dark:bg-teal-600 text-white rounded-lg hover:bg-teal-600 dark:hover:bg-teal-700"
-                    aria-label="Simpan perubahan staf"
+                    aria-label="Simpan perubahan barang"
                   >
                     Simpan
                   </button>
@@ -789,36 +715,31 @@ const ManajemenInventaris = () => {
           </div>
         )}
 
-        {/* Modal Detail Staf */}
-        {isModalOpen && selectedStaff && (
+        {/* Modal Detail Barang */}
+        {isModalOpen && selectedMedicine && (
           <div className="fixed inset-0 bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50">
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md shadow-lg z-60 relative">
               <div className="mb-4">
-                <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Nama</label>
-                <div className="bg-green-100 dark:bg-green-900 p-3 rounded">{selectedStaff.name}</div>
+                <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Nama Barang</label>
+                <div className="bg-green-100 dark:bg-green-900 p-3 rounded">{selectedMedicine.nama_barang}</div>
               </div>
               <div className="mb-4">
-                <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Peran</label>
-                <div className="bg-green-100 dark:bg-green-900 p-3 rounded">{selectedStaff.role}</div>
+                <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Jumlah</label>
+                <div className="bg-green-100 dark:bg-green-900 p-3 rounded">{selectedMedicine.jumlah}</div>
               </div>
               <div className="mb-4">
-                <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Nomor WA</label>
-                <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded">{selectedStaff.wa}</div>
+                <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Kategori</label>
+                <div className="bg-green-100 dark:bg-green-900 p-3 rounded">{selectedMedicine.kategori}</div>
               </div>
               <div className="mb-4">
-                <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Gambar</label>
-                <img
-                  src={getImageUrl(selectedStaff.image)}
-                  alt={selectedStaff.name}
-                  className="w-full h-32 object-contain rounded"
-                  onError={(e) => (e.target.src = "/placeholder.png")}
-                />
+                <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Kondisi</label>
+                <div className="bg-green-100 dark:bg-green-900 p-3 rounded">{selectedMedicine.kondisi}</div>
               </div>
               <div className="flex justify-end gap-2">
                 <button
                   className="bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-2 rounded hover:bg-gray-400 dark:hover:bg-gray-600"
-                  onClick={closeModal}
-                  aria-label="Kembali dari detail staf"
+                  onClick={() => setIsModalOpen(false)}
+                  aria-label="Kembali dari detail barang"
                 >
                   Kembali
                 </button>
@@ -832,27 +753,82 @@ const ManajemenInventaris = () => {
           <div className="fixed inset-0 bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50">
             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-2xl relative animate-fade-in">
               <div className="p-6 text-center">
-                <h3 className="text-xl font-bold text-red-600 dark:text-red-400 mb-2">Yakin Ingin Menghapus Staf?</h3>
+                <h3 className="text-xl font-bold text-red-600 dark:text-red-400 mb-2">Yakin Ingin Menghapus Barang?</h3>
                 <p className="text-gray-600 dark:text-gray-300 mb-4">
-                  Tindakan ini akan menghapus data staf dari sistem secara permanen. Pastikan Anda telah menyimpan data penting sebelum melanjutkan.
+                  Tindakan ini akan menghapus data barang dari sistem secara permanen. Pastikan Anda telah menyimpan data penting sebelum melanjutkan.
                 </p>
                 <div className="flex justify-center gap-4">
                   <button
                     className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition duration-200"
                     onClick={() => setIsConfirmModalOpen(false)}
-                    aria-label="Batal hapus staf"
+                    aria-label="Batal hapus barang"
                   >
                     Batal
                   </button>
                   <button
                     className="px-6 py-2 bg-red-500 dark:bg-red-600 text-white rounded-lg hover:bg-red-600 dark:hover:bg-red-700 transition duration-200"
                     onClick={handleDelete}
-                    aria-label="Hapus staf"
+                    aria-label="Hapus barang"
                   >
                     Hapus
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Tambah/Kurangi Stok */}
+        {isStockModalOpen && (
+          <div className="fixed inset-0 bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-2xl relative">
+              <button
+                className="absolute top-4 right-4 text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100"
+                onClick={() => setIsStockModalOpen(false)}
+                aria-label="Tutup modal"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4">
+                {stockAction === 'add' ? 'Tambah Stok' : 'Kurangi Stok'}
+              </h3>
+              <form onSubmit={handleStockUpdate} className="space-y-4">
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text font-medium text-gray-700 dark:text-gray-300">Jumlah:</span>
+                  </label>
+                  <input
+                    type="number"
+                    value={stockAmount}
+                    onChange={handleStockAmountChange}
+                    className="input w-full rounded-lg bg-teal-100 dark:bg-gray-700 border-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 placeholder-gray-500 dark:placeholder-gray-400"
+                    required
+                    aria-required="true"
+                    placeholder="Masukkan jumlah stok"
+                    min="1"
+                  />
+                </div>
+                {error && <p className="text-red-500 dark:text-red-400 text-sm">{error}</p>}
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    className="btn bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
+                    onClick={() => setIsStockModalOpen(false)}
+                    aria-label="Batal"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn bg-teal-500 dark:bg-teal-600 text-white rounded-lg hover:bg-teal-600 dark:hover:bg-teal-700"
+                    aria-label={stockAction === 'add' ? 'Tambah stok' : 'Kurangi stok'}
+                  >
+                    {stockAction === 'add' ? 'Tambah' : 'Kurangi'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

@@ -2,53 +2,23 @@ import React, { useState, useEffect } from "react";
 import Sidebar from '../../partials/Sidebar';
 import Header from '../../partials/Header';
 import { FaTrash, FaEye, FaEdit, FaPlus, FaPlusCircle, FaMinusCircle } from "react-icons/fa";
-
-// Hardcoded medicine data
-const initialMedicines = [
-  {
-    id: 1,
-    nama_obat: "Paracetamol",
-    stok: 100,
-    deskripsi: "Obat untuk menurunkan demam dan meredakan nyeri",
-    tanggal_kadaluarsa: "2026-12-31",
-    kategori: "Analgesik",
-    gambar: "/images/paracetamol.jpg",
-    status: "active"
-  },
-  {
-    id: 2,
-    nama_obat: "Amoxicillin",
-    stok: 50,
-    deskripsi: "Antibiotik untuk infeksi bakteri",
-    tanggal_kadaluarsa: "2025-06-30",
-    kategori: "Antibiotik",
-    gambar: "/images/amoxicillin.jpg",
-    status: "active"
-  },
-  {
-    id: 3,
-    nama_obat: "Ibuprofen",
-    stok: 75,
-    deskripsi: "Obat anti-inflamasi nonsteroid",
-    tanggal_kadaluarsa: "2027-03-15",
-    kategori: "Analgesik",
-    gambar: "/images/ibuprofen.jpg",
-    status: "active"
-  }
-];
+import AuthService from '../../services/authService';
+import ObatService from '../../services/authServiceObat';
+import UKS2Img from '../../assets/img/uks2.png';
 
 const ManajemenObat = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [medicines, setMedicines] = useState(initialMedicines);
+  const [medicines, setMedicines] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [userRole, setUserRole] = useState(null);
   const [selectedMedicine, setSelectedMedicine] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isStockModalOpen, setIsStockModalOpen] = useState(false);
-  const [stockAction, setStockAction] = useState('add'); // 'add' or 'subtract'
+  const [stockAction, setStockAction] = useState('add');
   const [stockAmount, setStockAmount] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
@@ -76,23 +46,81 @@ const ManajemenObat = () => {
     gambar: null,
   });
 
-  // Simulate fetching medicines
-  const fetchMedicines = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setMedicines(initialMedicines.filter(med => med.status === 'active'));
-      setLoading(false);
-    }, 500);
+  // Set document title and favicon
+  useEffect(() => {
+    document.title = 'Manajemen Obat';
+    const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
+    favicon.rel = 'icon';
+    favicon.href = UKS2Img;
+    document.head.appendChild(favicon);
+
+    // Cleanup to prevent duplicate favicon elements
+    return () => {
+      const existingFavicon = document.querySelector("link[rel='icon']");
+      if (existingFavicon && existingFavicon.href === UKS2Img) {
+        document.head.removeChild(existingFavicon);
+      }
+    };
+  }, []);
+
+  // Check authentication and role on mount
+  useEffect(() => {
+    if (!AuthService.isAuthenticated()) {
+      showToastMessage('Silakan login terlebih dahulu.', 'error');
+      window.location.href = '/login';
+      return;
+    }
+
+    const user = AuthService.getCurrentUser();
+    if (user) {
+      setUserRole(user.role);
+    } else {
+      showToastMessage('Data pengguna tidak ditemukan. Silakan login kembali.', 'error');
+      window.location.href = '/login';
+    }
+  }, []);
+
+  // Show toast notification
+  const showToastMessage = (message, type) => {
+    setToastMessage(message);
+    setToastType(type);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
   };
 
-  // Simulate fetching medicine details
-  const fetchMedicineDetails = (id) => {
-    const medicine = medicines.find(med => med.id === id);
-    if (medicine) {
-      setSelectedMedicine(medicine);
-      setIsModalOpen(true);
-    } else {
-      showToastMessage('Obat tidak ditemukan', 'error');
+  // Fetch medicines
+  const fetchMedicines = async () => {
+    if (!AuthService.isAuthenticated()) return;
+
+    setLoading(true);
+    try {
+      const response = await ObatService.getObats();
+      if (response.status) {
+        setMedicines(response.data);
+      } else {
+        setError(response.message || 'Gagal mengambil data obat');
+      }
+    } catch (err) {
+      showToastMessage(err.message || 'Terjadi kesalahan saat mengambil data', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch medicine details
+  const fetchMedicineDetails = async (id) => {
+    if (!AuthService.isAuthenticated()) return;
+
+    try {
+      const response = await ObatService.getObatById(id);
+      if (response.status) {
+        setSelectedMedicine(response.data);
+        setIsModalOpen(true);
+      } else {
+        showToastMessage(response.message || 'Obat tidak ditemukan', 'error');
+      }
+    } catch (err) {
+      showToastMessage(err.message || 'Gagal mengambil detail obat', 'error');
     }
   };
 
@@ -119,87 +147,122 @@ const ManajemenObat = () => {
     setStockAmount(e.target.value);
   };
 
-  // Show toast notification
-  const showToastMessage = (message, type) => {
-    setToastMessage(message);
-    setToastType(type);
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
-  };
-
   // Add medicine
-  const handleAddMedicine = (e) => {
+  const handleAddMedicine = async (e) => {
     e.preventDefault();
-    const newId = medicines.length > 0 ? Math.max(...medicines.map(m => m.id)) + 1 : 1;
-    const newMedicineData = {
-      id: newId,
-      nama_obat: newMedicine.nama_obat,
-      stok: parseInt(newMedicine.stok),
-      deskripsi: newMedicine.deskripsi,
-      tanggal_kadaluarsa: newMedicine.tanggal_kadaluarsa,
-      kategori: newMedicine.kategori,
-      gambar: newMedicine.gambar ? URL.createObjectURL(newMedicine.gambar) : "/placeholder.png",
-      status: "active"
-    };
+    if (!AuthService.isAuthenticated()) return;
 
-    setMedicines(prev => [...prev, newMedicineData]);
-    showToastMessage('Obat berhasil ditambahkan', 'success');
-    setIsAddModalOpen(false);
-    setNewMedicine({
-      nama_obat: '',
-      stok: '',
-      deskripsi: '',
-      tanggal_kadaluarsa: '',
-      kategori: '',
-      gambar: null,
-    });
+    const formData = new FormData();
+    formData.append('nama_obat', newMedicine.nama_obat);
+    formData.append('stok', newMedicine.stok);
+    formData.append('deskripsi', newMedicine.deskripsi);
+    formData.append('tanggal_kadaluarsa', newMedicine.tanggal_kadaluarsa);
+    formData.append('kategori', newMedicine.kategori);
+    if (newMedicine.gambar) {
+      formData.append('gambar', newMedicine.gambar);
+    }
+
+    try {
+      const response = await ObatService.addObat(formData);
+      if (response.status) {
+        setMedicines(prev => [...prev, response.data]);
+        showToastMessage(response.message || 'Obat berhasil ditambahkan', 'success');
+        setIsAddModalOpen(false);
+        setNewMedicine({
+          nama_obat: '',
+          stok: '',
+          deskripsi: '',
+          tanggal_kadaluarsa: '',
+          kategori: '',
+          gambar: null,
+        });
+      } else {
+        showToastMessage(response.message || 'Gagal menambah obat', 'error');
+      }
+    } catch (err) {
+      showToastMessage(err.message || 'Terjadi kesalahan saat menambah obat', 'error');
+    }
   };
 
   // Update medicine
-  const handleUpdateMedicine = (e) => {
+  const handleUpdateMedicine = async (e) => {
     e.preventDefault();
-    setMedicines(prev => prev.map(med => 
-      med.id === editMedicine.id ? {
-        ...med,
-        nama_obat: editMedicine.nama_obat,
-        stok: parseInt(editMedicine.stok),
-        deskripsi: editMedicine.deskripsi,
-        tanggal_kadaluarsa: editMedicine.tanggal_kadaluarsa,
-        kategori: editMedicine.kategori,
-        gambar: editMedicine.gambar instanceof File ? URL.createObjectURL(editMedicine.gambar) : editMedicine.gambar
-      } : med
-    ));
-    showToastMessage('Obat berhasil diperbarui', 'success');
-    setIsEditModalOpen(false);
+    if (!AuthService.isAuthenticated()) return;
+
+    const formData = new FormData();
+    formData.append('nama_obat', editMedicine.nama_obat);
+    formData.append('stok', editMedicine.stok);
+    formData.append('deskripsi', editMedicine.deskripsi);
+    formData.append('tanggal_kadaluarsa', editMedicine.tanggal_kadaluarsa);
+    formData.append('kategori', editMedicine.kategori);
+    if (editMedicine.gambar instanceof File) {
+      formData.append('gambar', editMedicine.gambar);
+    }
+
+    try {
+      const response = await ObatService.updateObat(editMedicine.id, formData);
+      if (response.status) {
+        setMedicines(prev => prev.map(med =>
+          med.id === editMedicine.id ? response.data : med
+        ));
+        showToastMessage(response.message || 'Obat berhasil diperbarui', 'success');
+        setIsEditModalOpen(false);
+      } else {
+        showToastMessage(response.message || 'Gagal memperbarui obat', 'error');
+      }
+    } catch (err) {
+      showToastMessage(err.message || 'Terjadi kesalahan saat memperbarui obat', 'error');
+    }
   };
 
-  // Delete medicine (soft delete)
-  const handleDelete = () => {
-    setMedicines(prev => prev.map(med => 
-      med.id === deleteId ? { ...med, status: 'inactive' } : med
-    ));
-    showToastMessage('Obat berhasil dinonaktifkan', 'success');
-    setIsConfirmModalOpen(false);
+  // Delete medicine
+  const handleDelete = async () => {
+    if (!AuthService.isAuthenticated()) return;
+
+    try {
+      const response = await ObatService.deleteObat(deleteId);
+      if (response.status) {
+        setMedicines(prev => prev.filter(med => med.id !== deleteId));
+        showToastMessage(response.message || 'Obat berhasil dinonaktifkan', 'success');
+        setIsConfirmModalOpen(false);
+      } else {
+        showToastMessage(response.message || 'Gagal menonaktifkan obat', 'error');
+      }
+    } catch (err) {
+      showToastMessage(err.message || 'Terjadi kesalahan saat menonaktifkan obat', 'error');
+    }
   };
 
   // Handle stock update
-  const handleStockUpdate = (e) => {
+  const handleStockUpdate = async (e) => {
     e.preventDefault();
+    if (!AuthService.isAuthenticated()) return;
+
     const amount = parseInt(stockAmount);
     if (isNaN(amount) || amount <= 0) {
       showToastMessage('Jumlah stok tidak valid', 'error');
       return;
     }
 
-    setMedicines(prev => prev.map(med => 
-      med.id === editMedicine.id ? {
-        ...med,
-        stok: stockAction === 'add' ? med.stok + amount : Math.max(0, med.stok - amount)
-      } : med
-    ));
-    showToastMessage(stockAction === 'add' ? 'Stok berhasil ditambahkan' : 'Stok berhasil dikurangi', 'success');
-    setIsStockModalOpen(false);
-    setStockAmount('');
+    const newStock = stockAction === 'add' 
+      ? editMedicine.stok + amount 
+      : Math.max(0, editMedicine.stok - amount);
+
+    try {
+      const response = await ObatService.updateStock(editMedicine.id, newStock);
+      if (response.status) {
+        setMedicines(prev => prev.map(med =>
+          med.id === editMedicine.id ? response.data : med
+        ));
+        showToastMessage(stockAction === 'add' ? 'Stok berhasil ditambahkan' : 'Stok berhasil dikurangi', 'success');
+        setIsStockModalOpen(false);
+        setStockAmount('');
+      } else {
+        showToastMessage(response.message || 'Gagal memperbarui stok', 'error');
+      }
+    } catch (err) {
+      showToastMessage(err.message || 'Terjadi kesalahan saat memperbarui stok', 'error');
+    }
   };
 
   // Pagination logic
@@ -232,8 +295,18 @@ const ManajemenObat = () => {
   };
 
   useEffect(() => {
-    fetchMedicines();
-  }, []);
+    if (userRole === 'admin') {
+      fetchMedicines();
+    }
+  }, [userRole]);
+
+  if (userRole !== 'admin') {
+    return (
+      <div className="text-center text-red-500 dark:text-red-400 p-6">
+        Akses ditolak. Hanya admin yang dapat mengelola obat.
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
@@ -632,8 +705,7 @@ const ManajemenObat = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
-              <h3 className="text-xl_masks1.0.0.0
-                font-bold text-gray-800 dark:text-gray-200 mb-4">Edit Obat</h3>
+              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4">Edit Obat</h3>
               <form onSubmit={handleUpdateMedicine} className="space-y-4">
                 <div className="form-control">
                   <label className="label">

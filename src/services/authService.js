@@ -1,62 +1,70 @@
 import api from '../api/auth';
 
 const AuthService = {
-  login: async (email, password, remember = true) => {
-    try {
-      const response = await api.post('/login', { email, password, remember });
-      const resData = response.data;
+  login: async (data) => {
+    const { email, password, remember = true } = data;
+    const response = await api.post('/login', { email, password, remember });
+    const resData = response.data;
 
-      if (resData.status) {
-        const { token, name, email, role, status } = resData.data;
-        if (status !== 'active') {
-          throw new Error('Akun Anda tidak aktif. Silakan hubungi admin.');
-        }
-        return {
-          token,
-          user: { name, email, role, status },
-        };
-      } else {
-        throw new Error(resData.message || 'Login gagal');
+    if (resData.status) {
+      const { token, name, email, role, status } = resData.data;
+      if (status !== 'active') {
+        throw new Error('Akun Anda tidak aktif. Silakan hubungi admin.');
       }
-    } catch (error) {
-      // Tangani error dari Axios (misalnya, status 403)
-      if (error.response) {
-        // Error dari server (seperti 403, 401, dll.)
-        const errorMessage = error.response.data.message || 'Login gagal';
-        throw new Error(errorMessage);
-      } else {
-        // Error jaringan atau lainnya
-        throw new Error('Terjadi kesalahan jaringan. Silakan coba lagi.');
-      }
+
+      const storage = remember ? localStorage : sessionStorage;
+      storage.setItem('token', token);
+      storage.setItem('user', JSON.stringify({ name, email, role, status }));
+
+      return resData;
+    } else {
+      throw new Error(resData.message || 'Login gagal');
     }
   },
 
   logout: async () => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    if (!token) {
+      throw new Error('Token tidak ditemukan. Silakan login kembali.');
+    }
+
     const response = await api.post('/logout');
+    localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
+    localStorage.removeItem('user');
+    sessionStorage.removeItem('user');
+
     return response.data;
   },
 
   register: async (formData) => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-
     if (!token) {
-      throw new Error('Token admin tidak ditemukan. Silakan login sebagai admin.');
+      throw new Error('Token tidak ditemukan. Silakan login kembali.');
     }
 
     const response = await api.post('/register', formData, {
       headers: {
-        Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data',
       },
     });
 
-    const resData = response.data;
+    return response.data;
+  },
 
-    if (resData.status) {
-      return resData.data;
-    } else {
-      throw new Error(resData.message || 'Register gagal');
-    }
+  getCurrentUser: () => {
+    const user = localStorage.getItem('user') || sessionStorage.getItem('user');
+    return user ? JSON.parse(user) : null;
+  },
+
+  isAuthenticated: () => {
+    return !!(localStorage.getItem('token') || sessionStorage.getItem('token'));
+  },
+
+  getToken: () => {
+    return localStorage.getItem('token') || sessionStorage.getItem('token');
   },
 };
 
+export { api };
 export default AuthService;

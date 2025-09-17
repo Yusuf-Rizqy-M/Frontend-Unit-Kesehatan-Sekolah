@@ -3,13 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../partials/Sidebar';
 import Header from '../../partials/Header';
 import axios from 'axios';
-import UKS2Img from '../../assets/img/uks2.png'; // Favicon import
+import UKS2Img from '../../assets/img/uks2.png';
 
 const RekamMedisGuru = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
-  const [roleFilter, setRoleFilter] = useState('');
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,10 +19,12 @@ const RekamMedisGuru = () => {
   const usersPerPage = 10;
   const navigate = useNavigate();
 
+  // Retrieve authentication token from local or session storage
   const getToken = () => {
     return localStorage.getItem('token') || sessionStorage.getItem('token');
   };
 
+  // Display toast notification
   const showToastMessage = (message, type = 'success') => {
     setToastMessage(message);
     setToastType(type);
@@ -31,7 +32,7 @@ const RekamMedisGuru = () => {
     setTimeout(() => setShowToast(false), 3000);
   };
 
-  // Toggle dark mode
+  // Toggle dark mode and persist in localStorage
   const toggleDarkMode = () => {
     setIsDarkMode((prev) => {
       const newMode = !prev;
@@ -46,7 +47,7 @@ const RekamMedisGuru = () => {
     });
   };
 
-  // Set tab title and favicon
+  // Set page title and favicon
   useEffect(() => {
     document.title = 'Rekam Medis Guru';
     const favicon = document.querySelector("link[rel='icon']") || document.createElement('link');
@@ -55,7 +56,7 @@ const RekamMedisGuru = () => {
     document.head.appendChild(favicon);
   }, []);
 
-  // Initialize theme
+  // Initialize theme based on localStorage or system preference
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -67,7 +68,7 @@ const RekamMedisGuru = () => {
     }
   }, []);
 
-  // Fetch teachers data
+  // Fetch teacher data from API
   const fetchTeachers = async () => {
     setLoading(true);
     setError(null);
@@ -78,24 +79,15 @@ const RekamMedisGuru = () => {
       return;
     }
     try {
-      const response = await axios.get('https://api-uks.rplrus.com/api/he', {
+      const response = await axios.get('https://api-uks.rplrus.com/api/gurus', {
         headers: { Authorization: `Bearer ${token}` },
-        params: { status: 'active' }, // Match backend's 'aktif' status
+        params: { status: 'active' },
       });
-      if (response.data.status && response.data.data) {
-        const activeTeachers = response.data.data.filter(teacher => teacher.status === 'aktif');
-        const mappedTeachers = activeTeachers.map(teacher => ({
-          id: teacher.id,
-          name: teacher.nama,
-          gender: teacher.jenis_kelamin || 'Belum Terisi',
-          subject: teacher.mata_pelajaran || 'Belum Terisi',
-          phone: teacher.no_hp || 'Belum Terisi',
-          email: teacher.email || 'Belum Terisi',
-          address: teacher.alamat || 'Belum Terisi',
-        }));
-        setTeachers(mappedTeachers);
+      if (response.data.status) {
+        const activeTeachers = response.data.data.filter(user => user.status === 'active');
+        setTeachers(activeTeachers);
       } else {
-        setError(response.data.message || 'Invalid response format');
+        setError(response.data.message || 'Gagal mengambil data guru');
         setTeachers([]);
       }
     } catch (err) {
@@ -116,19 +108,17 @@ const RekamMedisGuru = () => {
     fetchTeachers();
   }, []);
 
-  // Filter teachers
-  const filteredTeachers = teachers.filter((teacher) => {
-    const matchesSearch = teacher.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesRole = roleFilter ? teacher.role === roleFilter : true;
-    return matchesSearch && matchesRole;
-  });
+  // Filter teachers based on search query
+  const filteredTeachers = teachers.filter((teacher) =>
+    teacher.nama.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const totalPages = Math.ceil(filteredTeachers.length / usersPerPage) || 1;
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
   const currentTeachers = filteredTeachers.slice(indexOfFirstUser, indexOfLastUser);
 
-  // Calculate page range for pagination
+  // Calculate pagination range
   const getPageRange = () => {
     const maxPagesToShow = 5;
     let startPage, endPage;
@@ -154,11 +144,6 @@ const RekamMedisGuru = () => {
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(1);
-  };
-
-  const handleRoleChange = (e) => {
-    setRoleFilter(e.target.value);
     setCurrentPage(1);
   };
 
@@ -241,21 +226,12 @@ const RekamMedisGuru = () => {
                   className="w-full pl-10 pr-4 py-2 rounded-[10px] bg-white dark:bg-gray-800 text-[#6D9C9D] dark:text-gray-200 placeholder-[#6D9C9D] dark:placeholder-gray-400 focus:outline-none"
                 />
               </div>
-              <select
-                value={roleFilter}
-                onChange={handleRoleChange}
-                className="w-[120px] rounded-[10px] bg-white dark:bg-gray-800 text-[#6D9C9D] dark:text-gray-200 text-left pl-5 py-2 focus:outline-none appearance-none"
-              >
-                <option value="">Peran</option>
-                <option value="guru">Guru</option>
-                <option value="admin">Admin</option>
-              </select>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-gray-100 dark:bg-gray-800">
-                    <th className="p-3 text-left text-gray-800 dark:text-gray-200">ID</th>
+                    <th className="p-3 text-left text-gray-800 dark:text-gray-200">No</th>
                     <th className="p-3 text-left text-gray-800 dark:text-gray-200">Nama</th>
                     <th className="p-3 text-left text-gray-800 dark:text-gray-200">Jenis Kelamin</th>
                     <th className="p-3 text-left text-gray-800 dark:text-gray-200">Mata Pelajaran</th>
@@ -271,16 +247,16 @@ const RekamMedisGuru = () => {
                       </td>
                     </tr>
                   ) : currentTeachers.length > 0 ? (
-                    currentTeachers.map((teacher) => (
+                    currentTeachers.map((teacher, index) => (
                       <tr
                         key={teacher.id}
                         className="border-b-4 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
                       >
-                        <td className="p-3 text-gray-800 dark:text-gray-200">{teacher.id}</td>
-                        <td className="p-3 text-gray-800 dark:text-gray-200">{teacher.name}</td>
-                        <td className="p-3 text-gray-800 dark:text-gray-200">{teacher.gender}</td>
-                        <td className="p-3 text-gray-800 dark:text-gray-200">{teacher.subject}</td>
-                        <td className="p-3 text-gray-800 dark:text-gray-200">{teacher.phone}</td>
+                        <td className="p-3 text-gray-800 dark:text-gray-200">{indexOfFirstUser + index + 1}</td>
+                        <td className="p-3 text-gray-800 dark:text-gray-200">{teacher.nama || 'Belum Terisi'}</td>
+                        <td className="p-3 text-gray-800 dark:text-gray-200">{teacher.jenis_kelamin || 'Belum Terisi'}</td>
+                        <td className="p-3 text-gray-800 dark:text-gray-200">{teacher.mata_pelajaran || 'Belum Terisi'}</td>
+                        <td className="p-3 text-gray-800 dark:text-gray-200">{teacher.no_hp || 'Belum Terisi'}</td>
                         <td className="p-3">
                           <button
                             onClick={() => handleNavigateToDetails(teacher)}
@@ -339,17 +315,6 @@ const RekamMedisGuru = () => {
           </div>
         </main>
       </div>
-      <style jsx>{`
-        .animate-fade-in-out {
-          animation: fadeInOut 3s ease-in-out;
-        }
-        @keyframes fadeInOut {
-          0% { opacity: 0; }
-          10% { opacity: 1; }
-          90% { opacity: 1; }
-          100% { opacity: 0; }
-        }
-      `}</style>
     </div>
   );
 };
